@@ -8,6 +8,78 @@ import { requestParentConsentEmail } from "./parent-consent";
 import prisma from "./prisma";
 import { openAPI } from "better-auth/plugins";
 
+function normalizeOrigin(value?: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  const withProtocol = value.startsWith("http") ? value : `https://${value}`;
+
+  try {
+    const url = new URL(withProtocol);
+    return url.origin;
+  } catch {
+    return null;
+  }
+}
+
+function isLocalOrigin(origin?: string | null) {
+  if (!origin) {
+    return false;
+  }
+
+  try {
+    const hostname = new URL(origin).hostname;
+    return hostname === "localhost" || hostname === "127.0.0.1";
+  } catch {
+    return false;
+  }
+}
+
+function getAppOrigin() {
+  const configuredAuthUrl = normalizeOrigin(process.env.BETTER_AUTH_URL);
+  const configuredAppUrl = normalizeOrigin(process.env.NEXT_PUBLIC_APP_URL);
+  const vercelProductionUrl = normalizeOrigin(
+    process.env.VERCEL_PROJECT_PRODUCTION_URL,
+  );
+  const vercelDeploymentUrl = normalizeOrigin(process.env.VERCEL_URL);
+
+  if (process.env.VERCEL) {
+    return (
+      (configuredAppUrl && !isLocalOrigin(configuredAppUrl)
+        ? configuredAppUrl
+        : null) ||
+      (configuredAuthUrl && !isLocalOrigin(configuredAuthUrl)
+        ? configuredAuthUrl
+        : null) ||
+      vercelProductionUrl ||
+      vercelDeploymentUrl ||
+      configuredAppUrl ||
+      configuredAuthUrl ||
+      "http://localhost:3000"
+    );
+  }
+
+  return configuredAuthUrl || configuredAppUrl || "http://localhost:3000";
+}
+
+function buildResetPasswordPageUrl(generatedUrl: string) {
+  const appOrigin = getAppOrigin();
+
+  try {
+    const url = new URL(generatedUrl);
+    const token = url.pathname.split("/").filter(Boolean).pop();
+
+    if (!token) {
+      return `${appOrigin}/reset-password`;
+    }
+
+    return `${appOrigin}/reset-password?token=${encodeURIComponent(token)}`;
+  } catch {
+    return `${appOrigin}/reset-password`;
+  }
+}
+
 function getGooglePictureFromIdToken(idToken?: string | null) {
   if (!idToken) {
     return null;
@@ -68,7 +140,7 @@ async function syncGoogleImageForUser(userId: string) {
 
 export const auth = betterAuth({
   // Uses the app URL so OAuth redirects always resolve to this Next.js app.
-  baseURL: process.env.BETTER_AUTH_URL,
+  baseURL: getAppOrigin(),
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
@@ -239,6 +311,7 @@ export const auth = betterAuth({
     requireEmailVerification: true,
     sendResetPassword: async ({ user, url }) => {
       const greetingName = user.name?.trim() || "Teman";
+      const resetPasswordUrl = buildResetPasswordPageUrl(url);
 
       await sendEmail({
         to: user.email,
@@ -247,7 +320,7 @@ export const auth = betterAuth({
           `Halo ${greetingName},\n\n` +
           "Kami menerima permintaan untuk mengatur ulang password akunmu.\n" +
           "Jika ini memang kamu, buka link berikut untuk membuat password baru:\n\n" +
-          `${url}\n\n` +
+          `${resetPasswordUrl}\n\n` +
           "Jika kamu tidak meminta reset password, abaikan email ini.",
         html: `
           <div style="background:#f3f8ff;padding:24px 12px;font-family:Arial,sans-serif;color:#1f2937;">
@@ -259,11 +332,11 @@ export const auth = betterAuth({
                 <p style="margin:0 0 20px;font-size:15px;line-height:1.7;">Klik tombol di bawah untuk membuat password baru.</p>
 
                 <div style="margin:22px 0 24px;text-align:center;">
-                  <a href="${url}" style="display:inline-block;background:#1a9688;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 22px;border-radius:10px;">Atur Ulang Password</a>
+                  <a href="${resetPasswordUrl}" style="display:inline-block;background:#1a9688;color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;padding:12px 22px;border-radius:10px;">Atur Ulang Password</a>
                 </div>
 
                 <p style="margin:0 0 8px;font-size:13px;color:#4b5563;">Jika tombol tidak berfungsi, salin link ini:</p>
-                <p style="margin:0 0 18px;word-break:break-all;"><a href="${url}" style="color:#0f6b60;font-size:13px;">${url}</a></p>
+                <p style="margin:0 0 18px;word-break:break-all;"><a href="${resetPasswordUrl}" style="color:#0f6b60;font-size:13px;">${resetPasswordUrl}</a></p>
 
                 <p style="margin:0;font-size:12px;line-height:1.6;color:#6b7280;">Jika kamu tidak merasa meminta reset password, abaikan email ini.</p>
               </div>
