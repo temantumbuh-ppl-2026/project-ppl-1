@@ -67,7 +67,7 @@ type Props = {
   onNextQuiz: () => void;
   onResetQuestions: () => void;
   onUpgrade: () => void;
-  onAnswerSubmit: (quizId: string, label: string) => void;
+  onAnswerSubmit: (quizId: string, label: string) => void | Promise<void>;
   onContinueWriting?: () => void;
 };
 
@@ -120,11 +120,12 @@ export function BraveChoiceModal({
         // Before checking, Enter = check answer
         const opt = quiz.options[selectedIdx];
         setIsSubmitting(true);
-        onAnswerSubmit(quiz.id, opt.label);
-        setTimeout(() => {
-          setIsChecked(true);
-          setIsSubmitting(false);
-        }, 320);
+        void Promise.resolve(onAnswerSubmit(quiz.id, opt.label)).finally(() => {
+          setTimeout(() => {
+            setIsChecked(true);
+            setIsSubmitting(false);
+          }, 320);
+        });
       }
     };
 
@@ -147,7 +148,7 @@ export function BraveChoiceModal({
     if (selectedIdx === null || !quiz || isSubmitting) return;
     const opt = quiz.options[selectedIdx];
     setIsSubmitting(true);
-    onAnswerSubmit(quiz.id, opt.label);
+    await Promise.resolve(onAnswerSubmit(quiz.id, opt.label));
     // small delay so animation feels intentional
     await new Promise((r) => setTimeout(r, 320));
     setIsChecked(true);
@@ -163,6 +164,8 @@ export function BraveChoiceModal({
 
   const selectedOpt = quiz?.options[selectedIdx ?? -1];
   const selectedBrave = selectedOpt?.isBrave ?? false;
+  const shouldShowQuotaState =
+    plan === "free" && (isQuotaReached || quizRemaining <= 0) && !quiz;
 
   return (
     <AnimatePresence>
@@ -295,6 +298,19 @@ export function BraveChoiceModal({
                   >
                     <LoadingState />
                   </motion.div>
+                ) : shouldShowQuotaState ? (
+                  <motion.div
+                    key="quota-reached"
+                    variants={fadeSlide}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                  >
+                    <QuotaReachedState
+                      onClose={handleClose}
+                      onUpgrade={onUpgrade}
+                    />
+                  </motion.div>
                 ) : quiz ? (
                   <motion.div
                     key={`quiz-${quiz.id}`}
@@ -319,6 +335,19 @@ export function BraveChoiceModal({
                       onCheck={handleCheck}
                       onNext={onNextQuiz}
                       onClose={onContinueWriting ?? handleClose}
+                      onUpgrade={onUpgrade}
+                    />
+                  </motion.div>
+                ) : isQuotaReached ? (
+                  <motion.div
+                    key="quota-reached"
+                    variants={fadeSlide}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                  >
+                    <QuotaReachedState
+                      onClose={handleClose}
                       onUpgrade={onUpgrade}
                     />
                   </motion.div>
@@ -382,6 +411,8 @@ function QuizBody({
   onUpgrade: () => void;
 }) {
   const selectedOpt = quiz.options[selectedIdx ?? -1];
+  const shouldShowUpgradeAction =
+    plan === "free" && (isQuotaReached || quizRemaining <= 0 || !canLoadNext);
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
@@ -521,25 +552,37 @@ function QuizBody({
               {isSubmitting ? <MiniSpinner /> : "Cek Jawaban"}
             </motion.button>
 
-            <motion.button
-              onClick={onNext}
-              whileHover={{ y: -1 }}
-              whileTap={{ scale: 0.975 }}
-              style={{
-                height: 44,
-                padding: "0 18px",
-                borderRadius: 13,
-                border: "1px solid rgba(26, 150, 136, 0.22)",
-                background: "rgba(255, 255, 255, 0.80)",
-                fontSize: 13,
-                fontWeight: 600,
-                color: C.ink,
-                cursor: "pointer",
-                fontFamily: fonts.sans,
-              }}
-            >
-              Lewati
-            </motion.button>
+            {shouldShowUpgradeAction ? (
+              <motion.button
+                onClick={onUpgrade}
+                whileHover={{ y: -1 }}
+                whileTap={{ scale: 0.975 }}
+                style={upgradeButtonStyle}
+              >
+                <Crown size={14} color={C.gold} />
+                Upgrade
+              </motion.button>
+            ) : (
+              <motion.button
+                onClick={onNext}
+                whileHover={{ y: -1 }}
+                whileTap={{ scale: 0.975 }}
+                style={{
+                  height: 44,
+                  padding: "0 18px",
+                  borderRadius: 13,
+                  border: "1px solid rgba(26, 150, 136, 0.22)",
+                  background: "rgba(255, 255, 255, 0.80)",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: C.ink,
+                  cursor: "pointer",
+                  fontFamily: fonts.sans,
+                }}
+              >
+                Lewati
+              </motion.button>
+            )}
           </>
         ) : (
           <>
@@ -566,7 +609,7 @@ function QuizBody({
               Lanjutkan Menulis
             </motion.button>
 
-            {canLoadNext ? (
+            {!shouldShowUpgradeAction ? (
               <motion.button
                 onClick={onNext}
                 whileHover={{ y: -1 }}
@@ -590,7 +633,7 @@ function QuizBody({
                 Soal Lagi
                 <ChevronRight size={13} color={C.ink} />
               </motion.button>
-            ) : isQuotaReached ? (
+            ) : (
               <motion.button
                 onClick={onUpgrade}
                 whileHover={{ y: -1 }}
@@ -598,9 +641,9 @@ function QuizBody({
                 style={upgradeButtonStyle}
               >
                 <Crown size={14} color={C.gold} />
-                Premium
+                Upgrade
               </motion.button>
-            ) : null}
+            )}
           </>
         )}
       </motion.div>
@@ -758,6 +801,98 @@ function LoadingState() {
       >
         Memuat soal...
       </p>
+    </div>
+  );
+}
+
+function QuotaReachedState({
+  onClose,
+  onUpgrade,
+}: {
+  onClose: () => void;
+  onUpgrade: () => void;
+}) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div
+        style={{
+          padding: "14px 16px",
+          borderRadius: 14,
+          background: "rgba(253, 240, 204, 0.72)",
+          border: "1px solid rgba(214, 161, 27, 0.28)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+          display: "flex",
+          gap: 10,
+          alignItems: "flex-start",
+        }}
+      >
+        <Crown
+          size={18}
+          color={C.gold}
+          style={{ flexShrink: 0, marginTop: 2 }}
+        />
+        <div>
+          <p
+            style={{
+              margin: "0 0 5px",
+              fontSize: 13,
+              fontWeight: 800,
+              color: C.amber,
+              fontFamily: fonts.sans,
+            }}
+          >
+            Upgrade ke Premium
+          </p>
+          <p
+            style={{
+              margin: 0,
+              fontSize: 12,
+              lineHeight: 1.65,
+              color: C.text,
+              fontFamily: fonts.serif,
+            }}
+          >
+            Brave Choice gratis hari ini sudah habis. Premium membuka akses
+            unlimited, jadi kamu bisa lanjut latihan keputusan bijak tanpa
+            menunggu besok.
+          </p>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 8 }}>
+        <motion.button
+          onClick={onUpgrade}
+          whileHover={{ y: -1 }}
+          whileTap={{ scale: 0.975 }}
+          style={upgradeButtonStyle}
+        >
+          <Crown size={14} color={C.gold} />
+          Upgrade Premium
+        </motion.button>
+
+        <motion.button
+          onClick={onClose}
+          whileHover={{ y: -1 }}
+          whileTap={{ scale: 0.975 }}
+          style={{
+            height: 44,
+            padding: "0 18px",
+            borderRadius: 13,
+            border: "1px solid rgba(26, 150, 136, 0.22)",
+            background: "rgba(237, 249, 247, 0.60)",
+            fontSize: 13,
+            fontWeight: 600,
+            color: C.ink,
+            cursor: "pointer",
+            fontFamily: fonts.sans,
+            backdropFilter: "blur(6px)",
+            WebkitBackdropFilter: "blur(6px)",
+          }}
+        >
+          Tutup
+        </motion.button>
+      </div>
     </div>
   );
 }
