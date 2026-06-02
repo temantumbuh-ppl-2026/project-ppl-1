@@ -19,7 +19,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: {
     template: "%s | TemanTumbuh",
-    default: "TemanTumbuh — Tumbuh Bersama, Lebih Aman",
+    default: "TemanTumbuh - Tumbuh Bersama, Lebih Aman",
   },
   description:
     "Platform refleksi diri dan kesadaran sosial untuk usia 10–29 tahun.",

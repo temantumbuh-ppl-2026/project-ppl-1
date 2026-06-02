@@ -164,6 +164,8 @@ export function BraveChoiceModal({
 
   const selectedOpt = quiz?.options[selectedIdx ?? -1];
   const selectedBrave = selectedOpt?.isBrave ?? false;
+  const shouldShowQuotaState =
+    plan === "free" && (isQuotaReached || quizRemaining <= 0) && !quiz;
 
   return (
     <AnimatePresence>
@@ -295,6 +297,19 @@ export function BraveChoiceModal({
                     exit="exit"
                   >
                     <LoadingState />
+                  </motion.div>
+                ) : shouldShowQuotaState ? (
+                  <motion.div
+                    key="quota-reached"
+                    variants={fadeSlide}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                  >
+                    <QuotaReachedState
+                      onClose={handleClose}
+                      onUpgrade={onUpgrade}
+                    />
                   </motion.div>
                 ) : quiz ? (
                   <motion.div
@@ -821,13 +836,13 @@ function QuotaReachedState({
           <p
             style={{
               margin: "0 0 5px",
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: 800,
               color: C.amber,
               fontFamily: fonts.sans,
             }}
           >
-            Batas Brave Choice hari ini sudah habis
+            Upgrade ke Premium
           </p>
           <p
             style={{
@@ -838,7 +853,9 @@ function QuotaReachedState({
               fontFamily: fonts.serif,
             }}
           >
-            Upgrade ke Premium untuk lanjut mengerjakan soal tanpa batas.
+            Brave Choice gratis hari ini sudah habis. Premium membuka akses
+            unlimited, jadi kamu bisa lanjut latihan keputusan bijak tanpa
+            menunggu besok.
           </p>
         </div>
       </div>
@@ -851,7 +868,7 @@ function QuotaReachedState({
           style={upgradeButtonStyle}
         >
           <Crown size={14} color={C.gold} />
-          Upgrade
+          Upgrade Premium
         </motion.button>
 
         <motion.button

@@ -70,9 +70,18 @@ export function useBraveChoice(user: UserProfile | null) {
   const loadQuiz = useCallback(async () => {
     setShowModal(true);
 
+    if (user?.plan === "free" && (isQuotaReached || quizRemaining <= 0)) {
+      setCurrentQuiz(null);
+      setIsLoading(false);
+      setIsQuotaReached(true);
+      setIsQuestionPoolExhausted(false);
+      return;
+    }
+
     // Jika kuota habis atau soal habis, kita tetap buka modal
     // tapi tidak perlu fetch quiz baru jika sudah ada statusnya.
     if (!canDoQuiz && (isQuotaReached || isQuestionPoolExhausted)) {
+      setCurrentQuiz(null);
       return;
     }
     setIsLoading(true);
@@ -84,6 +93,8 @@ export function useBraveChoice(user: UserProfile | null) {
       setIsQuotaReached(result.isQuotaReached);
 
       if (!result.quiz) {
+        setCurrentQuiz(null);
+
         if (result.isQuotaReached) {
           setIsQuestionPoolExhausted(false);
           return;
@@ -101,9 +112,23 @@ export function useBraveChoice(user: UserProfile | null) {
     } finally {
       setIsLoading(false);
     }
-  }, [canDoQuiz, isQuotaReached, isQuestionPoolExhausted]);
+  }, [
+    canDoQuiz,
+    isQuotaReached,
+    isQuestionPoolExhausted,
+    quizRemaining,
+    user?.plan,
+  ]);
 
   const loadNextQuiz = useCallback(async () => {
+    if (user?.plan === "free" && (isQuotaReached || quizRemaining <= 0)) {
+      setCurrentQuiz(null);
+      setIsLoading(false);
+      setIsQuotaReached(true);
+      setIsQuestionPoolExhausted(false);
+      return;
+    }
+
     setIsLoading(true);
     setCurrentQuiz(null);
 
@@ -113,6 +138,8 @@ export function useBraveChoice(user: UserProfile | null) {
       setIsQuotaReached(result.isQuotaReached);
 
       if (!result.quiz) {
+        setCurrentQuiz(null);
+
         if (result.isQuotaReached) {
           setIsQuestionPoolExhausted(false);
           return;
@@ -130,7 +157,7 @@ export function useBraveChoice(user: UserProfile | null) {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [isQuotaReached, quizRemaining, user?.plan]);
 
   const handleAnswerSubmit = useCallback(
     async (quizId: string, selectedLabel: string) => {

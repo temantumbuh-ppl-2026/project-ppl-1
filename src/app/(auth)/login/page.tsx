@@ -187,6 +187,7 @@ function LoginPageContent() {
 
   if (sessionData?.isAuthenticated) {
     return <PageLoader message="Memuat dashboard..." fullscreen />;
+    /*  */
   }
 
   return (
