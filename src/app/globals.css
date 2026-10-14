@@ -438,6 +438,16 @@ body.snap-open nav {
   pointer-events: none !important;
 }
 
+/* FE-02: shared focus treatment, including links in authentication pages. */
+@utility tt-focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--tt-primary-700);
+    outline-offset: 2px;
+    border-color: var(--tt-primary-500);
+    box-shadow: 0 0 0 3px var(--tt-primary-200);
+  }
+}
+
 @utility tt-text-display {
   font: var(--tt-text-display);
 }
@@ -472,4 +482,22 @@ body.snap-open nav {
 
 @utility tt-text-button {
   font: var(--tt-text-button);
+}
+
+@layer components {
+  .tt-auth-page main :where(a, button, input, textarea, select) {
+    @apply tt-focus-ring;
+  }
+  .tt-auth-page main a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .tt-auth-page main a:not([data-slot="button"]) {
+    color: var(--tt-primary-700);
+  }
+  .tt-auth-page main a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
 }

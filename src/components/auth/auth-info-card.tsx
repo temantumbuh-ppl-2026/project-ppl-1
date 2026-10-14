@@ -33,7 +33,7 @@ export function AuthInfoCard({
   return (
     <Alert
       className={cn(
-        "border-[var(--color-brand-teal-pale)] bg-[var(--color-brand-teal-ghost)] text-[var(--color-text-brand-secondary)]",
+        "border-[var(--tt-primary-200)] bg-[var(--tt-primary-100)] text-[var(--tt-gray-600)]",
         className,
       )}
     >
