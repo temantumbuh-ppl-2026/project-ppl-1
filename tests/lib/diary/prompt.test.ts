@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { buildDiaryPromptMessages } from "@/lib/diary/prompt";
+import { ConversationState, DiaryTopic } from "@/app/generated/prisma/client";
+import {
+  buildDiaryPromptMessages,
+  buildDiaryStructuredPromptMessages,
+} from "@/lib/diary/prompt";
 
 describe("lib/diary/prompt", () => {
   it("membangun system prompt, context, dan riwayat percakapan", () => {
@@ -45,5 +49,22 @@ describe("lib/diary/prompt", () => {
     expect(messages[2]?.content).toBe("pesan-2");
     expect(messages.at(-1)?.content).toHaveLength(1203);
     expect(messages.at(-1)?.content.endsWith("...")).toBe(true);
+  });
+
+  it("memberi aturan JSON, multi-topic terkini, dan konteks sesi sebelumnya", () => {
+    const messages = buildDiaryStructuredPromptMessages({
+      userName: "Ruri",
+      todayLabel: "Hari ini",
+      conversation: [{ role: "user", content: "Aku juga sulit belajar." }],
+      currentTopics: [DiaryTopic.KELUARGA],
+      currentState: ConversationState.EXPLORATION,
+    });
+
+    expect(messages[1]?.role).toBe("system");
+    expect(messages[1]?.content).toContain("satu objek JSON");
+    expect(messages[1]?.content).toContain("hapus topik lama");
+    expect(messages[1]?.content).toContain("KELUARGA");
+    expect(messages[1]?.content).toContain("EXPLORATION");
+    expect(messages.at(-1)?.content).toBe("Aku juga sulit belajar.");
   });
 });

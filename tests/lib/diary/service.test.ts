@@ -4,8 +4,12 @@ const { mockPrisma, mockTx } = vi.hoisted(() => {
   const tx = {
     diary: {
       create: vi.fn(),
+      update: vi.fn(),
     },
     diaryMessage: {
+      create: vi.fn(),
+    },
+    safetyAlert: {
       create: vi.fn(),
     },
   };
@@ -21,6 +25,7 @@ const { mockPrisma, mockTx } = vi.hoisted(() => {
         count: vi.fn(),
         create: vi.fn(),
         findFirst: vi.fn(),
+        findUnique: vi.fn(),
         findMany: vi.fn(),
       },
       diaryMessage: {
@@ -33,6 +38,7 @@ const { mockPrisma, mockTx } = vi.hoisted(() => {
 });
 
 const mockGenerateDiaryAssistantReply = vi.hoisted(() => vi.fn());
+const mockGenerateDiaryStructuredReply = vi.hoisted(() => vi.fn());
 
 vi.mock("@/lib/prisma", () => ({
   default: mockPrisma,
@@ -46,10 +52,17 @@ vi.mock("@/lib/encryption", () => ({
 
 vi.mock("@/lib/diary/litellm", () => ({
   generateDiaryAssistantReply: mockGenerateDiaryAssistantReply,
+  generateDiaryStructuredReply: mockGenerateDiaryStructuredReply,
 }));
 
-import { Sender } from "@/app/generated/prisma/client";
+import {
+  ConversationState,
+  DiaryTopic,
+  RiskLevel,
+  Sender,
+} from "@/app/generated/prisma/client";
 import { DiaryStructuredOutputError } from "@/lib/diary/structured-output";
+import type { DiaryStructuredOutput } from "@/lib/diary/structured-output";
 import {
   DiaryServiceError,
   ensureDiaryShellFromMood,
@@ -61,12 +74,25 @@ import {
   persistDiaryChatSession,
   prepareDiaryChatSession,
   sendDiaryChatMessage,
+  sendDiaryStructuredChatMessage,
   toDiaryServiceErrorForAiFailure,
   type PreparedDiaryChatSession,
 } from "@/lib/diary/service";
 
 const today = new Date("2026-05-23T03:00:00.000Z");
 const todayDate = new Date(Date.UTC(2026, 4, 23));
+const structuredOutput: DiaryStructuredOutput = {
+  reply: "Aku mendengarmu. Apa yang paling berat sekarang?",
+  topics: [DiaryTopic.KELUARGA, DiaryTopic.AKADEMIK_SEKOLAH],
+  conversationState: ConversationState.CLARIFICATION,
+  proactiveSuggestion: "Coba ceritakan satu kejadian yang paling mengganggu.",
+  safety: {
+    flag: false,
+    riskLevel: RiskLevel.NONE,
+    category: null,
+    summary: null,
+  },
+};
 
 function createSession(
   overrides: Partial<PreparedDiaryChatSession> = {},
@@ -80,6 +106,7 @@ function createSession(
     trimmedText: "Aku ingin cerita",
     promptHistory: [],
     promptMessages: [{ role: "user", content: "Aku ingin cerita" }],
+    structuredPromptMessages: [{ role: "user", content: "Aku ingin cerita" }],
     ...overrides,
   };
 }
@@ -329,6 +356,42 @@ describe("lib/diary/service", () => {
       role: "user",
       content: "Sekarang lebih tenang",
     });
+    expect(mockPrisma.diary.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("prepareDiaryChatSession membaca metadata sesi hanya untuk output terstruktur", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      name: "Ruri",
+      isPremium: true,
+    });
+    mockPrisma.diary.findFirst.mockResolvedValue({
+      id: "diary-1",
+      date: todayDate,
+    });
+    mockPrisma.diary.findUnique.mockResolvedValue({
+      topics: [DiaryTopic.KELUARGA],
+      conversationState: ConversationState.REFLECTION,
+      riskLevel: RiskLevel.ATTENTION,
+    });
+    mockPrisma.diaryMessage.findMany.mockResolvedValue([]);
+
+    const session = await prepareDiaryChatSession(
+      {
+        userId: "user-1",
+        entryId: "today",
+        messageText: "Aku juga capek sekolah",
+      },
+      { includeMetadata: true },
+    );
+
+    expect(mockPrisma.diary.findUnique).toHaveBeenCalledWith({
+      where: { id: "diary-1" },
+      select: { topics: true, conversationState: true, riskLevel: true },
+    });
+    expect(session.diary?.topics).toEqual([DiaryTopic.KELUARGA]);
+    expect(session.structuredPromptMessages[1]?.content).toContain(
+      "State sebelum pesan ini: REFLECTION",
+    );
   });
 
   it("persistDiaryChatSession menolak balasan AI kosong", async () => {
@@ -338,6 +401,20 @@ describe("lib/diary/service", () => {
         assistantText: "   ",
       }),
     ).rejects.toMatchObject({ code: "AI_EMPTY_RESPONSE", status: 502 });
+  });
+
+  it("persistDiaryChatSession menolak metadata invalid sebelum transaksi", async () => {
+    await expect(
+      persistDiaryChatSession({
+        session: createSession(),
+        assistantText: "Abaikan",
+        assistantOutput: {
+          ...structuredOutput,
+          topics: [DiaryTopic.KELUARGA, DiaryTopic.KELUARGA],
+        },
+      }),
+    ).rejects.toThrow(DiaryStructuredOutputError);
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
   });
 
   it("persistDiaryChatSession membuat diary baru, menyimpan dua pesan, dan menghitung quota bulan", async () => {
@@ -372,6 +449,124 @@ describe("lib/diary/service", () => {
     );
     expect(result.entry.preview).toBe("Aku ingin cerita");
     expect(result.diarySessionsUsedThisMonth).toBe(3);
+  });
+
+  it("menyimpan output terstruktur dan alert HIGH dalam satu transaksi", async () => {
+    mockTx.diary.create.mockResolvedValue({ id: "diary-1", date: todayDate });
+    mockTx.diaryMessage.create
+      .mockResolvedValueOnce({
+        id: "user-message",
+        senderType: Sender.USER,
+        createdAt: today,
+      })
+      .mockResolvedValueOnce({
+        id: "ai-message",
+        senderType: Sender.AI,
+        createdAt: today,
+      });
+    mockPrisma.diary.count.mockResolvedValue(1);
+    const output: DiaryStructuredOutput = {
+      ...structuredOutput,
+      safety: {
+        flag: true,
+        riskLevel: RiskLevel.HIGH,
+        category: "SELF_HARM",
+        summary: "Pengguna menyebut niat menyakiti diri.",
+      },
+    };
+
+    const result = await persistDiaryChatSession({
+      session: createSession(),
+      assistantText: output.reply,
+      assistantOutput: output,
+    });
+
+    expect(mockPrisma.$transaction).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.any(Object),
+    );
+    expect(mockTx.diary.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        topics: [DiaryTopic.KELUARGA, DiaryTopic.AKADEMIK_SEKOLAH],
+        conversationState: ConversationState.CLARIFICATION,
+        proactiveSuggestion:
+          "encrypted:Coba ceritakan satu kejadian yang paling mengganggu.",
+        safetyFlag: true,
+        riskLevel: RiskLevel.HIGH,
+      }),
+      select: { id: true, date: true },
+    });
+    expect(mockTx.diaryMessage.create).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        data: expect.objectContaining({
+          senderType: Sender.AI,
+          content: `encrypted:${output.reply}`,
+        }),
+      }),
+    );
+    expect(mockTx.safetyAlert.create).toHaveBeenCalledWith({
+      data: {
+        diaryId: "diary-1",
+        triggerMessageId: "user-message",
+        riskLevel: RiskLevel.HIGH,
+        category: "SELF_HARM",
+        summary: "encrypted:Pengguna menyebut niat menyakiti diri.",
+      },
+    });
+    expect(result.conversation).toMatchObject({
+      topics: output.topics,
+      safetyFlag: true,
+      riskLevel: RiskLevel.HIGH,
+    });
+  });
+
+  it("mengganti topik lama dan mempertahankan risiko tertinggi pada diary existing", async () => {
+    mockTx.diary.update.mockResolvedValue({ id: "diary-1", date: todayDate });
+    mockTx.diaryMessage.create
+      .mockResolvedValueOnce({
+        id: "user-message",
+        senderType: Sender.USER,
+        createdAt: today,
+      })
+      .mockResolvedValueOnce({
+        id: "ai-message",
+        senderType: Sender.AI,
+        createdAt: today,
+      });
+    mockPrisma.diary.count.mockResolvedValue(1);
+    const output: DiaryStructuredOutput = {
+      ...structuredOutput,
+      topics: [DiaryTopic.PERTEMANAN],
+      proactiveSuggestion: null,
+    };
+
+    await persistDiaryChatSession({
+      session: createSession({
+        diary: {
+          id: "diary-1",
+          date: todayDate,
+          topics: [DiaryTopic.KELUARGA],
+          conversationState: ConversationState.EXPLORATION,
+          riskLevel: RiskLevel.HIGH,
+        },
+      }),
+      assistantText: output.reply,
+      assistantOutput: output,
+    });
+
+    expect(mockTx.diary.update).toHaveBeenCalledWith({
+      where: { id: "diary-1" },
+      data: {
+        topics: [DiaryTopic.PERTEMANAN],
+        conversationState: ConversationState.CLARIFICATION,
+        proactiveSuggestion: null,
+        safetyFlag: true,
+        riskLevel: RiskLevel.HIGH,
+      },
+      select: { id: true, date: true },
+    });
+    expect(mockTx.safetyAlert.create).not.toHaveBeenCalled();
   });
 
   it("ensureDiaryShellFromMood memakai diary existing atau membuat shell baru", async () => {
@@ -529,5 +724,35 @@ describe("lib/diary/service", () => {
         messageText: "Halo",
       }),
     ).rejects.toMatchObject({ code: "AI_EMPTY_RESPONSE" });
+  });
+
+  it("sendDiaryStructuredChatMessage menolak output invalid sebelum menyimpan", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      name: "Ruri",
+      isPremium: true,
+    });
+    mockPrisma.diary.findFirst.mockResolvedValue(null);
+    mockGenerateDiaryStructuredReply.mockRejectedValueOnce(
+      new DiaryStructuredOutputError(),
+    );
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await expect(
+      sendDiaryStructuredChatMessage({
+        userId: "user-1",
+        entryId: "today",
+        messageText: "Aku ingin cerita",
+      }),
+    ).rejects.toMatchObject({ status: 502, code: "AI_OUTPUT_INVALID" });
+    expect(mockGenerateDiaryStructuredReply).toHaveBeenCalledWith({
+      messages: expect.arrayContaining([
+        expect.objectContaining({
+          role: "system",
+          content: expect.stringContaining("satu objek JSON"),
+        }),
+      ]),
+    });
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 });

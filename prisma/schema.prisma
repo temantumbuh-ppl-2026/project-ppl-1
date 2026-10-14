@@ -241,17 +241,19 @@ enum SafetyAlertStatus {
 }
 
 model Diary {
-  id                String            @id @default(cuid())
-  userId            String
-  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  date              DateTime          @db.Date
-  isActive          Boolean           @default(true)
-  topics            DiaryTopic[]      @default([])
-  conversationState ConversationState @default(EXPLORATION)
-  safetyFlag        Boolean           @default(false)
-  riskLevel         RiskLevel         @default(NONE)
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @default(now()) @updatedAt
+  id                  String            @id @default(cuid())
+  userId              String
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date                DateTime          @db.Date
+  isActive            Boolean           @default(true)
+  topics              DiaryTopic[]      @default([])
+  conversationState   ConversationState @default(EXPLORATION)
+  // Encrypted by the diary service before storage.
+  proactiveSuggestion String?           @db.Text
+  safetyFlag          Boolean           @default(false)
+  riskLevel           RiskLevel         @default(NONE)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @default(now()) @updatedAt
 
   messages     DiaryMessage[]
   safetyAlerts SafetyAlert[]
