@@ -14,7 +14,6 @@ export function HomeDashboardHeroCard({
   longestStreak,
   totalDiaries,
   streakWeek,
-  getMoodColor,
 }: {
   currentStreak: number;
   longestStreak: number;
@@ -45,7 +44,7 @@ export function HomeDashboardHeroCard({
         >
           <Flame
             size={40}
-            className="text-[var(--tt-dashboard-warning)] drop-shadow-[0_0_10px_rgba(255,190,92,0.4)]"
+            className="text-[#FDE047] drop-shadow-[0_0_10px_rgba(253,224,71,0.4)]"
           />
         </motion.div>
 
@@ -89,9 +88,7 @@ export function HomeDashboardHeroCard({
               className="h-1.5 w-full rounded-full transition-all duration-200"
               style={{
                 background:
-                  d.score !== null
-                    ? getMoodColor(d.score)
-                    : "rgba(255,255,255,0.18)",
+                  d.score !== null ? "#86EFAC" : "rgba(255,255,255,0.18)",
               }}
             />
             <span className="text-[6px] text-white/50">{d.day[0]}</span>

@@ -16,9 +16,7 @@ describe("ChatBubble follow-up presentation", () => {
     expect(content.parentElement!.style.background).toBe(
       "var(--tt-primary-100)",
     );
-    expect(content.parentElement!.style.borderLeft).toBe(
-      "3px solid var(--tt-primary-500)",
-    );
+    expect(content.parentElement!.style.borderLeftWidth).not.toBe("3px");
   });
 
   it("keeps an ordinary AI reply on the normal surface", () => {

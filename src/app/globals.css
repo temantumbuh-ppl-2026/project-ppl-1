@@ -248,8 +248,14 @@
   --tt-dashboard-skeleton: var(--tt-gray-200);
 
   /* Hero aliases */
-  --tt-dashboard-hero-bg: var(--tt-primary-900);
-  --tt-dashboard-hero-shadow: var(--tt-shadow-elevated);
+  --tt-dashboard-hero-bg: linear-gradient(
+    145deg,
+    #144949 0%,
+    #1b6b6b 55%,
+    #1a9688 100%
+  );
+  --tt-dashboard-hero-shadow:
+    0 18px 48px rgba(20, 73, 73, 0.22), inset 0 1.5px 0 rgba(255, 255, 255, 0.1);
 
   /* Button */
   --tt-dashboard-button-bg: var(--tt-button-primary);
