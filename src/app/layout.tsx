@@ -46,8 +46,8 @@ export default function RootLayout({
             richColors
             toastOptions={{
               style: {
-                fontFamily: "var(--font-plus-jakarta)",
-                borderRadius: "12px",
+                fontFamily: "var(--tt-font-sans)",
+                borderRadius: "var(--tt-radius-md)",
               },
             }}
           />
