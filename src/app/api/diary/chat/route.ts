@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { getAuthenticatedUserIdFromRequest } from "@/lib/auth";
-import { DiaryServiceError, sendDiaryChatMessage } from "@/lib/diary/service";
+import {
+  DiaryServiceError,
+  sendDiaryStructuredChatMessage,
+} from "@/lib/diary/service";
 import { diaryChatPayloadSchema } from "@/lib/diary/validation";
 
 /**
@@ -29,7 +32,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const result = await sendDiaryChatMessage({
+    const result = await sendDiaryStructuredChatMessage({
       userId,
       entryId: parsedPayload.data.entryId,
       messageText: parsedPayload.data.messageText,

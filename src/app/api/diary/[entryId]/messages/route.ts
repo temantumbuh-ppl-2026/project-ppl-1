@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedUserIdFromRequest } from "@/lib/auth";
 import {
   DiaryServiceError,
+  getDiaryConversationMetadata,
   listDiaryMessagesByEntryId,
 } from "@/lib/diary/service";
 import { diaryMessagesQuerySchema } from "@/lib/diary/validation";
@@ -47,11 +48,17 @@ export async function GET(request: Request, context: RouteContext) {
       entryId,
       timezone: parsedQuery.data.timezone,
     });
+    const conversation = await getDiaryConversationMetadata({
+      userId,
+      entryId,
+      timezone: parsedQuery.data.timezone,
+    });
 
     return NextResponse.json({
       success: true,
       data: {
         messages,
+        conversation,
       },
     });
   } catch (error) {

@@ -22,6 +22,7 @@ import {
   type DiaryStructuredOutput,
 } from "@/lib/diary/structured-output";
 import type {
+  DiaryConversationDto,
   DiaryEntryDto,
   DiaryMessageDto,
   DiaryMoodScore,
@@ -196,6 +197,47 @@ export async function listDiaryMessagesByEntryId({
   }));
 
   return decryptedMessages.map((message) => toDiaryMessageDto(message, tz));
+}
+
+export async function getDiaryConversationMetadata({
+  userId,
+  entryId,
+  timezone,
+}: ListDiaryMessagesInput): Promise<DiaryConversationDto | null> {
+  const diary = await findDiaryForUser({
+    userId,
+    entryId,
+    timezone: normalizeTimezone(timezone),
+  });
+
+  if (!diary) {
+    return null;
+  }
+
+  const metadata = await prisma.diary.findUnique({
+    where: { id: diary.id },
+    select: {
+      topics: true,
+      conversationState: true,
+      proactiveSuggestion: true,
+      safetyFlag: true,
+      riskLevel: true,
+    },
+  });
+
+  if (!metadata) {
+    return null;
+  }
+
+  return {
+    topics: metadata.topics,
+    conversationState: metadata.conversationState,
+    proactiveSuggestion: metadata.proactiveSuggestion
+      ? decrypt(metadata.proactiveSuggestion)
+      : null,
+    safetyFlag: metadata.safetyFlag,
+    riskLevel: metadata.riskLevel,
+  };
 }
 
 export type PreparedDiaryChatSession = {
@@ -441,6 +483,7 @@ export async function persistDiaryChatSession({
         riskLevel,
       }
     : null;
+  const { startDate, endDate } = getMonthRange(session.todayKey.slice(0, 7));
 
   const persisted = await prisma.$transaction(
     async (tx) => {
@@ -505,8 +548,20 @@ export async function persistDiaryChatSession({
         });
       }
 
+      const diarySessionsUsedThisMonth = await tx.diary.count({
+        where: {
+          userId: session.userId,
+          isActive: true,
+          date: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
+      });
+
       return {
         finalDiary,
+        diarySessionsUsedThisMonth,
         userMessage: {
           ...userMessage,
           content: session.trimmedText,
@@ -529,18 +584,6 @@ export async function persistDiaryChatSession({
     persisted.aiMessage,
   ];
 
-  const { startDate, endDate } = getMonthRange(session.todayKey.slice(0, 7));
-  const diarySessionsUsedThisMonth = await prisma.diary.count({
-    where: {
-      userId: session.userId,
-      isActive: true,
-      date: {
-        gte: startDate,
-        lte: endDate,
-      },
-    },
-  });
-
   return {
     aiMessage: toDiaryMessageDto(persisted.aiMessage, session.timezone),
     entry: {
@@ -552,7 +595,7 @@ export async function persistDiaryChatSession({
       ),
       isToday: true,
     },
-    diarySessionsUsedThisMonth,
+    diarySessionsUsedThisMonth: persisted.diarySessionsUsedThisMonth,
     ...(assistantOutput
       ? {
           conversation: {
@@ -807,6 +850,12 @@ export async function sendDiaryStructuredChatMessage(
     includeMetadata: true,
   });
 
+  return completePreparedDiaryStructuredChatSession(session);
+}
+
+export async function completePreparedDiaryStructuredChatSession(
+  session: PreparedDiaryChatSession,
+) {
   try {
     const output = await generateDiaryStructuredReply({
       messages: session.structuredPromptMessages,

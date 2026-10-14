@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const { mockPrisma, mockTx } = vi.hoisted(() => {
   const tx = {
     diary: {
+      count: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
     },
@@ -67,6 +68,7 @@ import {
   DiaryServiceError,
   ensureDiaryShellFromMood,
   generateDiaryGreetingFromMood,
+  getDiaryConversationMetadata,
   getTotalDiaryCount,
   initiateDiaryFromMood,
   listDiaryEntriesByMonth,
@@ -247,6 +249,42 @@ describe("lib/diary/service", () => {
       expect.objectContaining({ id: "m1", role: "user", text: "Halo" }),
       expect.objectContaining({ id: "m2", role: "ai", text: "Hai juga" }),
     ]);
+  });
+
+  it("getDiaryConversationMetadata menjaga ownership dan mendekripsi saran", async () => {
+    mockPrisma.diary.findFirst.mockResolvedValueOnce(null);
+    await expect(
+      getDiaryConversationMetadata({
+        userId: "user-1",
+        entryId: "milik-orang-lain",
+      }),
+    ).resolves.toBeNull();
+    expect(mockPrisma.diary.findUnique).not.toHaveBeenCalled();
+
+    mockPrisma.diary.findFirst.mockResolvedValueOnce({
+      id: "diary-1",
+      date: todayDate,
+    });
+    mockPrisma.diary.findUnique.mockResolvedValueOnce({
+      topics: [DiaryTopic.KELUARGA, DiaryTopic.AKADEMIK_SEKOLAH],
+      conversationState: ConversationState.CLARIFICATION,
+      proactiveSuggestion: "encrypted:Ceritakan bagian yang paling sulit.",
+      safetyFlag: true,
+      riskLevel: RiskLevel.ATTENTION,
+    });
+
+    await expect(
+      getDiaryConversationMetadata({
+        userId: "user-1",
+        entryId: "diary-1",
+      }),
+    ).resolves.toEqual({
+      topics: [DiaryTopic.KELUARGA, DiaryTopic.AKADEMIK_SEKOLAH],
+      conversationState: ConversationState.CLARIFICATION,
+      proactiveSuggestion: "Ceritakan bagian yang paling sulit.",
+      safetyFlag: true,
+      riskLevel: RiskLevel.ATTENTION,
+    });
   });
 
   it("prepareDiaryChatSession validasi pesan kosong dan user tidak ditemukan", async () => {
@@ -435,7 +473,7 @@ describe("lib/diary/service", () => {
         content: "encrypted:Aku dengerin.",
         createdAt: new Date("2026-05-23T03:02:00.000Z"),
       });
-    mockPrisma.diary.count.mockResolvedValue(3);
+    mockTx.diary.count.mockResolvedValue(3);
 
     const result = await persistDiaryChatSession({
       session: createSession(),
@@ -464,7 +502,7 @@ describe("lib/diary/service", () => {
         senderType: Sender.AI,
         createdAt: today,
       });
-    mockPrisma.diary.count.mockResolvedValue(1);
+    mockTx.diary.count.mockResolvedValue(1);
     const output: DiaryStructuredOutput = {
       ...structuredOutput,
       safety: {
@@ -534,7 +572,7 @@ describe("lib/diary/service", () => {
         senderType: Sender.AI,
         createdAt: today,
       });
-    mockPrisma.diary.count.mockResolvedValue(1);
+    mockTx.diary.count.mockResolvedValue(1);
     const output: DiaryStructuredOutput = {
       ...structuredOutput,
       topics: [DiaryTopic.PERTEMANAN],
