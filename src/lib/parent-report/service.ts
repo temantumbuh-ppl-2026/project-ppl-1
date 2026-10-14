@@ -1,3 +1,5 @@
+import { getMoodColor } from "@/lib/mood/palette";
+
 import { readFile } from "node:fs/promises";
 
 import { ReportStatus, ReportType } from "@/app/generated/prisma/client";
@@ -731,14 +733,7 @@ function buildPremiumReportText(report: WeeklyParentReportData) {
 function renderMoodRows(days: ReportDay[]) {
   return days
     .map((day) => {
-      const moodColor =
-        day.score === null
-          ? "#8fa3a0"
-          : day.score >= 4
-            ? "#059669"
-            : day.score >= 3
-              ? "#d97706"
-              : "#dc2626";
+      const moodColor = getMoodColor(day.score);
       const moodFace = getMoodFaceSvg(day.score);
       const moodText =
         day.score === null
@@ -760,14 +755,7 @@ function renderMoodRows(days: ReportDay[]) {
 function renderBasicMoodRows(days: ReportDay[]) {
   return days
     .map((day) => {
-      const moodColor =
-        day.score === null
-          ? "#8fa3a0"
-          : day.score >= 4
-            ? "#059669"
-            : day.score >= 3
-              ? "#d97706"
-              : "#dc2626";
+      const moodColor = getMoodColor(day.score);
       const moodFace = getMoodFaceSvg(day.score);
       const moodText =
         day.score === null
@@ -789,14 +777,7 @@ function renderBasicMoodRows(days: ReportDay[]) {
 function getMoodFaceSvg(score: number | null): string {
   if (score === null) return "";
   const size = 18;
-  const colors: Record<number, string> = {
-    1: "#EF4444",
-    2: "#F97316",
-    3: "#EAB308",
-    4: "#22C55E",
-    5: "#10B981",
-  };
-  const color = colors[score] ?? "#8fa3a0";
+  const color = getMoodColor(score);
 
   // Simple circle face SVG
   const mouth =

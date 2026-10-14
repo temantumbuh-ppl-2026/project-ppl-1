@@ -1,3 +1,5 @@
+import { MOOD_COLORS } from "@/lib/mood/palette";
+
 import { MONTHS_ID } from "./insight-data";
 import type { TrendPoint } from "./insight-types";
 
@@ -31,35 +33,35 @@ export function getEmotionalStatus(score: number) {
   if (score >= 4.5) {
     return {
       label: "Kondisi emosional sangat baik",
-      color: "var(--tt-dashboard-success)",
-      bg: "var(--tt-dashboard-success-soft)",
+      color: MOOD_COLORS[5].stroke,
+      bg: MOOD_COLORS[5].bg,
     };
   }
   if (score >= 3.5) {
     return {
       label: "Kondisi emosional baik",
-      color: "var(--tt-dashboard-success)",
-      bg: "var(--tt-dashboard-success-soft)",
+      color: MOOD_COLORS[4].stroke,
+      bg: MOOD_COLORS[4].bg,
     };
   }
   if (score >= 2.5) {
     return {
       label: "Kondisi cukup stabil",
-      color: "var(--tt-dashboard-brand)",
-      bg: "var(--tt-dashboard-brand-soft)",
+      color: MOOD_COLORS[3].stroke,
+      bg: MOOD_COLORS[3].bg,
     };
   }
   if (score >= 1.5) {
     return {
       label: "Perlu menjaga kondisi emosional",
-      color: "var(--tt-dashboard-warning)",
-      bg: "var(--tt-dashboard-warning-soft)",
+      color: MOOD_COLORS[2].stroke,
+      bg: MOOD_COLORS[2].bg,
     };
   }
   return {
     label: "Perlu perhatian lebih",
-    color: "var(--tt-dashboard-danger)",
-    bg: "#FEF2F2",
+    color: MOOD_COLORS[1].stroke,
+    bg: MOOD_COLORS[1].bg,
   };
 }
 

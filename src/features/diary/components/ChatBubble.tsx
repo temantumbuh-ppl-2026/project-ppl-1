@@ -62,9 +62,6 @@ export function ChatBubble({
                 : C.white
               : `linear-gradient(135deg,${C.inkD},${C.inkM})`,
             border: isAi ? `1px solid ${C.bdL}` : "none",
-            borderLeft: isFollowUp
-              ? "3px solid var(--tt-primary-500)"
-              : undefined,
             boxShadow: isAi
               ? "0 1px 4px rgba(0,0,0,0.06)"
               : "0 2px 8px rgba(0,0,0,0.10)",
