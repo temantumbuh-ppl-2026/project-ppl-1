@@ -36,15 +36,12 @@ export function AuthShell({
         animate="visible"
         variants={fadeUpVariants}
         transition={springBouncy}
-        className="relative w-full overflow-hidden rounded-[24px]"
+        className="relative w-full overflow-hidden rounded-tt-xl"
         style={{
           maxWidth: maxWidth,
-          background: "rgba(255,255,255,0.94)",
-          border: "1px solid rgba(190, 227, 221, 0.9)",
-          boxShadow:
-            "0 18px 50px rgba(15, 23, 42, 0.07), 0 4px 14px rgba(15, 23, 42, 0.04)",
-          backdropFilter: "blur(10px)",
-          WebkitBackdropFilter: "blur(10px)",
+          background: "var(--tt-surface)",
+          border: "1px solid var(--tt-primary-200)",
+          boxShadow: "var(--tt-shadow-elevated)",
         }}
       >
         <div
@@ -62,7 +59,7 @@ export function AuthShell({
               transition={{ ...springSmooth, delay: 0.05 }}
               className="mb-4 flex justify-center"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl">
+              <div className="flex h-10 w-10 items-center justify-center rounded-tt-lg">
                 <Image
                   src="/img/LOGO_TEMANTUMBUH.svg"
                   alt="TemanTumbuh"
@@ -78,10 +75,10 @@ export function AuthShell({
 
         {footer ? (
           <div
-            className="px-5 pb-4 pt-3 text-center text-[11px] sm:px-6"
+            className="tt-text-caption px-5 pb-4 pt-3 text-center sm:px-6"
             style={{
-              color: "var(--color-text-brand-muted)",
-              borderTop: "1px solid var(--color-brand-border)",
+              color: "var(--tt-gray-600)",
+              borderTop: "1px solid var(--tt-gray-200)",
             }}
           >
             {footer}

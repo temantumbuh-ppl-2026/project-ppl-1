@@ -30,35 +30,35 @@ export function AuthStepIndicator({
               <motion.div
                 animate={{
                   background: isDone
-                    ? "var(--color-brand-teal)"
+                    ? "var(--tt-primary-700)"
                     : isActive
-                      ? "#ffffff"
-                      : "var(--color-page-bg1)",
+                      ? "var(--tt-surface)"
+                      : "var(--tt-gray-100)",
                   borderColor:
                     isDone || isActive
-                      ? "var(--color-brand-teal)"
-                      : "var(--color-brand-border)",
+                      ? "var(--tt-primary-700)"
+                      : "var(--tt-gray-200)",
                   scale: isActive ? 1.08 : 1,
                 }}
                 transition={springSmooth}
-                className="flex h-8 w-8 items-center justify-center rounded-full border-2 text-xs font-bold"
+                className="flex h-8 w-8 items-center justify-center rounded-full border-2 tt-text-caption font-bold"
                 style={{
                   color: isDone
-                    ? "#ffffff"
+                    ? "var(--tt-surface)"
                     : isActive
-                      ? "var(--color-brand-teal)"
-                      : "var(--color-text-brand-muted)",
+                      ? "var(--tt-primary-700)"
+                      : "var(--tt-gray-600)",
                 }}
               >
                 {isDone ? <Check className="h-4 w-4" /> : <span>{i + 1}</span>}
               </motion.div>
 
               <span
-                className="mt-1.5 text-[10px] font-medium"
+                className="mt-1.5 tt-text-caption font-medium"
                 style={{
                   color: isActive
-                    ? "var(--color-brand-teal)"
-                    : "var(--color-text-brand-muted)",
+                    ? "var(--tt-primary-700)"
+                    : "var(--tt-gray-600)",
                 }}
               >
                 {safeLabels[i]}
@@ -71,8 +71,8 @@ export function AuthStepIndicator({
                 style={{
                   background:
                     i < current
-                      ? "var(--color-brand-teal)"
-                      : "var(--color-brand-border)",
+                      ? "var(--tt-primary-700)"
+                      : "var(--tt-gray-200)",
                 }}
               />
             )}
