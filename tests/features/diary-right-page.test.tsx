@@ -53,7 +53,7 @@ function renderPage(
     </QueryClientProvider>,
   );
 
-  return { onInputChange };
+  return { onInputChange, onSend: props.onSend };
 }
 
 describe("DiaryRightPage story starters", () => {
@@ -78,11 +78,12 @@ describe("DiaryRightPage story starters", () => {
   });
 
   it("mengisi input dari starter agar bisa diedit sebelum dikirim", () => {
-    const { onInputChange } = renderPage();
+    const { onInputChange, onSend } = renderPage();
 
     fireEvent.click(screen.getByRole("button", { name: starter.label }));
 
     expect(onInputChange).toHaveBeenCalledWith(starter.messageText);
+    expect(onSend).not.toHaveBeenCalled();
     expect(document.activeElement).toBe(
       screen.getByPlaceholderText("Tulis ceritamu di sini..."),
     );
@@ -109,6 +110,18 @@ describe("DiaryRightPage story starters", () => {
       isReadOnly: true,
     });
 
+    expect(screen.queryByRole("button", { name: starter.label })).toBeNull();
+  });
+
+  it("tetap menyediakan input ketika pilihan awal gagal dimuat", () => {
+    renderPage({ starters: [], startersError: "Unavailable" });
+
+    expect(screen.getByRole("status").textContent).toBe(
+      "Pilihan awal belum tersedia. Kamu tetap bisa menulis di bawah.",
+    );
+    expect(
+      screen.getByPlaceholderText("Tulis ceritamu di sini..."),
+    ).not.toBeNull();
     expect(screen.queryByRole("button", { name: starter.label })).toBeNull();
   });
 });
