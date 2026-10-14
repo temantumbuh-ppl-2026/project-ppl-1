@@ -592,7 +592,7 @@ export function DiaryRightPage({
           <div
             style={{
               alignSelf: "flex-start",
-              maxWidth: 520,
+              maxWidth: "min(520px, 100%)",
               padding: "4px 0 8px 36px",
             }}
           >
@@ -624,19 +624,10 @@ export function DiaryRightPage({
                   <button
                     key={starter.id}
                     type="button"
+                    className="tt-focus-ring min-h-11 max-w-full cursor-pointer rounded-tt-full border border-tt-primary-200 bg-tt-surface px-4 py-3 text-left tt-text-label text-tt-primary-700 transition-colors hover:bg-tt-primary-50 [overflow-wrap:anywhere] motion-reduce:transition-none"
                     onClick={() => {
                       onInputChange(starter.messageText);
                       textareaRef.current?.focus();
-                    }}
-                    style={{
-                      borderRadius: 999,
-                      border: `1px solid ${C.bd}`,
-                      background: C.white,
-                      color: C.inkD,
-                      padding: "8px 12px",
-                      fontSize: 11,
-                      fontFamily: fonts.sans,
-                      cursor: "pointer",
                     }}
                   >
                     {starter.label}

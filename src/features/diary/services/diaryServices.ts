@@ -10,6 +10,7 @@ import type {
   DiaryEntry,
 } from "../types";
 import { DIARY_TOPIC_LABELS } from "../constants/topics";
+import { ConversationState, RiskLevel } from "@/app/generated/prisma/enums";
 
 type ApiErrorResponse = {
   error?: string;
@@ -650,7 +651,14 @@ function isDiaryConversation(value: unknown): value is DiaryConversation {
       (topic) =>
         typeof topic === "string" &&
         Object.prototype.hasOwnProperty.call(DIARY_TOPIC_LABELS, topic),
-    )
+    ) &&
+    Object.values(ConversationState).includes(
+      record.conversationState as ConversationState,
+    ) &&
+    (record.proactiveSuggestion === null ||
+      typeof record.proactiveSuggestion === "string") &&
+    typeof record.safetyFlag === "boolean" &&
+    Object.values(RiskLevel).includes(record.riskLevel as RiskLevel)
   );
 }
 
