@@ -43,8 +43,10 @@ type Props = {
   startersError?: string | null;
   inputValue: string;
   isAiTyping: boolean;
+  isGreetingPending?: boolean;
   isMessagesLoading: boolean;
   sendError?: string | null;
+  requiresReload?: boolean;
   isReadOnly: boolean;
   canWriteDiary: boolean;
   isPremium: boolean;
@@ -189,8 +191,10 @@ export function DiaryRightPage({
   startersError,
   inputValue,
   isAiTyping,
+  isGreetingPending = false,
   isMessagesLoading,
   sendError,
+  requiresReload = false,
   isReadOnly,
   canWriteDiary,
   isPremium,
@@ -204,7 +208,11 @@ export function DiaryRightPage({
 }: Props) {
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const canSend = inputValue.trim().length > 0 && !isAiTyping;
+  const canSend =
+    inputValue.trim().length > 0 &&
+    !isAiTyping &&
+    !isMessagesLoading &&
+    !requiresReload;
   const showStarters =
     entry.isToday &&
     canWriteDiary &&
@@ -639,7 +647,23 @@ export function DiaryRightPage({
           </div>
         ) : null}
 
-        {isAiTyping ? <TypingIndicator /> : null}
+        {isGreetingPending ? (
+          <div style={{ alignSelf: "flex-start" }}>
+            <p
+              style={{
+                margin: "0 0 6px 36px",
+                color: C.sub,
+                fontSize: 11,
+                fontFamily: fonts.sans,
+              }}
+            >
+              Menyiapkan sapaan. Kamu tetap bisa mulai cerita.
+            </p>
+            <TypingIndicator />
+          </div>
+        ) : isAiTyping ? (
+          <TypingIndicator />
+        ) : null}
       </div>
 
       <div
@@ -667,6 +691,31 @@ export function DiaryRightPage({
             }}
           >
             {sendError}
+            {requiresReload ? (
+              <>
+                <p style={{ margin: "6px 0 0" }}>
+                  Salin draf di kolom chat sebelum memuat ulang jika ingin
+                  menyimpannya.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  style={{
+                    display: "block",
+                    marginTop: 8,
+                    padding: "6px 10px",
+                    borderRadius: 8,
+                    border: `1px solid ${C.amberB}`,
+                    background: C.white,
+                    color: C.inkD,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Muat ulang diary
+                </button>
+              </>
+            ) : null}
           </div>
         ) : null}
 
@@ -678,6 +727,7 @@ export function DiaryRightPage({
           <ChatInputRow
             value={inputValue}
             canSend={canSend}
+            disabled={isAiTyping || isMessagesLoading}
             textareaRef={textareaRef}
             onChange={handleTextareaChange}
             onSend={onSend}
@@ -914,6 +964,7 @@ function LockedInputNotice({ message }: { message: string }) {
 function ChatInputRow({
   value,
   canSend,
+  disabled,
   textareaRef,
   onChange,
   onSend,
@@ -922,6 +973,7 @@ function ChatInputRow({
 }: {
   value: string;
   canSend: boolean;
+  disabled: boolean;
   textareaRef: RefObject<HTMLTextAreaElement | null>;
   onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
   onSend: () => void;
@@ -955,6 +1007,7 @@ function ChatInputRow({
         <textarea
           ref={textareaRef}
           value={value}
+          disabled={disabled}
           onChange={onChange}
           onKeyDown={onKeyDown}
           rows={1}

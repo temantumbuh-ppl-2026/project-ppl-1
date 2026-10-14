@@ -255,8 +255,10 @@ export function DiaryPageClient({
                 startersError={diary.startersError}
                 inputValue={diary.inputValue}
                 isAiTyping={diary.isAiTyping}
+                isGreetingPending={diary.isGreetingPending}
                 isMessagesLoading={diary.isMessagesLoading}
                 sendError={diary.sendError}
+                requiresReload={diary.isSendStatusUnknown}
                 isReadOnly={diary.isReadOnly}
                 canWriteDiary={diary.canWriteDiary}
                 isPremium={isPremium}
@@ -342,8 +344,10 @@ export function DiaryPageClient({
               startersError={diary.startersError}
               inputValue={diary.inputValue}
               isAiTyping={diary.isAiTyping}
+              isGreetingPending={diary.isGreetingPending}
               isMessagesLoading={diary.isMessagesLoading}
               sendError={diary.sendError}
+              requiresReload={diary.isSendStatusUnknown}
               isReadOnly={diary.isReadOnly}
               canWriteDiary={diary.canWriteDiary}
               isPremium={isPremium}
