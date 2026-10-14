@@ -49,6 +49,7 @@ vi.mock("@/lib/diary/litellm", () => ({
 }));
 
 import { Sender } from "@/app/generated/prisma/client";
+import { DiaryStructuredOutputError } from "@/lib/diary/structured-output";
 import {
   DiaryServiceError,
   ensureDiaryShellFromMood,
@@ -471,6 +472,10 @@ describe("lib/diary/service", () => {
   });
 
   it("toDiaryServiceErrorForAiFailure memetakan error AI dan persist", () => {
+    expect(
+      toDiaryServiceErrorForAiFailure(new DiaryStructuredOutputError()),
+    ).toMatchObject({ status: 502, code: "AI_OUTPUT_INVALID" });
+
     expect(
       toDiaryServiceErrorForAiFailure(
         new DiaryServiceError("x", 418, "TEAPOT"),

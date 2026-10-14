@@ -1,6 +1,7 @@
 import { Sender } from "@/app/generated/prisma/client";
 
 import { generateDiaryAssistantReply } from "@/lib/diary/litellm";
+import { DiaryStructuredOutputError } from "@/lib/diary/structured-output";
 import {
   buildDiaryPromptMessages,
   type DiaryConversationTurn,
@@ -598,6 +599,14 @@ function getMoodDescription(score: number): string {
 export function toDiaryServiceErrorForAiFailure(error: unknown) {
   if (error instanceof DiaryServiceError) {
     return error;
+  }
+
+  if (error instanceof DiaryStructuredOutputError) {
+    return new DiaryServiceError(
+      "AI belum dapat memberi balasan yang valid. Coba kirim ulang pesanmu.",
+      502,
+      "AI_OUTPUT_INVALID",
+    );
   }
 
   if (error instanceof EncryptionError) {
