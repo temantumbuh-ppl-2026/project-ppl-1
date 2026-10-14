@@ -70,4 +70,18 @@ test.describe("Auth dan route guard utama", () => {
 
     await expect(page).toHaveURL(/\/login/);
   });
+
+  // FE-03: baseline tidak lagi jadi gate setelah login maupun registrasi.
+  // Suite e2e ini berjalan tanpa session nyata, jadi yang bisa diuji di sini adalah
+  // kontrak rutenya: /baseline masih ada dan masih dijaga login, bukan dihapus.
+  // Perilaku "siswa tanpa baseline tidak lagi dipaksa ke /baseline" diuji di
+  // tests/lib/get-post-login-redirect.test.ts.
+  test("/baseline tetap routable dan hanya dijaga login, bukan dihapus", async ({
+    page,
+  }) => {
+    const response = await page.goto("/baseline");
+
+    expect(response?.status()).toBeLessThan(400);
+    await expect(page).toHaveURL(/\/login/);
+  });
 });
