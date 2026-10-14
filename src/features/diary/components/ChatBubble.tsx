@@ -19,6 +19,8 @@ export function ChatBubble({
 }: Props) {
   const isAi = message.role === "ai";
   const shouldShowAiMeta = isAi && showAiMeta;
+  // TODO BE-04: use explicit follow-up metadata when the message API exposes it.
+  const isFollowUp = isAi && message.text.trimEnd().endsWith("?");
 
   return (
     <div
@@ -55,9 +57,14 @@ export function ChatBubble({
             padding: "9px 13px",
             borderRadius: 14,
             background: isAi
-              ? C.white
+              ? isFollowUp
+                ? "var(--tt-primary-100)"
+                : C.white
               : `linear-gradient(135deg,${C.inkD},${C.inkM})`,
             border: isAi ? `1px solid ${C.bdL}` : "none",
+            borderLeft: isFollowUp
+              ? "3px solid var(--tt-primary-500)"
+              : undefined,
             boxShadow: isAi
               ? "0 1px 4px rgba(0,0,0,0.06)"
               : "0 2px 8px rgba(0,0,0,0.10)",
