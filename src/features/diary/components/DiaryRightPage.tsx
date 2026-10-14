@@ -24,7 +24,13 @@ import {
 import { useQuery } from "@tanstack/react-query";
 
 import { colors as C, fonts } from "../constants/tokens";
-import type { DiaryEntry, ChatMessage } from "../types";
+import { DIARY_TOPIC_LABELS } from "../constants/topics";
+import type {
+  DiaryConversation,
+  DiaryEntry,
+  ChatMessage,
+  DiaryConversationStarter,
+} from "../types";
 import { MoodFace } from "./MoodFace";
 import { ChatBubble } from "./ChatBubble";
 import { TypingIndicator } from "./TypingIndicator";
@@ -32,9 +38,15 @@ import { TypingIndicator } from "./TypingIndicator";
 type Props = {
   entry: DiaryEntry;
   messages: ChatMessage[];
+  conversation?: DiaryConversation | null;
+  starters: DiaryConversationStarter[];
+  startersError?: string | null;
   inputValue: string;
   isAiTyping: boolean;
+  isGreetingPending?: boolean;
+  isMessagesLoading: boolean;
   sendError?: string | null;
+  requiresReload?: boolean;
   isReadOnly: boolean;
   canWriteDiary: boolean;
   isPremium: boolean;
@@ -174,9 +186,15 @@ function resolveMoodFromEntry(entry: DiaryEntryWithMoodFallback): MoodScore {
 export function DiaryRightPage({
   entry,
   messages,
+  conversation = null,
+  starters,
+  startersError,
   inputValue,
   isAiTyping,
+  isGreetingPending = false,
+  isMessagesLoading,
   sendError,
+  requiresReload = false,
   isReadOnly,
   canWriteDiary,
   isPremium,
@@ -190,7 +208,17 @@ export function DiaryRightPage({
 }: Props) {
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const canSend = inputValue.trim().length > 0 && !isAiTyping;
+  const canSend =
+    inputValue.trim().length > 0 &&
+    !isAiTyping &&
+    !isMessagesLoading &&
+    !requiresReload;
+  const showStarters =
+    entry.isToday &&
+    canWriteDiary &&
+    !isAiTyping &&
+    !isMessagesLoading &&
+    !messages.some((message) => message.role === "user");
   const displayMessages = useMemo(
     () => buildDisplayMessages(messages),
     [messages],
@@ -411,6 +439,51 @@ export function DiaryRightPage({
         </div>
       </div>
 
+      {conversation && conversation.topics.length > 0 ? (
+        <div
+          aria-label="Topik percakapan"
+          style={{
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
+            padding: isMobile ? "8px 14px 8px 44px" : "8px 22px 8px 56px",
+            overflowX: "auto",
+            borderBottom: `1px solid ${C.bdL}`,
+            background: C.paperL,
+            whiteSpace: "nowrap",
+          }}
+        >
+          <span
+            style={{
+              color: C.sub,
+              fontSize: 10,
+              fontFamily: fonts.sans,
+              flexShrink: 0,
+            }}
+          >
+            Topik cerita:
+          </span>
+          {conversation.topics.map((topic) => (
+            <span
+              key={topic}
+              style={{
+                borderRadius: 999,
+                border: `1px solid ${C.bd}`,
+                background: C.white,
+                color: C.inkD,
+                padding: "4px 9px",
+                fontSize: 10,
+                fontFamily: fonts.sans,
+                flexShrink: 0,
+              }}
+            >
+              {DIARY_TOPIC_LABELS[topic]}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
       {!isPremium && entry.isToday && !canWriteDiary ? (
         <div
           style={{
@@ -515,7 +588,82 @@ export function DiaryRightPage({
           />
         ))}
 
-        {isAiTyping ? <TypingIndicator /> : null}
+        {showStarters && (starters.length > 0 || startersError) ? (
+          <div
+            style={{
+              alignSelf: "flex-start",
+              maxWidth: 520,
+              padding: "4px 0 8px 36px",
+            }}
+          >
+            <p
+              style={{
+                margin: "0 0 10px",
+                color: C.sub,
+                fontSize: 12,
+                fontFamily: fonts.sans,
+              }}
+            >
+              Mau mulai dari mana? Pilih salah satu atau tulis ceritamu sendiri.
+            </p>
+            {startersError ? (
+              <p
+                role="status"
+                style={{
+                  margin: 0,
+                  color: C.sub,
+                  fontSize: 11,
+                  fontFamily: fonts.sans,
+                }}
+              >
+                Pilihan awal belum tersedia. Kamu tetap bisa menulis di bawah.
+              </p>
+            ) : (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {starters.map((starter) => (
+                  <button
+                    key={starter.id}
+                    type="button"
+                    onClick={() => {
+                      onInputChange(starter.messageText);
+                      textareaRef.current?.focus();
+                    }}
+                    style={{
+                      borderRadius: 999,
+                      border: `1px solid ${C.bd}`,
+                      background: C.white,
+                      color: C.inkD,
+                      padding: "8px 12px",
+                      fontSize: 11,
+                      fontFamily: fonts.sans,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {starter.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {isGreetingPending ? (
+          <div style={{ alignSelf: "flex-start" }}>
+            <p
+              style={{
+                margin: "0 0 6px 36px",
+                color: C.sub,
+                fontSize: 11,
+                fontFamily: fonts.sans,
+              }}
+            >
+              Menyiapkan sapaan. Kamu tetap bisa mulai cerita.
+            </p>
+            <TypingIndicator />
+          </div>
+        ) : isAiTyping ? (
+          <TypingIndicator />
+        ) : null}
       </div>
 
       <div
@@ -543,6 +691,31 @@ export function DiaryRightPage({
             }}
           >
             {sendError}
+            {requiresReload ? (
+              <>
+                <p style={{ margin: "6px 0 0" }}>
+                  Salin draf di kolom chat sebelum memuat ulang jika ingin
+                  menyimpannya.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  style={{
+                    display: "block",
+                    marginTop: 8,
+                    padding: "6px 10px",
+                    borderRadius: 8,
+                    border: `1px solid ${C.amberB}`,
+                    background: C.white,
+                    color: C.inkD,
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Muat ulang diary
+                </button>
+              </>
+            ) : null}
           </div>
         ) : null}
 
@@ -554,6 +727,7 @@ export function DiaryRightPage({
           <ChatInputRow
             value={inputValue}
             canSend={canSend}
+            disabled={isAiTyping || isMessagesLoading}
             textareaRef={textareaRef}
             onChange={handleTextareaChange}
             onSend={onSend}
@@ -790,6 +964,7 @@ function LockedInputNotice({ message }: { message: string }) {
 function ChatInputRow({
   value,
   canSend,
+  disabled,
   textareaRef,
   onChange,
   onSend,
@@ -798,6 +973,7 @@ function ChatInputRow({
 }: {
   value: string;
   canSend: boolean;
+  disabled: boolean;
   textareaRef: RefObject<HTMLTextAreaElement | null>;
   onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
   onSend: () => void;
@@ -831,6 +1007,7 @@ function ChatInputRow({
         <textarea
           ref={textareaRef}
           value={value}
+          disabled={disabled}
           onChange={onChange}
           onKeyDown={onKeyDown}
           rows={1}

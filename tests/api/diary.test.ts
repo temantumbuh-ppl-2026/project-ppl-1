@@ -8,8 +8,9 @@ import {
   DiaryServiceError,
   listDiaryEntriesByMonth,
   getTotalDiaryCount,
+  getDiaryConversationMetadata,
   listDiaryMessagesByEntryId,
-  sendDiaryChatMessage,
+  sendDiaryStructuredChatMessage,
 } from "@/lib/diary/service";
 
 vi.mock("@/lib/auth", () => ({
@@ -29,15 +30,17 @@ vi.mock("@/lib/diary/service", () => ({
   },
   listDiaryEntriesByMonth: vi.fn(),
   getTotalDiaryCount: vi.fn(),
+  getDiaryConversationMetadata: vi.fn(),
   listDiaryMessagesByEntryId: vi.fn(),
-  sendDiaryChatMessage: vi.fn(),
+  sendDiaryStructuredChatMessage: vi.fn(),
 }));
 
 const mockGetAuthId = vi.mocked(getAuthenticatedUserIdFromRequest);
 const mockListDiary = vi.mocked(listDiaryEntriesByMonth);
 const mockGetCount = vi.mocked(getTotalDiaryCount);
 const mockListMessages = vi.mocked(listDiaryMessagesByEntryId);
-const mockSendChat = vi.mocked(sendDiaryChatMessage);
+const mockGetConversation = vi.mocked(getDiaryConversationMetadata);
+const mockSendChat = vi.mocked(sendDiaryStructuredChatMessage);
 
 describe("Diary API Routes", () => {
   beforeEach(() => {
@@ -160,6 +163,13 @@ describe("Diary API Routes", () => {
       mockListMessages.mockResolvedValue([
         { id: "m1", text: "hello" } as never,
       ]);
+      mockGetConversation.mockResolvedValue({
+        topics: ["KELUARGA", "AKADEMIK_SEKOLAH"],
+        conversationState: "CLARIFICATION",
+        proactiveSuggestion: null,
+        safetyFlag: false,
+        riskLevel: "NONE",
+      });
 
       const req = new Request("http://localhost/api/diary/entry1/messages");
       const context = { params: Promise.resolve({ entryId: "entry1" }) };
@@ -169,6 +179,15 @@ describe("Diary API Routes", () => {
       const json = await res.json();
       expect(json.success).toBe(true);
       expect(json.data.messages.length).toBe(1);
+      expect(json.data.conversation.topics).toEqual([
+        "KELUARGA",
+        "AKADEMIK_SEKOLAH",
+      ]);
+      expect(mockGetConversation).toHaveBeenCalledWith({
+        userId: "user1",
+        entryId: "entry1",
+        timezone: undefined,
+      });
     });
 
     it("Harus return DiaryServiceError dari list messages", async () => {
@@ -231,7 +250,18 @@ describe("Diary API Routes", () => {
 
     it("Harus return reply dari chat", async () => {
       mockGetAuthId.mockResolvedValue("user1");
-      mockSendChat.mockResolvedValue({ reply: "Hai!" } as never);
+      mockSendChat.mockResolvedValue({
+        aiMessage: { id: "a1", role: "ai", text: "Hai!", time: "09.00" },
+        entry: { id: "e1" },
+        diarySessionsUsedThisMonth: 1,
+        conversation: {
+          topics: ["PERTEMANAN"],
+          conversationState: "EXPLORATION",
+          proactiveSuggestion: null,
+          safetyFlag: false,
+          riskLevel: "NONE",
+        },
+      } as never);
 
       const req = new Request("http://localhost/api/diary/chat", {
         method: "POST",
@@ -247,13 +277,14 @@ describe("Diary API Routes", () => {
       expect(res.status).toBe(200);
       const json = await res.json();
       expect(json.success).toBe(true);
-      expect(json.data.reply).toBe("Hai!");
+      expect(json.data.aiMessage.text).toBe("Hai!");
+      expect(json.data.conversation.topics).toEqual(["PERTEMANAN"]);
     });
 
     it("Harus return DiaryServiceError dari send chat", async () => {
       mockGetAuthId.mockResolvedValue("user1");
       mockSendChat.mockRejectedValue(
-        new DiaryServiceError("AI kosong", 502, "AI_EMPTY_RESPONSE"),
+        new DiaryServiceError("Output AI invalid", 502, "AI_OUTPUT_INVALID"),
       );
 
       const req = new Request("http://localhost/api/diary/chat", {
@@ -265,7 +296,7 @@ describe("Diary API Routes", () => {
 
       expect(res.status).toBe(502);
       const json = await res.json();
-      expect(json.code).toBe("AI_EMPTY_RESPONSE");
+      expect(json.code).toBe("AI_OUTPUT_INVALID");
     });
 
     it("Harus return 500 jika send chat gagal", async () => {

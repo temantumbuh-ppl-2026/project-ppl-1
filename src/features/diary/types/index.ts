@@ -37,6 +37,27 @@ export type ChatMessage = {
   time: string; // "HH.mm"
 };
 
+export type DiaryConversationStarter = {
+  id: string;
+  label: string;
+  messageText: string;
+};
+
+export type DiaryTopic =
+  | "KELUARGA"
+  | "PERTEMANAN"
+  | "PERCINTAAN"
+  | "IDENTITAS_RELASI"
+  | "AKADEMIK_SEKOLAH"
+  | "GURU_BK"
+  | "BULLYING_KONFLIK"
+  | "PILIHAN_STUDI"
+  | "LAINNYA";
+
+export type DiaryConversation = {
+  topics: DiaryTopic[];
+};
+
 export type QuizOption = {
   label: string; // "A" | "B"
   text: string;

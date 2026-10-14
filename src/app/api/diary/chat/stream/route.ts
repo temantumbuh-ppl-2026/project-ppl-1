@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { getAuthenticatedUserIdFromRequest } from "@/lib/auth";
-import { generateDiaryAssistantReplyStream } from "@/lib/diary/litellm";
 import {
+  completePreparedDiaryStructuredChatSession,
   DiaryServiceError,
-  persistDiaryChatSession,
   prepareDiaryChatSession,
   toDiaryServiceErrorForAiFailure,
 } from "@/lib/diary/service";
@@ -40,33 +39,28 @@ export async function POST(request: Request) {
       );
     }
 
-    const session = await prepareDiaryChatSession({
-      userId,
-      entryId: parsedPayload.data.entryId,
-      messageText: parsedPayload.data.messageText,
-      timezone: parsedPayload.data.timezone,
-    });
+    const session = await prepareDiaryChatSession(
+      {
+        userId,
+        entryId: parsedPayload.data.entryId,
+        messageText: parsedPayload.data.messageText,
+        timezone: parsedPayload.data.timezone,
+      },
+      { includeMetadata: true },
+    );
 
     const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
-        let assistantText = "";
-
         try {
-          for await (const textChunk of generateDiaryAssistantReplyStream({
-            messages: session.promptMessages,
-          })) {
-            assistantText += textChunk;
-            controller.enqueue(toSseChunk("chunk", { text: textChunk }));
-          }
+          const result =
+            await completePreparedDiaryStructuredChatSession(session);
 
-          const result = await persistDiaryChatSession({
-            session,
-            assistantText,
-          });
-
+          controller.enqueue(
+            toSseChunk("chunk", { text: result.aiMessage.text }),
+          );
           controller.enqueue(toSseChunk("done", result));
         } catch (error) {
-          console.error("Diary chat stream error:", error);
+          console.error("Diary chat stream error:");
 
           const serviceError =
             error instanceof DiaryServiceError
@@ -95,7 +89,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Diary chat stream POST error:", error);
+    console.error("Diary chat stream POST error:");
 
     if (error instanceof DiaryServiceError) {
       return NextResponse.json(

@@ -48,6 +48,7 @@ model User {
   diaries       Diary[]
   quizLogs      QuizLog[]
   insights      Insight[]
+  reviewedSafetyAlerts SafetyAlert[] @relation("SafetyAlertReviewer")
 
   @@unique([email])
   @@map("user")
@@ -196,30 +197,107 @@ enum Sender {
   AI
 }
 
-model Diary {
-  id        String         @id @default(cuid())
-  userId    String
-  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  date      DateTime       @db.Date
-  isActive  Boolean        @default(true)
-  createdAt DateTime       @default(now())
+enum DiaryTopic {
+  KELUARGA
+  PERTEMANAN
+  PERCINTAAN
+  IDENTITAS_RELASI
+  AKADEMIK_SEKOLAH
+  GURU_BK
+  BULLYING_KONFLIK
+  PILIHAN_STUDI
+  LAINNYA
+}
 
-  messages  DiaryMessage[]
+enum ConversationState {
+  EXPLORATION
+  CLARIFICATION
+  REFLECTION
+  ACTION
+  CLOSING
+}
+
+enum RiskLevel {
+  NONE
+  ATTENTION
+  HIGH
+}
+
+enum SafetyCategory {
+  SELF_HARM
+  HARM_TO_OTHERS
+  VIOLENCE_ABUSE
+  BULLYING_THREAT
+  DOMESTIC_VIOLENCE
+  GROOMING_EXPLOITATION
+  SEVERE_DISTRESS
+  OTHER
+}
+
+enum SafetyAlertStatus {
+  OPEN
+  REVIEWED
+  RESOLVED
+}
+
+model Diary {
+  id                  String            @id @default(cuid())
+  userId              String
+  user                User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date                DateTime          @db.Date
+  isActive            Boolean           @default(true)
+  topics              DiaryTopic[]      @default([])
+  conversationState   ConversationState @default(EXPLORATION)
+  // Encrypted by the diary service before storage.
+  proactiveSuggestion String?           @db.Text
+  safetyFlag          Boolean           @default(false)
+  riskLevel           RiskLevel         @default(NONE)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @default(now()) @updatedAt
+
+  messages     DiaryMessage[]
+  safetyAlerts SafetyAlert[]
 
   @@index([userId])
+  @@index([safetyFlag])
+  @@index([riskLevel])
   @@map("diary")
 }
 
 model DiaryMessage {
-  id         String   @id @default(cuid())
-  diaryId    String
-  diary      Diary    @relation(fields: [diaryId], references: [id], onDelete: Cascade)
-  senderType Sender
-  content    String   @db.Text
-  createdAt  DateTime @default(now())
+  id                   String       @id @default(cuid())
+  diaryId              String
+  diary                Diary        @relation(fields: [diaryId], references: [id], onDelete: Cascade)
+  senderType           Sender
+  content              String       @db.Text
+  createdAt            DateTime     @default(now())
+  triggeredSafetyAlert SafetyAlert?
 
   @@index([diaryId])
   @@map("diary_message")
+}
+
+model SafetyAlert {
+  id               String            @id @default(cuid())
+  diaryId          String
+  diary            Diary             @relation(fields: [diaryId], references: [id], onDelete: Cascade)
+  triggerMessageId String            @unique
+  triggerMessage   DiaryMessage      @relation(fields: [triggerMessageId], references: [id], onDelete: Cascade)
+  riskLevel        RiskLevel
+  category         SafetyCategory
+  summary          String            @db.Text
+  status           SafetyAlertStatus @default(OPEN)
+  reviewedById     String?
+  reviewedBy       User?             @relation("SafetyAlertReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  reviewedAt       DateTime?
+  reviewNote       String?           @db.Text
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  @@index([diaryId])
+  @@index([status, createdAt])
+  @@index([riskLevel, status])
+  @@map("safety_alert")
 }
 
 enum AgeSegment {
