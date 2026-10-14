@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { ConversationState, DiaryTopic } from "@/app/generated/prisma/client";
 import {
   buildDiaryPromptMessages,
+  buildDiaryMoodGreetingPromptMessages,
   buildDiaryStructuredPromptMessages,
 } from "@/lib/diary/prompt";
 
@@ -66,5 +67,41 @@ describe("lib/diary/prompt", () => {
     expect(messages[1]?.content).toContain("KELUARGA");
     expect(messages[1]?.content).toContain("EXPLORATION");
     expect(messages.at(-1)?.content).toBe("Aku juga sulit belajar.");
+  });
+
+  it("memberi panduan lanjutan yang menanggapi jawaban tanpa pertanyaan berulang", () => {
+    const messages = buildDiaryStructuredPromptMessages({
+      userName: "Ruri",
+      todayLabel: "Hari ini",
+      currentTopics: [DiaryTopic.PERTEMANAN],
+      currentState: ConversationState.CLARIFICATION,
+      conversation: [
+        { role: "assistant", content: "Apa yang membuatmu merasa dijauhi?" },
+        { role: "user", content: "Mereka membuat grup tanpa aku." },
+      ],
+    });
+
+    expect(messages[1]?.content).toContain("Jangan mengulang pertanyaan");
+    expect(messages[1]?.content).toContain("Tanggapi jawaban pengguna");
+    expect(messages.at(-2)?.content).toContain("Apa yang membuatmu");
+    expect(messages.at(-1)?.content).toContain("Mereka membuat grup");
+  });
+
+  it("mood greeting memakai output terstruktur dan catatan sebagai pesan pengguna", () => {
+    const messages = buildDiaryMoodGreetingPromptMessages({
+      userName: "Ruri",
+      todayLabel: "Hari ini",
+      currentTopics: [],
+      currentState: ConversationState.EXPLORATION,
+      moodDescription: "sedih",
+      note: "Capek belajar",
+    });
+
+    expect(messages[1]?.content).toContain("satu objek JSON");
+    expect(messages[2]?.content).toContain("sapaan pertama");
+    expect(messages.at(-1)).toEqual({
+      role: "user",
+      content: "Perasaanku hari ini: sedih. Catatan moodku: Capek belajar",
+    });
   });
 });

@@ -2,12 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockPrisma, mockTx } = vi.hoisted(() => {
   const tx = {
+    $queryRaw: vi.fn(),
     diary: {
       count: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
     },
     diaryMessage: {
+      count: vi.fn(),
       create: vi.fn(),
     },
     safetyAlert: {
@@ -64,6 +66,7 @@ import {
 } from "@/app/generated/prisma/client";
 import { DiaryStructuredOutputError } from "@/lib/diary/structured-output";
 import type { DiaryStructuredOutput } from "@/lib/diary/structured-output";
+import { diaryConversationStarters } from "@/lib/diary/starters";
 import {
   DiaryServiceError,
   ensureDiaryShellFromMood,
@@ -129,6 +132,7 @@ describe("lib/diary/service", () => {
 
       return Promise.resolve(arg);
     });
+    mockTx.$queryRaw.mockResolvedValue([{ riskLevel: RiskLevel.NONE }]);
   });
 
   afterEach(() => {
@@ -635,7 +639,7 @@ describe("lib/diary/service", () => {
     );
   });
 
-  it("generateDiaryGreetingFromMood membuat greeting sekali dan mengabaikan error AI", async () => {
+  it("generateDiaryGreetingFromMood menyimpan sapaan terstruktur dan metadata sekali", async () => {
     mockPrisma.diaryMessage.count.mockResolvedValueOnce(1);
 
     await generateDiaryGreetingFromMood({
@@ -646,13 +650,16 @@ describe("lib/diary/service", () => {
       diaryId: "diary-1",
       todayDate,
     });
-    expect(mockGenerateDiaryAssistantReply).not.toHaveBeenCalled();
+    expect(mockGenerateDiaryStructuredReply).not.toHaveBeenCalled();
 
-    mockPrisma.diaryMessage.count
-      .mockResolvedValueOnce(0)
-      .mockResolvedValueOnce(0);
+    mockPrisma.diaryMessage.count.mockResolvedValueOnce(0);
     mockPrisma.user.findUnique.mockResolvedValue({ name: null });
-    mockGenerateDiaryAssistantReply.mockResolvedValue(" Halo, aku di sini. ");
+    mockPrisma.diary.findFirst.mockResolvedValue({
+      topics: [],
+      conversationState: ConversationState.EXPLORATION,
+    });
+    mockTx.diaryMessage.count.mockResolvedValue(0);
+    mockGenerateDiaryStructuredReply.mockResolvedValue(structuredOutput);
 
     await generateDiaryGreetingFromMood({
       userId: "user-1",
@@ -663,17 +670,36 @@ describe("lib/diary/service", () => {
       todayDate,
     });
 
-    expect(mockPrisma.diaryMessage.create).toHaveBeenCalledWith({
+    expect(mockGenerateDiaryStructuredReply).toHaveBeenCalledWith({
+      messages: expect.arrayContaining([
+        expect.objectContaining({
+          role: "system",
+          content: expect.stringContaining("sapaan pertama"),
+        }),
+      ]),
+    });
+    expect(mockTx.diary.update).toHaveBeenCalledWith({
+      where: { id: "diary-1" },
+      data: expect.objectContaining({
+        topics: [DiaryTopic.KELUARGA, DiaryTopic.AKADEMIK_SEKOLAH],
+        conversationState: ConversationState.CLARIFICATION,
+        proactiveSuggestion:
+          "encrypted:Coba ceritakan satu kejadian yang paling mengganggu.",
+      }),
+    });
+    expect(mockTx.diaryMessage.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         diaryId: "diary-1",
         senderType: Sender.AI,
-        content: "encrypted:Halo, aku di sini.",
+        content: `encrypted:${structuredOutput.reply}`,
       }),
     });
 
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockPrisma.diaryMessage.count.mockResolvedValueOnce(0);
-    mockGenerateDiaryAssistantReply.mockRejectedValueOnce(new Error("AI down"));
+    mockGenerateDiaryStructuredReply.mockRejectedValueOnce(
+      new Error("AI down"),
+    );
 
     await expect(
       generateDiaryGreetingFromMood({
@@ -689,6 +715,30 @@ describe("lib/diary/service", () => {
     consoleSpy.mockRestore();
   });
 
+  it("mood greeting tidak menimpa chat yang sudah masuk saat generation berlangsung", async () => {
+    mockPrisma.diaryMessage.count.mockResolvedValueOnce(0);
+    mockPrisma.user.findUnique.mockResolvedValue({ name: "Ruri" });
+    mockPrisma.diary.findFirst.mockResolvedValue({
+      topics: [],
+      conversationState: ConversationState.EXPLORATION,
+    });
+    mockGenerateDiaryStructuredReply.mockResolvedValue(structuredOutput);
+    mockTx.diaryMessage.count.mockResolvedValueOnce(1);
+
+    await generateDiaryGreetingFromMood({
+      userId: "user-1",
+      moodScore: 3,
+      notes: "",
+      timezone: "Asia/Jakarta",
+      diaryId: "diary-1",
+      todayDate,
+    });
+
+    expect(mockTx.$queryRaw).toHaveBeenCalled();
+    expect(mockTx.diary.update).not.toHaveBeenCalled();
+    expect(mockTx.diaryMessage.create).not.toHaveBeenCalled();
+  });
+
   it("initiateDiaryFromMood hanya generate greeting saat shell kosong", async () => {
     mockPrisma.diary.findFirst.mockResolvedValueOnce({
       id: "existing",
@@ -701,7 +751,7 @@ describe("lib/diary/service", () => {
       notes: "",
     });
 
-    expect(mockGenerateDiaryAssistantReply).not.toHaveBeenCalled();
+    expect(mockGenerateDiaryStructuredReply).not.toHaveBeenCalled();
   });
 
   it("toDiaryServiceErrorForAiFailure memetakan error AI dan persist", () => {
@@ -792,5 +842,105 @@ describe("lib/diary/service", () => {
     });
     expect(mockPrisma.$transaction).not.toHaveBeenCalled();
     consoleSpy.mockRestore();
+  });
+
+  it("starter dan jawaban lanjutan memakai riwayat sesi serta memperbarui topik", async () => {
+    const starterText = diaryConversationStarters[0].messageText;
+    mockPrisma.user.findUnique.mockResolvedValue({
+      name: "Ruri",
+      isPremium: true,
+    });
+    mockPrisma.diary.findFirst
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: "diary-1", date: todayDate });
+    mockPrisma.diary.findUnique.mockResolvedValueOnce({
+      topics: [DiaryTopic.KELUARGA],
+      conversationState: ConversationState.EXPLORATION,
+      riskLevel: RiskLevel.NONE,
+    });
+    mockPrisma.diaryMessage.findMany.mockResolvedValueOnce([
+      {
+        id: "user-1",
+        senderType: Sender.USER,
+        content: `encrypted:${starterText}`,
+        createdAt: today,
+      },
+      {
+        id: "ai-1",
+        senderType: Sender.AI,
+        content: "encrypted:Apa yang paling ingin kamu ceritakan?",
+        createdAt: today,
+      },
+    ]);
+    mockGenerateDiaryStructuredReply
+      .mockResolvedValueOnce({
+        ...structuredOutput,
+        reply: "Apa yang paling ingin kamu ceritakan?",
+        topics: [DiaryTopic.KELUARGA],
+        conversationState: ConversationState.EXPLORATION,
+        proactiveSuggestion: null,
+      })
+      .mockResolvedValueOnce({
+        ...structuredOutput,
+        reply:
+          "Kedengarannya sekolah ikut membuatmu lelah. Apa yang terjadi di kelas?",
+        topics: [DiaryTopic.AKADEMIK_SEKOLAH],
+        proactiveSuggestion: null,
+      });
+    mockTx.diary.create.mockResolvedValue({ id: "diary-1", date: todayDate });
+    mockTx.diary.update.mockResolvedValue({ id: "diary-1", date: todayDate });
+    mockTx.diaryMessage.create
+      .mockResolvedValueOnce({
+        id: "user-1",
+        senderType: Sender.USER,
+        createdAt: today,
+      })
+      .mockResolvedValueOnce({
+        id: "ai-1",
+        senderType: Sender.AI,
+        createdAt: today,
+      })
+      .mockResolvedValueOnce({
+        id: "user-2",
+        senderType: Sender.USER,
+        createdAt: today,
+      })
+      .mockResolvedValueOnce({
+        id: "ai-2",
+        senderType: Sender.AI,
+        createdAt: today,
+      });
+    mockTx.diary.count.mockResolvedValue(1);
+
+    const first = await sendDiaryStructuredChatMessage({
+      userId: "user-1",
+      entryId: "today",
+      messageText: starterText,
+    });
+    const second = await sendDiaryStructuredChatMessage({
+      userId: "user-1",
+      entryId: "diary-1",
+      messageText: "Aku capek karena tugas di kelas menumpuk.",
+    });
+
+    expect(first.conversation?.topics).toEqual([DiaryTopic.KELUARGA]);
+    expect(second.conversation?.topics).toEqual([DiaryTopic.AKADEMIK_SEKOLAH]);
+    expect(mockGenerateDiaryStructuredReply).toHaveBeenCalledTimes(2);
+    const secondPrompt =
+      mockGenerateDiaryStructuredReply.mock.calls[1]?.[0].messages;
+    expect(secondPrompt).toEqual(
+      expect.arrayContaining([
+        { role: "assistant", content: "Apa yang paling ingin kamu ceritakan?" },
+        { role: "user", content: "Aku capek karena tugas di kelas menumpuk." },
+      ]),
+    );
+    expect(secondPrompt[1].content).toContain("Ini kelanjutan sesi");
+    expect(mockTx.diary.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          topics: [DiaryTopic.AKADEMIK_SEKOLAH],
+        }),
+      }),
+    );
   });
 });
