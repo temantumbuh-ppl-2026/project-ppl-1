@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       data: result,
     });
   } catch (error) {
-    console.error("Diary chat POST error:", error);
+    console.error("Diary chat POST error:");
 
     if (error instanceof DiaryServiceError) {
       return NextResponse.json(

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { encrypt, decrypt } from "@/lib/encryption";
+import { encrypt, decrypt, EncryptionError } from "@/lib/encryption";
 
 // Key 32-byte hex yang valid (64 karakter)
 const VALID_KEY = "a".repeat(64);
@@ -32,17 +32,16 @@ describe("lib/encryption", () => {
       expect(result1).not.toBe(result2); // IV random = cipher berbeda
     });
 
-    it("Harus return teks asli jika ENCRYPTION_KEY tidak ada (fallback)", () => {
+    it("Harus gagal jika ENCRYPTION_KEY tidak ada", () => {
       vi.stubEnv("ENCRYPTION_KEY", "");
-      const result = encrypt("teks gagal dienkripsi");
-      // Fallback: return teks aslinya
-      expect(result).toBe("teks gagal dienkripsi");
+      expect(() => encrypt("teks gagal dienkripsi")).toThrow(EncryptionError);
     });
 
-    it("Harus return teks asli jika ENCRYPTION_KEY panjangnya salah (bukan 32 byte)", () => {
-      vi.stubEnv("ENCRYPTION_KEY", "abcd"); // terlalu pendek
-      const result = encrypt("teks gagal");
-      expect(result).toBe("teks gagal");
+    it("Harus gagal jika ENCRYPTION_KEY tidak valid", () => {
+      vi.stubEnv("ENCRYPTION_KEY", "abcd");
+      expect(() => encrypt("teks gagal")).toThrow(EncryptionError);
+      vi.stubEnv("ENCRYPTION_KEY", "z".repeat(64));
+      expect(() => encrypt("teks gagal")).toThrow(EncryptionError);
     });
   });
 
@@ -67,22 +66,19 @@ describe("lib/encryption", () => {
       expect(result).toBe("hanya:dua");
     });
 
-    it("Harus return hash asli jika decryption gagal (authTag salah)", () => {
+    it("Harus gagal jika ciphertext rusak (authTag salah)", () => {
       // Buat hash dengan format benar tapi authTag palsu
       const fakeHash = "aXZiYXNlNjQ=:YXV0aFRhZ0Zha2U=:ZW5jcnlwdGVk";
-      const result = decrypt(fakeHash);
-      // Harus fallback ke hash asli, tidak throw
-      expect(result).toBe(fakeHash);
+      expect(() => decrypt(fakeHash)).toThrow(EncryptionError);
     });
 
-    it("Harus return hash asli jika decrypt tapi key beda (ENCRYPTION_KEY berubah)", () => {
+    it("Harus gagal jika key dekripsi berbeda", () => {
       // Encrypt dengan key awal
       const encrypted = encrypt("data penting");
 
       // Ganti key — decryption harus gagal dan fallback ke hash
       vi.stubEnv("ENCRYPTION_KEY", "b".repeat(64));
-      const result = decrypt(encrypted);
-      expect(result).toBe(encrypted); // fallback
+      expect(() => decrypt(encrypted)).toThrow(EncryptionError);
     });
 
     it("Harus return input langsung jika input falsy/kosong", () => {

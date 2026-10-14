@@ -55,7 +55,7 @@ export async function GET(request: Request, context: RouteContext) {
       },
     });
   } catch (error) {
-    console.error("Diary messages GET error:", error);
+    console.error("Diary messages GET error:");
 
     if (error instanceof DiaryServiceError) {
       return NextResponse.json(

@@ -11,7 +11,7 @@ import type {
   DiaryMessageDto,
   DiaryMoodScore,
 } from "@/lib/diary/types";
-import { encrypt, decrypt } from "@/lib/encryption";
+import { encrypt, decrypt, EncryptionError } from "@/lib/encryption";
 import prisma from "@/lib/prisma";
 
 type ListDiaryEntriesInput = {
@@ -234,6 +234,14 @@ export async function prepareDiaryChatSession({
     entryId,
     timezone: tz,
   });
+
+  if (!diary && entryId !== "today") {
+    throw new DiaryServiceError(
+      "Sesi diary tidak ditemukan.",
+      404,
+      "SESSION_NOT_FOUND",
+    );
+  }
 
   if (diary && getDateKeyInTimeZone(diary.date, tz) !== todayKey) {
     throw new DiaryServiceError(
@@ -547,8 +555,8 @@ export async function generateDiaryGreetingFromMood({
         },
       });
     }
-  } catch (error) {
-    console.error("Gagal menginisiasi diary dari mood:", error);
+  } catch {
+    console.error("Gagal menginisiasi diary dari mood.");
   }
 }
 
@@ -592,10 +600,15 @@ export function toDiaryServiceErrorForAiFailure(error: unknown) {
     return error;
   }
 
-  const rawMessage =
-    error instanceof Error
-      ? error.message
-      : "AI sedang tidak tersedia. Coba kirim lagi.";
+  if (error instanceof EncryptionError) {
+    return new DiaryServiceError(
+      "Data percakapan sedang tidak tersedia. Coba lagi nanti.",
+      503,
+      "DIARY_ENCRYPTION_UNAVAILABLE",
+    );
+  }
+
+  const rawMessage = error instanceof Error ? error.message : "";
 
   if (
     /respons kosong|response kosong|empty response|empty assistant text/i.test(
@@ -621,7 +634,11 @@ export function toDiaryServiceErrorForAiFailure(error: unknown) {
     );
   }
 
-  return new DiaryServiceError(rawMessage, 503, "AI_UNAVAILABLE");
+  return new DiaryServiceError(
+    "AI sedang tidak tersedia. Coba kirim lagi.",
+    503,
+    "AI_UNAVAILABLE",
+  );
 }
 
 export async function sendDiaryChatMessage(input: SendDiaryChatInput) {
@@ -634,7 +651,7 @@ export async function sendDiaryChatMessage(input: SendDiaryChatInput) {
       messages: session.promptMessages,
     });
   } catch (error) {
-    console.error("Diary AI generation error:", error);
+    console.error("Diary AI generation failed.");
 
     throw toDiaryServiceErrorForAiFailure(error);
   }

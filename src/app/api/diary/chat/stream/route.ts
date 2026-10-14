@@ -66,7 +66,7 @@ export async function POST(request: Request) {
 
           controller.enqueue(toSseChunk("done", result));
         } catch (error) {
-          console.error("Diary chat stream error:", error);
+          console.error("Diary chat stream error:");
 
           const serviceError =
             error instanceof DiaryServiceError
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Diary chat stream POST error:", error);
+    console.error("Diary chat stream POST error:");
 
     if (error instanceof DiaryServiceError) {
       return NextResponse.json(

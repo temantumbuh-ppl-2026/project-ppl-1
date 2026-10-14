@@ -2,6 +2,13 @@ import crypto from "crypto";
 
 const ALGORITHM = "aes-256-gcm";
 
+export class EncryptionError extends Error {
+  constructor(message = "Data percakapan tidak dapat diproses dengan aman.") {
+    super(message);
+    this.name = "EncryptionError";
+  }
+}
+
 function getEncryptionKey(): Buffer {
   const keyHex = process.env.ENCRYPTION_KEY;
   if (!keyHex) {
@@ -9,7 +16,7 @@ function getEncryptionKey(): Buffer {
   }
 
   const keyBuffer = Buffer.from(keyHex, "hex");
-  if (keyBuffer.length !== 32) {
+  if (!/^[0-9a-fA-F]{64}$/.test(keyHex) || keyBuffer.length !== 32) {
     throw new Error(
       "ENCRYPTION_KEY must be a 32-byte hex string (64 characters).",
     );
@@ -29,11 +36,10 @@ export function encrypt(text: string): string {
 
     const authTag = cipher.getAuthTag();
 
-    // Format: iv:authTag:encrypted
+    // Preserve the format used by existing encrypted diary messages.
     return `${iv.toString("base64")}:${authTag.toString("base64")}:${encrypted}`;
-  } catch (error) {
-    console.error("Encryption error:", error);
-    return text; // Fallback or throw? Better to return text to not break if encrypt fails? Actually, standard is throw, but the prompt says "tanpa merusak sistem". Let's return the unencrypted text if something goes wrong or throw.
+  } catch {
+    throw new EncryptionError();
   }
 }
 
@@ -50,6 +56,9 @@ export function decrypt(hash: string): string {
     const [ivStr, authTagStr, encryptedStr] = parts;
     const iv = Buffer.from(ivStr, "base64");
     const authTag = Buffer.from(authTagStr, "base64");
+    if (iv.length !== 12 || authTag.length !== 16) {
+      throw new EncryptionError();
+    }
     const key = getEncryptionKey();
 
     const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
@@ -59,8 +68,7 @@ export function decrypt(hash: string): string {
     decrypted += decipher.final("utf8");
 
     return decrypted;
-  } catch (error) {
-    console.error("Decryption error:", error);
-    return hash; // Return original hash if decryption fails
+  } catch {
+    throw new EncryptionError();
   }
 }

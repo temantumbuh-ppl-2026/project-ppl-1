@@ -39,6 +39,7 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 vi.mock("@/lib/encryption", () => ({
+  EncryptionError: class EncryptionError extends Error {},
   encrypt: vi.fn((value: string) => `encrypted:${value}`),
   decrypt: vi.fn((value: string) => value.replace(/^encrypted:/, "")),
 }));
@@ -270,6 +271,32 @@ describe("lib/diary/service", () => {
     ).rejects.toMatchObject({ code: "DIARY_QUOTA_EXCEEDED", status: 403 });
   });
 
+  it("prepareDiaryChatSession menolak entry eksplisit yang tidak dimiliki tanpa membuat diary", async () => {
+    mockPrisma.user.findUnique.mockResolvedValue({
+      name: "Ruri",
+      isPremium: true,
+    });
+    mockPrisma.diary.findFirst.mockResolvedValue(null);
+
+    await expect(
+      prepareDiaryChatSession({
+        userId: "user-1",
+        entryId: "diary-user-lain",
+        messageText: "Halo",
+      }),
+    ).rejects.toMatchObject({ code: "SESSION_NOT_FOUND", status: 404 });
+    expect(mockPrisma.diary.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: "diary-user-lain",
+          userId: "user-1",
+        }),
+      }),
+    );
+    expect(mockPrisma.diary.create).not.toHaveBeenCalled();
+    expect(mockGenerateDiaryAssistantReply).not.toHaveBeenCalled();
+  });
+
   it("prepareDiaryChatSession membuat prompt dari histori decrypted dan pesan masuk", async () => {
     mockPrisma.user.findUnique.mockResolvedValue({
       name: "Ruri",
@@ -461,6 +488,7 @@ describe("lib/diary/service", () => {
     expect(toDiaryServiceErrorForAiFailure("down")).toMatchObject({
       status: 503,
       code: "AI_UNAVAILABLE",
+      message: "AI sedang tidak tersedia. Coba kirim lagi.",
     });
   });
 
