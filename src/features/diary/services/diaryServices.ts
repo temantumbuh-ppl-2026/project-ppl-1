@@ -2,7 +2,12 @@
 //  src/features/diary/services/diaryServices.ts
 // ============================================================
 
-import type { BraveChoiceQuiz, ChatMessage, DiaryEntry } from "../types";
+import type {
+  BraveChoiceQuiz,
+  ChatMessage,
+  DiaryConversationStarter,
+  DiaryEntry,
+} from "../types";
 
 type ApiErrorResponse = {
   error?: string;
@@ -22,6 +27,14 @@ type DiaryMessagesApiResponse = {
   error?: string;
   data?: {
     messages?: ChatMessage[];
+  };
+};
+
+type DiaryStartersApiResponse = {
+  success?: boolean;
+  error?: string;
+  data?: {
+    starters?: DiaryConversationStarter[];
   };
 };
 
@@ -170,6 +183,34 @@ export async function getDiaryMessages(
   }
 
   return Array.isArray(payload.data.messages) ? payload.data.messages : [];
+}
+
+export async function getDiaryConversationStarters(): Promise<
+  DiaryConversationStarter[]
+> {
+  const response = await fetch("/api/diary/chat/starters", {
+    method: "GET",
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      await extractResponseError(response, "Gagal memuat pilihan awal cerita."),
+    );
+  }
+
+  const payload = (await response.json()) as DiaryStartersApiResponse;
+  const starters = payload.data?.starters;
+
+  if (
+    !payload.success ||
+    !Array.isArray(starters) ||
+    !starters.every(isDiaryConversationStarter)
+  ) {
+    throw new Error(payload.error || "Pilihan awal cerita tidak valid.");
+  }
+
+  return starters;
 }
 
 export async function sendChatMessageStream(
@@ -564,6 +605,20 @@ function isChatMessage(value: unknown): value is ChatMessage {
     typeof record.text === "string" &&
     typeof record.time === "string" &&
     (role === "ai" || role === "user")
+  );
+}
+
+function isDiaryConversationStarter(
+  value: unknown,
+): value is DiaryConversationStarter {
+  const record = asRecord(value);
+
+  return (
+    record !== null &&
+    typeof record.id === "string" &&
+    typeof record.label === "string" &&
+    typeof record.messageText === "string" &&
+    record.messageText.trim().length > 0
   );
 }
 

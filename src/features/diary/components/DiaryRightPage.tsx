@@ -24,7 +24,11 @@ import {
 import { useQuery } from "@tanstack/react-query";
 
 import { colors as C, fonts } from "../constants/tokens";
-import type { DiaryEntry, ChatMessage } from "../types";
+import type {
+  DiaryEntry,
+  ChatMessage,
+  DiaryConversationStarter,
+} from "../types";
 import { MoodFace } from "./MoodFace";
 import { ChatBubble } from "./ChatBubble";
 import { TypingIndicator } from "./TypingIndicator";
@@ -32,8 +36,11 @@ import { TypingIndicator } from "./TypingIndicator";
 type Props = {
   entry: DiaryEntry;
   messages: ChatMessage[];
+  starters: DiaryConversationStarter[];
+  startersError?: string | null;
   inputValue: string;
   isAiTyping: boolean;
+  isMessagesLoading: boolean;
   sendError?: string | null;
   isReadOnly: boolean;
   canWriteDiary: boolean;
@@ -174,8 +181,11 @@ function resolveMoodFromEntry(entry: DiaryEntryWithMoodFallback): MoodScore {
 export function DiaryRightPage({
   entry,
   messages,
+  starters,
+  startersError,
   inputValue,
   isAiTyping,
+  isMessagesLoading,
   sendError,
   isReadOnly,
   canWriteDiary,
@@ -191,6 +201,12 @@ export function DiaryRightPage({
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const canSend = inputValue.trim().length > 0 && !isAiTyping;
+  const showStarters =
+    entry.isToday &&
+    canWriteDiary &&
+    !isAiTyping &&
+    !isMessagesLoading &&
+    !messages.some((message) => message.role === "user");
   const displayMessages = useMemo(
     () => buildDisplayMessages(messages),
     [messages],
@@ -514,6 +530,65 @@ export function DiaryRightPage({
             showTimestamp={msg.showTimestamp}
           />
         ))}
+
+        {showStarters && (starters.length > 0 || startersError) ? (
+          <div
+            style={{
+              alignSelf: "flex-start",
+              maxWidth: 520,
+              padding: "4px 0 8px 36px",
+            }}
+          >
+            <p
+              style={{
+                margin: "0 0 10px",
+                color: C.sub,
+                fontSize: 12,
+                fontFamily: fonts.sans,
+              }}
+            >
+              Mau mulai dari mana? Pilih salah satu atau tulis ceritamu sendiri.
+            </p>
+            {startersError ? (
+              <p
+                role="status"
+                style={{
+                  margin: 0,
+                  color: C.sub,
+                  fontSize: 11,
+                  fontFamily: fonts.sans,
+                }}
+              >
+                Pilihan awal belum tersedia. Kamu tetap bisa menulis di bawah.
+              </p>
+            ) : (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {starters.map((starter) => (
+                  <button
+                    key={starter.id}
+                    type="button"
+                    onClick={() => {
+                      onInputChange(starter.messageText);
+                      textareaRef.current?.focus();
+                    }}
+                    style={{
+                      borderRadius: 999,
+                      border: `1px solid ${C.bd}`,
+                      background: C.white,
+                      color: C.inkD,
+                      padding: "8px 12px",
+                      fontSize: 11,
+                      fontFamily: fonts.sans,
+                      cursor: "pointer",
+                    }}
+                  >
+                    {starter.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : null}
 
         {isAiTyping ? <TypingIndicator /> : null}
       </div>

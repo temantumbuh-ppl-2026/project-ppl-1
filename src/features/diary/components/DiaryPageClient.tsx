@@ -250,8 +250,11 @@ export function DiaryPageClient({
               <DiaryRightPage
                 entry={diary.selectedEntry}
                 messages={diary.messages}
+                starters={diary.starters}
+                startersError={diary.startersError}
                 inputValue={diary.inputValue}
                 isAiTyping={diary.isAiTyping}
+                isMessagesLoading={diary.isMessagesLoading}
                 sendError={diary.sendError}
                 isReadOnly={diary.isReadOnly}
                 canWriteDiary={diary.canWriteDiary}
@@ -333,8 +336,11 @@ export function DiaryPageClient({
             <DiaryRightPage
               entry={diary.selectedEntry}
               messages={diary.messages}
+              starters={diary.starters}
+              startersError={diary.startersError}
               inputValue={diary.inputValue}
               isAiTyping={diary.isAiTyping}
+              isMessagesLoading={diary.isMessagesLoading}
               sendError={diary.sendError}
               isReadOnly={diary.isReadOnly}
               canWriteDiary={diary.canWriteDiary}

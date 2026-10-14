@@ -37,6 +37,12 @@ export type ChatMessage = {
   time: string; // "HH.mm"
 };
 
+export type DiaryConversationStarter = {
+  id: string;
+  label: string;
+  messageText: string;
+};
+
 export type QuizOption = {
   label: string; // "A" | "B"
   text: string;

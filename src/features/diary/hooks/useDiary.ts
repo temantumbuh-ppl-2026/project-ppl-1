@@ -4,12 +4,14 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   DiaryEntry,
   ChatMessage,
+  DiaryConversationStarter,
   PlanConfig,
   UserProfile,
 } from "../types";
 import { PLAN_CONFIG } from "../constants/planConfig";
 import {
   getDiaryEntries,
+  getDiaryConversationStarters,
   getDiaryMessages,
   sendChatMessageStream,
 } from "../services/diaryServices";
@@ -32,6 +34,8 @@ export function useDiary(entryId?: string, initialUserMeta?: InitialUserMeta) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [starters, setStarters] = useState<DiaryConversationStarter[]>([]);
+  const [startersError, setStartersError] = useState<string | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<DiaryEntry | null>(null);
   const [inputValue, setInputValue] = useState("");
   const [isAiTyping, setIsAiTyping] = useState(false);
@@ -75,6 +79,28 @@ export function useDiary(entryId?: string, initialUserMeta?: InitialUserMeta) {
         .toUpperCase(),
     });
   }, [initialUserMeta]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    getDiaryConversationStarters()
+      .then((loadedStarters) => {
+        if (!ignore) setStarters(loadedStarters);
+      })
+      .catch((error: unknown) => {
+        if (!ignore) {
+          setStartersError(
+            error instanceof Error
+              ? error.message
+              : "Gagal memuat pilihan awal cerita.",
+          );
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -304,7 +330,10 @@ export function useDiary(entryId?: string, initialUserMeta?: InitialUserMeta) {
         );
 
   const isReadOnly = selectedEntry ? !selectedEntry.isToday : true;
-  const canWriteDiary = user?.plan === "premium" || diaryRemaining > 0;
+  const canWriteDiary =
+    user?.plan === "premium" ||
+    (selectedEntry?.isToday === true && selectedEntry.id !== "today") ||
+    diaryRemaining > 0;
 
   async function handleSendMessage() {
     if (
@@ -575,6 +604,8 @@ export function useDiary(entryId?: string, initialUserMeta?: InitialUserMeta) {
     user,
     entries,
     messages,
+    starters,
+    startersError,
     selectedEntry,
     activeMonth,
     activeMonthKey,
