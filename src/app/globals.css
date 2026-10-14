@@ -483,3 +483,21 @@ body.snap-open nav {
 @utility tt-text-button {
   font: var(--tt-text-button);
 }
+
+@layer components {
+  .tt-auth-page main :where(a, button, input, textarea, select) {
+    @apply tt-focus-ring;
+  }
+  .tt-auth-page main a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+  .tt-auth-page main a:not([data-slot="button"]) {
+    color: var(--tt-primary-700);
+  }
+  .tt-auth-page main a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}

@@ -192,20 +192,25 @@ function EmailExistsAlert({ email }: { email: string }) {
       className="mb-4"
     >
       <Alert
-        className="rounded-xl border"
+        className="rounded-tt-md border"
         style={{
-          background: "#FFF7ED",
-          borderColor: "#FED7AA",
-          color: "#9A3412",
+          background: "var(--tt-attention-bg)",
+          borderColor: "var(--tt-attention-border)",
+          color: "var(--tt-attention-text)",
         }}
       >
-        <AlertCircle className="h-4 w-4" style={{ color: "#EA580C" }} />
+        <AlertCircle
+          className="h-4 w-4"
+          style={{ color: "var(--tt-attention-text)" }}
+        />
 
-        <AlertTitle style={{ color: "#9A3412", fontWeight: 700 }}>
+        <AlertTitle
+          style={{ color: "var(--tt-attention-text)", fontWeight: 700 }}
+        >
           Email sudah terdaftar
         </AlertTitle>
 
-        <AlertDescription style={{ color: "#7C2D12" }}>
+        <AlertDescription style={{ color: "var(--tt-attention-text)" }}>
           <span className="mb-2 block">
             Akun dengan email <strong className="break-all">{email}</strong>{" "}
             sudah ada. Silakan login atau gunakan email lain.
@@ -214,10 +219,10 @@ function EmailExistsAlert({ email }: { email: string }) {
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
               href="/login"
-              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-opacity hover:opacity-80"
+              className="inline-flex min-h-11 items-center gap-2 rounded-tt-md px-3 py-2 tt-text-caption font-bold transition-opacity hover:opacity-80"
               style={{
-                background: "#EA580C",
-                color: "#fff",
+                background: "var(--tt-attention-text)",
+                color: "var(--tt-surface)",
               }}
             >
               <LogIn size={12} />
@@ -226,11 +231,11 @@ function EmailExistsAlert({ email }: { email: string }) {
 
             <Link
               href="/forgot-password"
-              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-opacity hover:opacity-80"
+              className="inline-flex min-h-11 items-center gap-2 rounded-tt-md px-3 py-2 tt-text-caption font-semibold transition-opacity hover:opacity-80"
               style={{
-                background: "rgba(234,88,12,0.1)",
-                color: "#C2410C",
-                border: "1px solid rgba(234,88,12,0.25)",
+                background: "var(--tt-attention-bg)",
+                color: "var(--tt-attention-text)",
+                border: "1px solid var(--tt-attention-border)",
               }}
             >
               Lupa password?
@@ -253,11 +258,11 @@ function GenericErrorAlert({ message }: { message: string }) {
       className="mb-4"
     >
       <Alert
-        className="rounded-xl border"
+        className="rounded-tt-md border"
         style={{
-          background: "#FEF2F2",
-          borderColor: "#FECACA",
-          color: "#B91C1C",
+          background: "var(--tt-attention-bg)",
+          borderColor: "var(--tt-attention-border)",
+          color: "var(--tt-attention-text)",
         }}
       >
         <AlertCircle className="h-4 w-4" />
@@ -278,13 +283,13 @@ function StepHeading({
   return (
     <div className="mb-4 text-center">
       <h2
-        className="mb-2 text-xl font-bold"
-        style={{ color: "var(--color-text-brand-primary)" }}
+        className="mb-2 tt-text-h3 font-bold"
+        style={{ color: "var(--tt-gray-900)" }}
       >
         {title}
       </h2>
 
-      <p className="text-sm" style={{ color: "var(--color-text-brand-muted)" }}>
+      <p className="tt-text-body" style={{ color: "var(--tt-gray-600)" }}>
         {description}
       </p>
     </div>
@@ -348,10 +353,10 @@ function Step1Form({
         variant="outline"
         onClick={onGoogle}
         disabled={isGoogleLoading}
-        className="mb-4 h-11 w-full gap-4 rounded-lg border-[1.5px] bg-white font-semibold"
+        className="mb-4 h-11 w-full gap-4 rounded-tt-md border-[1.5px] bg-tt-surface font-semibold"
         style={{
-          borderColor: "var(--color-brand-border)",
-          color: "var(--color-text-brand-primary)",
+          borderColor: "var(--tt-gray-200)",
+          color: "var(--tt-gray-900)",
         }}
       >
         {isGoogleLoading ? (
@@ -365,19 +370,16 @@ function Step1Form({
       <div className="mb-4 flex items-center gap-4">
         <div
           className="h-px flex-1"
-          style={{ background: "var(--color-brand-border)" }}
+          style={{ background: "var(--tt-gray-200)" }}
         />
 
-        <span
-          className="text-sm"
-          style={{ color: "var(--color-text-brand-muted)" }}
-        >
+        <span className="tt-text-body" style={{ color: "var(--tt-gray-600)" }}>
           atau dengan email
         </span>
 
         <div
           className="h-px flex-1"
-          style={{ background: "var(--color-brand-border)" }}
+          style={{ background: "var(--tt-gray-200)" }}
         />
       </div>
 
@@ -396,7 +398,7 @@ function Step1Form({
             placeholder="email@contoh.com"
             autoComplete="email"
             autoFocus
-            className="h-11 rounded-lg"
+            className="h-11 rounded-tt-md"
             {...register("email")}
           />
         </AuthField>
@@ -411,7 +413,7 @@ function Step1Form({
             id="reg-password"
             placeholder="Buat password"
             autoComplete="new-password"
-            className="h-11 rounded-lg"
+            className="h-11 rounded-tt-md"
             hasError={!!errors.password}
             {...register("password")}
           />
@@ -426,7 +428,7 @@ function Step1Form({
             id="reg-confirm"
             placeholder="Ulangi password"
             autoComplete="new-password"
-            className="h-11 rounded-lg"
+            className="h-11 rounded-tt-md"
             hasError={!!errors.confirm}
             {...register("confirm")}
           />
@@ -435,10 +437,9 @@ function Step1Form({
         <Button
           type="submit"
           disabled={isSubmitting || isEmailLoading}
-          className="mt-1 h-11 w-full rounded-lg font-semibold text-white"
+          className="mt-1 h-11 w-full rounded-tt-md font-semibold text-white"
           style={{
-            background: "var(--gradient-brand-btn)",
-            boxShadow: "0 4px 18px rgba(26,150,136,0.18)",
+            boxShadow: "var(--tt-shadow-card)",
           }}
         >
           {isSubmitting || isEmailLoading ? (
@@ -526,7 +527,7 @@ function Step2Form({
             placeholder="Nama kamu"
             autoComplete="name"
             autoFocus
-            className="h-11 rounded-lg"
+            className="h-11 rounded-tt-md"
             {...register("name")}
           />
         </AuthField>
@@ -543,7 +544,11 @@ function Step2Form({
               <Select value={field.value ?? ""} onValueChange={field.onChange}>
                 <SelectTrigger
                   id="reg-birthYear"
-                  className="h-11 w-full rounded-lg"
+                  className="tt-focus-ring h-11 w-full rounded-tt-md border-tt-gray-200 bg-tt-surface text-tt-gray-900"
+                  aria-invalid={!!errors.birthYear}
+                  aria-describedby={
+                    errors.birthYear ? "reg-birthYear-error" : undefined
+                  }
                 >
                   <SelectValue placeholder="Pilih tahun lahir" />
                 </SelectTrigger>
@@ -572,7 +577,11 @@ function Step2Form({
               <Select value={field.value ?? ""} onValueChange={field.onChange}>
                 <SelectTrigger
                   id="reg-gender"
-                  className="h-11 w-full rounded-lg"
+                  className="tt-focus-ring h-11 w-full rounded-tt-md border-tt-gray-200 bg-tt-surface text-tt-gray-900"
+                  aria-invalid={!!errors.gender}
+                  aria-describedby={
+                    errors.gender ? "reg-gender-error" : undefined
+                  }
                 >
                   <SelectValue placeholder="Pilih jenis kelamin" />
                 </SelectTrigger>
@@ -595,10 +604,10 @@ function Step2Form({
               type="button"
               variant="outline"
               onClick={onBack}
-              className="h-11 flex-1 rounded-lg border-[1.5px] font-semibold"
+              className="h-11 flex-1 rounded-tt-md border-[1.5px] font-semibold"
               style={{
-                borderColor: "var(--color-brand-border)",
-                color: "var(--color-text-brand-secondary)",
+                borderColor: "var(--tt-gray-200)",
+                color: "var(--tt-gray-600)",
               }}
             >
               Kembali
@@ -608,10 +617,9 @@ function Step2Form({
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="h-11 flex-1 rounded-lg font-semibold text-white"
+            className="h-11 flex-1 rounded-tt-md font-semibold text-white"
             style={{
-              background: "var(--gradient-brand-btn)",
-              boxShadow: "0 4px 18px rgba(26,150,136,0.18)",
+              boxShadow: "var(--tt-shadow-card)",
             }}
           >
             {isSubmitting ? (
@@ -682,7 +690,7 @@ function Step3Form({
             type="email"
             placeholder="email-orangtua@contoh.com"
             autoComplete="off"
-            className="h-11 rounded-lg"
+            className="h-11 rounded-tt-md"
             {...register("parentEmail")}
           />
         </AuthField>
@@ -692,10 +700,10 @@ function Step3Form({
             type="button"
             variant="outline"
             onClick={onBack}
-            className="h-11 flex-1 rounded-lg border-[1.5px] font-semibold"
+            className="h-11 flex-1 rounded-tt-md border-[1.5px] font-semibold"
             style={{
-              borderColor: "var(--color-brand-border)",
-              color: "var(--color-text-brand-secondary)",
+              borderColor: "var(--tt-gray-200)",
+              color: "var(--tt-gray-600)",
             }}
           >
             Kembali
@@ -704,10 +712,9 @@ function Step3Form({
           <Button
             type="submit"
             disabled={isLoading}
-            className="h-11 flex-1 rounded-lg font-semibold text-white"
+            className="h-11 flex-1 rounded-tt-md font-semibold text-white"
             style={{
-              background: "var(--gradient-brand-btn)",
-              boxShadow: "0 4px 18px rgba(26,150,136,0.18)",
+              boxShadow: "var(--tt-shadow-card)",
             }}
           >
             {isLoading ? (
@@ -722,8 +729,8 @@ function Step3Form({
         </div>
 
         <p
-          className="text-center text-xs"
-          style={{ color: "var(--color-text-brand-muted)" }}
+          className="text-center tt-text-caption"
+          style={{ color: "var(--tt-gray-600)" }}
         >
           Email orang tua bisa ditambahkan nanti melalui pengaturan akun.
         </p>
@@ -753,20 +760,20 @@ function SuccessScreen({ name }: { name: string }) {
       >
         <CheckCircle2
           className="h-11 w-12"
-          style={{ color: "var(--color-brand-teal)" }}
+          style={{ color: "var(--tt-primary-700)" }}
         />
       </motion.div>
 
       <h2
-        className="mb-2 text-xl font-bold"
-        style={{ color: "var(--color-text-brand-primary)" }}
+        className="mb-2 tt-text-h3 font-bold"
+        style={{ color: "var(--tt-gray-900)" }}
       >
         Selamat Datang, {name || "Teman"}!
       </h2>
 
       <p
-        className="mb-4 max-w-xs text-sm leading-relaxed"
-        style={{ color: "var(--color-text-brand-muted)" }}
+        className="mb-4 max-w-xs tt-text-body leading-relaxed"
+        style={{ color: "var(--tt-gray-600)" }}
       >
         Akunmu berhasil dibuat. Kamu siap memulai perjalanan tumbuh bersama
         TemanTumbuh.
@@ -774,10 +781,9 @@ function SuccessScreen({ name }: { name: string }) {
 
       <Button
         asChild
-        className="h-11 w-full rounded-lg font-semibold text-white"
+        className="h-11 w-full rounded-tt-md font-semibold text-white"
         style={{
-          background: "var(--gradient-brand-btn)",
-          boxShadow: "0 4px 18px rgba(26,150,136,0.18)",
+          boxShadow: "var(--tt-shadow-card)",
         }}
       >
         <Link href="/">Lanjut ke Beranda</Link>
@@ -998,7 +1004,7 @@ function RegisterPageContent() {
               <Link
                 href="/terms"
                 className="underline-offset-2 hover:underline"
-                style={{ color: "var(--color-text-brand-secondary)" }}
+                style={{ color: "var(--tt-gray-600)" }}
               >
                 Syarat &amp; Ketentuan
               </Link>{" "}
@@ -1006,7 +1012,7 @@ function RegisterPageContent() {
               <Link
                 href="/privacy"
                 className="underline-offset-2 hover:underline"
-                style={{ color: "var(--color-text-brand-secondary)" }}
+                style={{ color: "var(--tt-gray-600)" }}
               >
                 Kebijakan Privasi
               </Link>
@@ -1054,14 +1060,14 @@ function RegisterPageContent() {
 
         {!done && !isCompleteProfileFlow ? (
           <p
-            className="mt-4 text-center text-sm"
-            style={{ color: "var(--color-text-brand-muted)" }}
+            className="mt-4 text-center tt-text-body"
+            style={{ color: "var(--tt-gray-600)" }}
           >
             Sudah punya akun?{" "}
             <Link
               href="/login"
               className="font-semibold underline-offset-2 hover:underline"
-              style={{ color: "var(--color-brand-teal)" }}
+              style={{ color: "var(--tt-primary-700)" }}
             >
               Masuk
             </Link>

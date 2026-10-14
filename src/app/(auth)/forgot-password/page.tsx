@@ -127,13 +127,13 @@ function ForgotPasswordPageContent() {
   return (
     <BrandPageBackground>
       <div className="mx-auto flex min-h-[calc(100vh-128px)] w-full max-w-md items-center px-4 py-12">
-        <div className="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <div className="w-full rounded-tt-lg border border-tt-gray-200 bg-tt-surface p-6 shadow-sm sm:p-8">
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">
+              <h1 className="tt-text-h2 font-bold text-tt-gray-900">
                 Lupa Password
               </h1>
-              <p className="mt-2 text-sm text-slate-600">
+              <p className="mt-2 tt-text-body text-tt-gray-600">
                 Masukkan email akunmu. Kami akan kirim link untuk mengatur ulang
                 password.
               </p>
@@ -163,7 +163,7 @@ function ForgotPasswordPageContent() {
                     id="forgot-email"
                     type="email"
                     autoComplete="email"
-                    className="h-12 rounded-xl"
+                    className="h-12 rounded-tt-md"
                     placeholder="email@contoh.com"
                     {...register("email", {
                       onChange: () => {
@@ -179,10 +179,7 @@ function ForgotPasswordPageContent() {
                   <Button
                     type="submit"
                     disabled={forgotPasswordMutation.isPending}
-                    className="h-12 w-full rounded-xl text-sm font-semibold text-white"
-                    style={{
-                      background: "var(--gradient-brand-btn)",
-                    }}
+                    className="h-12 w-full rounded-tt-md tt-text-button text-tt-surface"
                   >
                     {forgotPasswordMutation.isPending ? (
                       <>
@@ -198,7 +195,7 @@ function ForgotPasswordPageContent() {
             </>
           ) : (
             <div className="space-y-4">
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+              <div className="rounded-tt-md border border-tt-success-text bg-tt-success-bg p-4 tt-text-body text-tt-success-text">
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
                   <div>
@@ -220,19 +217,19 @@ function ForgotPasswordPageContent() {
                   setSubmittedEmail("");
                   clearErrors();
                 }}
-                className="h-12 w-full rounded-xl"
+                className="h-12 w-full rounded-tt-md"
               >
                 Kirim ke Email Lain
               </Button>
             </div>
           )}
 
-          <div className="mt-6 space-y-2 text-center text-sm text-slate-600">
+          <div className="mt-6 space-y-2 text-center tt-text-body text-tt-gray-600">
             <p>
               Sudah ingat password?{" "}
               <Link
                 href="/login"
-                className="font-semibold text-teal-700 hover:underline"
+                className="font-semibold text-tt-primary-700 hover:underline"
               >
                 Kembali ke Login
               </Link>
@@ -241,7 +238,7 @@ function ForgotPasswordPageContent() {
             <p>
               <Link
                 href="/"
-                className="font-semibold text-teal-700 hover:underline"
+                className="font-semibold text-tt-primary-700 hover:underline"
               >
                 <span className="inline-flex items-center gap-1">
                   <ArrowLeft className="h-4 w-4" />

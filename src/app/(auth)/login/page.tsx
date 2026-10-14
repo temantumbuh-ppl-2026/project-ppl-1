@@ -207,15 +207,12 @@ function LoginPageContent() {
             className="mb-4 text-center"
           >
             <h1
-              className="mb-2 text-xl font-bold"
-              style={{ color: "var(--color-text-brand-primary)" }}
+              className="mb-2 tt-text-h3 font-bold"
+              style={{ color: "var(--tt-gray-900)" }}
             >
               Selamat Datang Kembali
             </h1>
-            <p
-              className="text-sm"
-              style={{ color: "var(--color-text-brand-muted)" }}
-            >
+            <p className="tt-text-body" style={{ color: "var(--tt-gray-600)" }}>
               Masuk ke akun TemanTumbuh-mu
             </p>
           </motion.div>
@@ -231,11 +228,11 @@ function LoginPageContent() {
                 className="mb-4"
               >
                 <Alert
-                  className="rounded-lg border"
+                  className="rounded-tt-md border"
                   style={{
-                    background: "#FEF2F2",
-                    borderColor: "#FECACA",
-                    color: "#B91C1C",
+                    background: "var(--tt-attention-bg)",
+                    borderColor: "var(--tt-attention-border)",
+                    color: "var(--tt-attention-text)",
                   }}
                 >
                   <AlertCircle className="h-4 w-4" />
@@ -254,10 +251,10 @@ function LoginPageContent() {
               googleMutation.mutate();
             }}
             disabled={googleMutation.isPending}
-            className="mb-4 h-11 w-full gap-4 rounded-lg border-[1.5px] bg-white font-semibold"
+            className="mb-4 h-11 w-full gap-4 rounded-tt-md border-[1.5px] bg-tt-surface font-semibold"
             style={{
-              borderColor: "var(--color-brand-border)",
-              color: "var(--color-text-brand-primary)",
+              borderColor: "var(--tt-gray-200)",
+              color: "var(--tt-gray-900)",
             }}
           >
             {googleMutation.isPending ? (
@@ -273,17 +270,17 @@ function LoginPageContent() {
           <div className="mb-4 flex items-center gap-4">
             <div
               className="h-px flex-1"
-              style={{ background: "var(--color-brand-border)" }}
+              style={{ background: "var(--tt-gray-200)" }}
             />
             <span
-              className="text-sm"
-              style={{ color: "var(--color-text-brand-muted)" }}
+              className="tt-text-body"
+              style={{ color: "var(--tt-gray-600)" }}
             >
               atau masuk dengan email
             </span>
             <div
               className="h-px flex-1"
-              style={{ background: "var(--color-brand-border)" }}
+              style={{ background: "var(--tt-gray-200)" }}
             />
           </div>
 
@@ -303,7 +300,7 @@ function LoginPageContent() {
                 placeholder="email@contoh.com"
                 autoComplete="email"
                 autoFocus
-                className="h-11 rounded-lg"
+                className="h-11 rounded-tt-md"
                 {...register("email")}
               />
             </AuthField>
@@ -317,7 +314,7 @@ function LoginPageContent() {
                 id="login-password"
                 placeholder="Masukkan password"
                 autoComplete="current-password"
-                className="h-11 rounded-lg"
+                className="h-11 rounded-tt-md"
                 hasError={!!errors.password}
                 {...register("password")}
               />
@@ -326,8 +323,8 @@ function LoginPageContent() {
             <div className="pt-0.5">
               <Link
                 href="/forgot-password"
-                className="text-sm font-medium transition-opacity hover:opacity-70"
-                style={{ color: "var(--color-brand-teal)" }}
+                className="tt-text-body font-medium transition-opacity hover:opacity-70"
+                style={{ color: "var(--tt-primary-700)" }}
               >
                 Lupa password?
               </Link>
@@ -336,10 +333,9 @@ function LoginPageContent() {
             <Button
               type="submit"
               disabled={isSubmitting || loginMutation.isPending}
-              className="mt-1 h-11 w-full rounded-lg font-semibold text-white"
+              className="mt-1 h-11 w-full rounded-tt-md font-semibold text-white"
               style={{
-                background: "var(--gradient-brand-btn)",
-                boxShadow: "0 4px 18px rgba(26,150,136,0.18)",
+                boxShadow: "var(--tt-shadow-card)",
               }}
             >
               {isSubmitting || loginMutation.isPending ? (
@@ -354,14 +350,14 @@ function LoginPageContent() {
           </form>
 
           <p
-            className="mt-4 text-center text-sm"
-            style={{ color: "var(--color-text-brand-muted)" }}
+            className="mt-4 text-center tt-text-body"
+            style={{ color: "var(--tt-gray-600)" }}
           >
             Belum punya akun?{" "}
             <Link
               href="/register"
               className="font-semibold underline-offset-2 hover:underline"
-              style={{ color: "var(--color-brand-teal)" }}
+              style={{ color: "var(--tt-primary-700)" }}
             >
               Daftar Gratis
             </Link>
