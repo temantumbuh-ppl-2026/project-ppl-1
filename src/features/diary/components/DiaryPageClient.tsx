@@ -250,6 +250,7 @@ export function DiaryPageClient({
               <DiaryRightPage
                 entry={diary.selectedEntry}
                 messages={diary.messages}
+                conversation={diary.conversation}
                 starters={diary.starters}
                 startersError={diary.startersError}
                 inputValue={diary.inputValue}
@@ -336,6 +337,7 @@ export function DiaryPageClient({
             <DiaryRightPage
               entry={diary.selectedEntry}
               messages={diary.messages}
+              conversation={diary.conversation}
               starters={diary.starters}
               startersError={diary.startersError}
               inputValue={diary.inputValue}

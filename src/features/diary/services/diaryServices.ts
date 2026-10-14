@@ -5,9 +5,11 @@
 import type {
   BraveChoiceQuiz,
   ChatMessage,
+  DiaryConversation,
   DiaryConversationStarter,
   DiaryEntry,
 } from "../types";
+import { DIARY_TOPIC_LABELS } from "../constants/topics";
 
 type ApiErrorResponse = {
   error?: string;
@@ -27,6 +29,7 @@ type DiaryMessagesApiResponse = {
   error?: string;
   data?: {
     messages?: ChatMessage[];
+    conversation?: DiaryConversation | null;
   };
 };
 
@@ -82,6 +85,12 @@ export type SendDiaryChatStreamResult = {
   aiMessage: ChatMessage;
   entry: DiaryEntry;
   diarySessionsUsedThisMonth: number;
+  conversation?: DiaryConversation;
+};
+
+export type DiaryMessagesResult = {
+  messages: ChatMessage[];
+  conversation: DiaryConversation | null;
 };
 
 export type GetBraveChoiceQuizResult = {
@@ -153,7 +162,7 @@ export async function getDiaryEntries(month: string): Promise<{
 
 export async function getDiaryMessages(
   entryId: string,
-): Promise<ChatMessage[]> {
+): Promise<DiaryMessagesResult> {
   const timezone = getTimezone();
   const query = new URLSearchParams({
     timezone,
@@ -182,7 +191,16 @@ export async function getDiaryMessages(
     throw new Error(payload.error || "Percakapan diary tidak valid.");
   }
 
-  return Array.isArray(payload.data.messages) ? payload.data.messages : [];
+  const conversation = payload.data.conversation;
+
+  if (conversation != null && !isDiaryConversation(conversation)) {
+    throw new Error("Topik percakapan diary tidak valid.");
+  }
+
+  return {
+    messages: Array.isArray(payload.data.messages) ? payload.data.messages : [],
+    conversation: conversation ?? null,
+  };
 }
 
 export async function getDiaryConversationStarters(): Promise<
@@ -622,6 +640,20 @@ function isDiaryConversationStarter(
   );
 }
 
+function isDiaryConversation(value: unknown): value is DiaryConversation {
+  const record = asRecord(value);
+
+  return (
+    record !== null &&
+    Array.isArray(record.topics) &&
+    record.topics.every(
+      (topic) =>
+        typeof topic === "string" &&
+        Object.prototype.hasOwnProperty.call(DIARY_TOPIC_LABELS, topic),
+    )
+  );
+}
+
 function isSendDiaryChatStreamResult(
   value: unknown,
 ): value is SendDiaryChatStreamResult {
@@ -634,7 +666,9 @@ function isSendDiaryChatStreamResult(
   return (
     isChatMessage(record.aiMessage) &&
     isDiaryEntry(record.entry) &&
-    typeof record.diarySessionsUsedThisMonth === "number"
+    typeof record.diarySessionsUsedThisMonth === "number" &&
+    (record.conversation === undefined ||
+      isDiaryConversation(record.conversation))
   );
 }
 

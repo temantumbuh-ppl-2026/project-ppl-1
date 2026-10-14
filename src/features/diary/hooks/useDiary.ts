@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   DiaryEntry,
   ChatMessage,
+  DiaryConversation,
   DiaryConversationStarter,
   PlanConfig,
   UserProfile,
@@ -34,6 +35,9 @@ export function useDiary(entryId?: string, initialUserMeta?: InitialUserMeta) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [conversation, setConversation] = useState<DiaryConversation | null>(
+    null,
+  );
   const [starters, setStarters] = useState<DiaryConversationStarter[]>([]);
   const [startersError, setStartersError] = useState<string | null>(null);
   const [selectedEntry, setSelectedEntry] = useState<DiaryEntry | null>(null);
@@ -113,6 +117,7 @@ export function useDiary(entryId?: string, initialUserMeta?: InitialUserMeta) {
       setEntries([]);
       setSelectedEntry(null);
       setMessages([]);
+      setConversation(null);
 
       try {
         const diaryEntriesResult = await getDiaryEntries(activeMonthKey);
@@ -138,6 +143,7 @@ export function useDiary(entryId?: string, initialUserMeta?: InitialUserMeta) {
 
         setEntries([]);
         setMessages([]);
+        setConversation(null);
       } finally {
         if (!ignore) {
           setIsMonthLoading(false);
@@ -159,6 +165,7 @@ export function useDiary(entryId?: string, initialUserMeta?: InitialUserMeta) {
     if (!entries.length) {
       setSelectedEntry(null);
       setMessages([]);
+      setConversation(null);
       setSendError(null);
       pendingCalendarSelectionRef.current = undefined;
       return;
@@ -217,6 +224,7 @@ export function useDiary(entryId?: string, initialUserMeta?: InitialUserMeta) {
     if (!nextEntry) {
       setSelectedEntry(null);
       setMessages([]);
+      setConversation(null);
       return;
     }
 
@@ -233,6 +241,7 @@ export function useDiary(entryId?: string, initialUserMeta?: InitialUserMeta) {
     async function loadMessages() {
       if (!selectedEntryId) {
         setMessages([]);
+        setConversation(null);
         setIsMessagesLoading(false);
         return;
       }
@@ -244,12 +253,15 @@ export function useDiary(entryId?: string, initialUserMeta?: InitialUserMeta) {
       }
 
       setIsMessagesLoading(true);
+      setConversation(null);
 
       try {
-        const diaryMessages = await getDiaryMessages(selectedEntryId);
+        const { messages: diaryMessages, conversation: diaryConversation } =
+          await getDiaryMessages(selectedEntryId);
 
         if (ignore) return;
         setMessages(diaryMessages);
+        setConversation(diaryConversation);
 
         if (diaryMessages.length === 0 && selectedEntryId !== "today") {
           setIsAiTyping(true);
@@ -261,6 +273,7 @@ export function useDiary(entryId?: string, initialUserMeta?: InitialUserMeta) {
 
         if (ignore) return;
         setMessages([]);
+        setConversation(null);
       } finally {
         if (!ignore) {
           setIsMessagesLoading(false);
@@ -287,10 +300,12 @@ export function useDiary(entryId?: string, initialUserMeta?: InitialUserMeta) {
     ) {
       interval = setInterval(async () => {
         try {
-          const diaryMessages = await getDiaryMessages(selectedEntryId);
+          const { messages: diaryMessages, conversation: diaryConversation } =
+            await getDiaryMessages(selectedEntryId);
           if (ignore) return;
           if (diaryMessages.length > 0) {
             setMessages(diaryMessages);
+            setConversation(diaryConversation);
             setIsAiTyping(false);
           }
         } catch (err) {
@@ -423,6 +438,7 @@ export function useDiary(entryId?: string, initialUserMeta?: InitialUserMeta) {
           message.id === streamingAiMessageId ? result.aiMessage : message,
         );
       });
+      setConversation(result.conversation ?? null);
       setEntries((prev) => upsertEntryByDate(prev, result.entry));
 
       if (selectedEntry.id !== result.entry.id) {
@@ -551,6 +567,7 @@ export function useDiary(entryId?: string, initialUserMeta?: InitialUserMeta) {
     if (!date) {
       setSelectedEntry(null);
       setMessages([]);
+      setConversation(null);
       pendingCalendarSelectionRef.current = undefined;
       return;
     }
@@ -593,6 +610,7 @@ export function useDiary(entryId?: string, initialUserMeta?: InitialUserMeta) {
     } else {
       setSelectedEntry(null);
       setMessages([]);
+      setConversation(null);
     }
 
     pendingCalendarSelectionRef.current = undefined;
@@ -604,6 +622,7 @@ export function useDiary(entryId?: string, initialUserMeta?: InitialUserMeta) {
     user,
     entries,
     messages,
+    conversation,
     starters,
     startersError,
     selectedEntry,

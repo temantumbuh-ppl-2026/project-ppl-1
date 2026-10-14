@@ -24,7 +24,9 @@ import {
 import { useQuery } from "@tanstack/react-query";
 
 import { colors as C, fonts } from "../constants/tokens";
+import { DIARY_TOPIC_LABELS } from "../constants/topics";
 import type {
+  DiaryConversation,
   DiaryEntry,
   ChatMessage,
   DiaryConversationStarter,
@@ -36,6 +38,7 @@ import { TypingIndicator } from "./TypingIndicator";
 type Props = {
   entry: DiaryEntry;
   messages: ChatMessage[];
+  conversation?: DiaryConversation | null;
   starters: DiaryConversationStarter[];
   startersError?: string | null;
   inputValue: string;
@@ -181,6 +184,7 @@ function resolveMoodFromEntry(entry: DiaryEntryWithMoodFallback): MoodScore {
 export function DiaryRightPage({
   entry,
   messages,
+  conversation = null,
   starters,
   startersError,
   inputValue,
@@ -426,6 +430,51 @@ export function DiaryRightPage({
           <NavArrowButton onClick={onNextEntry} direction="right" />
         </div>
       </div>
+
+      {conversation && conversation.topics.length > 0 ? (
+        <div
+          aria-label="Topik percakapan"
+          style={{
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
+            padding: isMobile ? "8px 14px 8px 44px" : "8px 22px 8px 56px",
+            overflowX: "auto",
+            borderBottom: `1px solid ${C.bdL}`,
+            background: C.paperL,
+            whiteSpace: "nowrap",
+          }}
+        >
+          <span
+            style={{
+              color: C.sub,
+              fontSize: 10,
+              fontFamily: fonts.sans,
+              flexShrink: 0,
+            }}
+          >
+            Topik cerita:
+          </span>
+          {conversation.topics.map((topic) => (
+            <span
+              key={topic}
+              style={{
+                borderRadius: 999,
+                border: `1px solid ${C.bd}`,
+                background: C.white,
+                color: C.inkD,
+                padding: "4px 9px",
+                fontSize: 10,
+                fontFamily: fonts.sans,
+                flexShrink: 0,
+              }}
+            >
+              {DIARY_TOPIC_LABELS[topic]}
+            </span>
+          ))}
+        </div>
+      ) : null}
 
       {!isPremium && entry.isToday && !canWriteDiary ? (
         <div
