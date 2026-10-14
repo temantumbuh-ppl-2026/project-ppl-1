@@ -1,6 +1,14 @@
+import path from "path";
+
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Kunci workspace root ke folder repo ini.
+  // Tanpa ini Turbopack menyimpulkan root dari lockfile terdekat ke atas, dan kalau
+  // ada lockfile lain di direktori induk, build ikut menarik file di luar repo.
+  turbopack: {
+    root: path.join(__dirname),
+  },
   async headers() {
     return [
       {

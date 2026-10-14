@@ -817,7 +817,7 @@ function RegisterPageContent() {
     if (!isCompleteProfileFlow || isSessionLoading || !sessionData) return;
 
     if (sessionData.isAuthenticated && sessionData.isComplete) {
-      window.location.href = "/baseline";
+      window.location.href = "/home";
       return;
     }
 
@@ -925,7 +925,7 @@ function RegisterPageContent() {
           : "Data diri berhasil dilengkapi.",
       );
 
-      window.location.href = "/baseline";
+      window.location.href = "/home";
     },
 
     onError: (error: { message?: string }) => {
@@ -982,7 +982,7 @@ function RegisterPageContent() {
   }
 
   if (done) {
-    return <PageLoader message="Memuat baseline..." fullscreen />;
+    return <PageLoader message="Memuat mood..." fullscreen />;
   }
 
   return (
