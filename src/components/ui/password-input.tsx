@@ -11,7 +11,7 @@ export interface PasswordInputProps extends React.InputHTMLAttributes<HTMLInputE
 }
 
 const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
-  ({ className, hasError, ...props }, ref) => {
+  ({ className, hasError, disabled, ...props }, ref) => {
     const [show, setShow] = React.useState(false);
 
     return (
@@ -19,17 +19,17 @@ const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
         <Input
           ref={ref}
           type={show ? "text" : "password"}
-          className={cn(
-            "pr-11",
-            hasError && "border-red-400 focus-visible:ring-red-400/30",
-            className,
-          )}
+          disabled={disabled}
+          className={cn("pr-12", className)}
           {...props}
+          aria-invalid={hasError || props["aria-invalid"]}
         />
         <button
           type="button"
           onClick={() => setShow((prev) => !prev)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-brand-muted)] transition-opacity hover:opacity-70"
+          disabled={disabled}
+          className="tt-focus-ring absolute right-0 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-tt-md text-tt-gray-600 transition-colors hover:text-tt-primary-700 disabled:cursor-not-allowed disabled:text-tt-gray-400"
+          aria-pressed={show}
           aria-label={show ? "Sembunyikan password" : "Tampilkan password"}
         >
           {show ? <EyeOff size={16} /> : <Eye size={16} />}

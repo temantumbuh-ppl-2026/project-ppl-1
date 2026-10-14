@@ -438,6 +438,16 @@ body.snap-open nav {
   pointer-events: none !important;
 }
 
+/* FE-02: shared focus treatment, including links in authentication pages. */
+@utility tt-focus-ring {
+  &:focus-visible {
+    outline: 2px solid var(--tt-primary-700);
+    outline-offset: 2px;
+    border-color: var(--tt-primary-500);
+    box-shadow: 0 0 0 3px var(--tt-primary-200);
+  }
+}
+
 @utility tt-text-display {
   font: var(--tt-text-display);
 }
