@@ -27,6 +27,9 @@ test("FE-01/02 login uses the PB20 palette, full targets and visible keyboard fo
     "background-color",
     "rgb(247, 250, 250)",
   );
+  const background = page.locator('[data-slot="brand-page-background"]');
+  await expect(background).toHaveCSS("background-color", "rgb(247, 250, 250)");
+  await expect(background).toHaveCSS("background-image", "none");
   for (const control of [
     email,
     page.getByLabel("Password", { exact: true }),
@@ -104,4 +107,51 @@ test("FE-02 register errors remain linked and use attention rather than red", as
     path: testInfo.outputPath("register-after.png"),
     fullPage: true,
   });
+});
+
+test("FE-02 profile dropdowns retain the shared keyboard ring and linked errors", async ({
+  page,
+}, testInfo) => {
+  await page.route("**/api/auth/get-session", (route) =>
+    route.fulfill({
+      json: {
+        user: {
+          id: "preview-user",
+          name: "Teman",
+          email: "preview@example.com",
+          profileFilled: false,
+        },
+        session: {
+          id: "preview-session",
+          userId: "preview-user",
+          expiresAt: "2099-01-01T00:00:00.000Z",
+        },
+      },
+    }),
+  );
+  await page.goto("/register?completeProfile=1");
+  const year = page.getByRole("combobox", { name: "Tahun Lahir" });
+  const gender = page.getByRole("combobox", { name: "Jenis Kelamin" });
+  for (const control of [year, gender]) {
+    await expect(control).toBeVisible();
+    await control.focus();
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Shift+Tab");
+    await expect(control).toBeFocused();
+    await expect(control).toHaveCSS("height", "44px");
+    await expect(control).toHaveCSS(
+      "box-shadow",
+      "rgb(184, 228, 225) 0px 0px 0px 3px",
+    );
+  }
+  await page.screenshot({
+    path: testInfo.outputPath("register-profile-focus.png"),
+    fullPage: true,
+  });
+  await page.getByRole("button", { name: "Lanjut", exact: true }).click();
+  await expect(year).toHaveAttribute("aria-describedby", "reg-birthYear-error");
+  await expect(gender).toHaveAttribute("aria-describedby", "reg-gender-error");
+  for (const id of ["reg-birthYear-error", "reg-gender-error"]) {
+    await expect(page.locator(`#${id} svg`)).toBeVisible();
+  }
 });

@@ -36,7 +36,7 @@ export function AuthShell({
         animate="visible"
         variants={fadeUpVariants}
         transition={springBouncy}
-        className="relative w-full overflow-hidden rounded-tt-xl"
+        className="relative w-full overflow-hidden rounded-tt-lg"
         style={{
           maxWidth: maxWidth,
           background: "var(--tt-surface)",

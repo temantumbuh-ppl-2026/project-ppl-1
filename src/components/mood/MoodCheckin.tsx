@@ -11,16 +11,19 @@ import {
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { AlertCircle } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
 import { BrandPageBackground } from "@/components/layout/brand-page-background";
 import { PageLoader } from "@/components/ui/manual/page-loader";
+import { Textarea } from "@/components/ui/textarea";
 import {
   FaceHappy,
   FaceNeutral,
   FaceSad,
   FaceVeryHappy,
   FaceVerySad,
+  getMoodColor,
 } from "@/components/mood/mood-face-icons";
 
 type FaceItem = {
@@ -50,36 +53,36 @@ const FACES: FaceItem[] = [
   {
     id: 1,
     label: "Sangat Sedih",
-    color: "#EF4444",
-    softBg: "rgba(239, 68, 68, 0.10)",
+    color: getMoodColor(1),
+    softBg: `${getMoodColor(1)}1A`,
     Component: FaceVerySad,
   },
   {
     id: 2,
     label: "Sedih",
-    color: "#F97316",
-    softBg: "rgba(249, 115, 22, 0.10)",
+    color: getMoodColor(2),
+    softBg: `${getMoodColor(2)}1A`,
     Component: FaceSad,
   },
   {
     id: 3,
     label: "Biasa Aja",
-    color: "#EAB308",
-    softBg: "rgba(234, 179, 8, 0.10)",
+    color: getMoodColor(3),
+    softBg: `${getMoodColor(3)}1A`,
     Component: FaceNeutral,
   },
   {
     id: 4,
     label: "Senang",
-    color: "#22C55E",
-    softBg: "rgba(34, 197, 94, 0.10)",
+    color: getMoodColor(4),
+    softBg: `${getMoodColor(4)}1A`,
     Component: FaceHappy,
   },
   {
     id: 5,
     label: "Sangat Senang",
-    color: "#10B981",
-    softBg: "rgba(16, 185, 129, 0.10)",
+    color: getMoodColor(5),
+    softBg: `${getMoodColor(5)}1A`,
     Component: FaceVeryHappy,
   },
 ];
@@ -351,7 +354,8 @@ export function MoodCheckin({
                 <button
                   key={id}
                   onClick={() => setMoodScore(id)}
-                  className="group flex min-w-0 flex-1 flex-col items-center gap-2 rounded-2xl px-1 py-2 transition-all duration-200"
+                  className="tt-focus-ring group flex min-w-0 flex-1 flex-col items-center gap-2 rounded-2xl px-1 py-2 transition-all duration-200"
+                  aria-pressed={moodScore === id}
                   style={{
                     background: moodScore === id ? softBg : "transparent",
                     transform: moodScore === id ? "translateY(-2px)" : "none",
@@ -415,17 +419,20 @@ export function MoodCheckin({
             />
 
             <div className="mb-3 flex items-center justify-between gap-3">
-              <p
+              <label
+                htmlFor="mood-note"
                 className="text-base font-bold"
                 style={{ color: "var(--about-dark-teal)" }}
               >
                 Catatan singkat (opsional)
-              </p>
+              </label>
 
               <span
                 className="text-sm font-medium"
                 style={{
-                  color: isOverWords ? "#EF4444" : "var(--brand-text-muted)",
+                  color: isOverWords
+                    ? "var(--tt-attention-text)"
+                    : "var(--brand-text-muted)",
                 }}
               >
                 {wordCount} / 100 kata
@@ -433,34 +440,24 @@ export function MoodCheckin({
             </div>
 
             <div className="relative">
-              <textarea
+              <Textarea
+                id="mood-note"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 rows={5}
                 placeholder="Ceritakan sedikit tentang harimu... Ada hal yang membuatmu merasa seperti ini?"
-                className="w-full resize-none rounded-[1.25rem] px-5 py-4 text-sm outline-none transition-all placeholder:text-[var(--brand-text-muted)] sm:text-base"
-                style={{
-                  background: "#F4FBFA",
-                  color: "var(--about-dark-teal)",
-                  border: `1.5px solid ${
-                    isOverWords ? "#EF4444" : "rgba(26,150,136,0.16)"
-                  }`,
-                  lineHeight: 1.7,
-                }}
-                onFocus={(e) => {
-                  e.target.style.borderColor = isOverWords
-                    ? "#EF4444"
-                    : "rgba(26,150,136,0.45)";
-                }}
-                onBlur={(e) => {
-                  e.target.style.borderColor = isOverWords
-                    ? "#EF4444"
-                    : "rgba(26,150,136,0.16)";
-                }}
+                className="resize-none px-5 py-4 sm:text-base"
+                aria-invalid={isOverWords}
+                aria-describedby={isOverWords ? "mood-note-error" : undefined}
               />
 
               {isOverWords && (
-                <p className="mt-2 text-xs text-[#EF4444]">
+                <p
+                  id="mood-note-error"
+                  role="alert"
+                  className="mt-2 flex items-start gap-2 tt-text-caption text-tt-attention-text"
+                >
+                  <AlertCircle aria-hidden="true" className="size-4 shrink-0" />
                   Melebihi batas 100 kata
                 </p>
               )}
@@ -471,25 +468,25 @@ export function MoodCheckin({
               disabled={
                 moodScore === null || isOverWords || submitMutation.isPending
               }
-              className="mt-7 flex h-14 w-full items-center justify-center gap-2 rounded-[1.1rem] text-base font-bold transition-all duration-300"
+              className="tt-focus-ring mt-7 flex h-14 w-full items-center justify-center gap-2 rounded-tt-md text-base font-bold transition-all duration-300"
               style={{
                 background:
                   moodScore !== null &&
                   !isOverWords &&
                   !submitMutation.isPending
                     ? "var(--gradient-brand-btn)"
-                    : "#CFE8E6",
+                    : "var(--tt-gray-100)",
                 color:
                   moodScore !== null &&
                   !isOverWords &&
                   !submitMutation.isPending
-                    ? "#FFFFFF"
-                    : "#6F9D9A",
+                    ? "var(--tt-surface)"
+                    : "var(--tt-gray-400)",
                 boxShadow:
                   moodScore !== null &&
                   !isOverWords &&
                   !submitMutation.isPending
-                    ? "0 14px 28px rgba(26,150,136,0.22)"
+                    ? "var(--tt-shadow-card)"
                     : "none",
                 cursor:
                   moodScore !== null &&

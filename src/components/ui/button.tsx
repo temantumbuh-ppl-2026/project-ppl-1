@@ -15,9 +15,9 @@ const buttonVariants = cva(
         outline:
           "border-tt-primary-200 bg-tt-gray-50 text-tt-primary-700 hover:bg-tt-primary-50 aria-expanded:bg-tt-primary-100",
         secondary:
-          "border-tt-primary-200 bg-tt-primary-50 text-tt-primary-700 hover:bg-tt-primary-100 aria-expanded:bg-tt-primary-100",
+          "border-tt-primary-200 bg-tt-gray-50 text-tt-primary-700 hover:bg-tt-primary-50 aria-expanded:bg-tt-primary-100",
         ghost:
-          "text-tt-primary-700 hover:bg-tt-primary-50 hover:underline underline-offset-4 aria-expanded:bg-tt-primary-100",
+          "text-tt-primary-700 hover:text-tt-primary-500 hover:underline underline-offset-4 aria-expanded:bg-tt-primary-100",
         destructive:
           "border-tt-attention-border bg-tt-attention-bg text-tt-attention-text hover:bg-tt-attention-border",
         link: "text-tt-primary-700 underline-offset-4 hover:underline",
