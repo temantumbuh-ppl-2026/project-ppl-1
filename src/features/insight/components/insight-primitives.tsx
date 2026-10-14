@@ -453,7 +453,7 @@ export function QuoteBlock({ text }: { text: string }) {
         aria-hidden
         className="block select-none leading-none"
         style={{
-          fontFamily: "Georgia, 'Times New Roman', serif",
+          fontFamily: "var(--tt-font-sans)",
           fontSize: "84px",
           color: "rgba(26,150,136,0.32)",
           height: "44px",
@@ -481,7 +481,7 @@ export function QuoteBlock({ text }: { text: string }) {
           aria-hidden
           className="block select-none leading-none"
           style={{
-            fontFamily: "Georgia, 'Times New Roman', serif",
+            fontFamily: "var(--tt-font-sans)",
             fontSize: "60px",
             color: "rgba(26,150,136,0.28)",
             height: "32px",
