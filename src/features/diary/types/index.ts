@@ -4,6 +4,8 @@
 //  response API saat backend sudah siap
 // ============================================================
 
+import type { DiaryConversationDto } from "@/lib/diary/types";
+
 export type PlanType = "free" | "premium";
 
 export type UserProfile = {
@@ -54,9 +56,8 @@ export type DiaryTopic =
   | "PILIHAN_STUDI"
   | "LAINNYA";
 
-export type DiaryConversation = {
-  topics: DiaryTopic[];
-};
+// Reuse the public API DTO; raw BE-03 structured output remains server-side.
+export type DiaryConversation = DiaryConversationDto;
 
 export type QuizOption = {
   label: string; // "A" | "B"
