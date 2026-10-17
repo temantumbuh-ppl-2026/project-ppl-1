@@ -1,135 +1,116 @@
+export type HomeMood = {
+  label: string;
+  icon: string;
+  activeIcon: string;
+};
+
 export type HomeFeatureItem = {
-  iconSrc: string;
+  icon: "spark" | "heart" | "chart";
   title: string;
-  description: string;
-  badge: string;
+  text: string;
+  color: "peach" | "lilac" | "sky";
 };
 
-export type HomeHowTrack = {
-  tag: string;
+export type HomeValueItem = {
   title: string;
-  bulletPoints: string[];
-  ctaLabel: string;
-  theme: "teal" | "gold";
+  text: string;
+  icon: "shield" | "people" | "compass";
 };
 
-export type HomePurposeItem = {
-  title: string;
-  description: string;
-  tag: string;
-  icon: "shield" | "users" | "brain";
-};
+// Urutan dari paling berat ke paling senang, memakai aset mood existing.
+export const homeMoods: HomeMood[] = [
+  {
+    label: "Berat",
+    icon: "/img/Emojis/FaceVerySad.png",
+    activeIcon: "/img/Emojis/VerySadActive.png",
+  },
+  {
+    label: "Kurang oke",
+    icon: "/img/Emojis/FaceSad.png",
+    activeIcon: "/img/Emojis/SadActive.png",
+  },
+  {
+    label: "Biasa",
+    icon: "/img/Emojis/FaceNeutral.png",
+    activeIcon: "/img/Emojis/NeutralActive.png",
+  },
+  {
+    label: "Baik",
+    icon: "/img/Emojis/FaceHappy.png",
+    activeIcon: "/img/Emojis/HappyActive.png",
+  },
+  {
+    label: "Senang",
+    icon: "/img/Emojis/FaceVeryHappy.png",
+    activeIcon: "/img/Emojis/VeryHappyActive.png",
+  },
+];
 
-export type HomeTestimonialItem = {
-  name: string;
-  role: string;
-  quote: string;
-};
+// Foto kolase mengikuti desain referensi.
+export const homePhotos = {
+  friends:
+    "https://images.unsplash.com/photo-1677152951816-83cc8ff220fa?auto=format&fit=crop&w=900&q=85",
+  girls:
+    "https://images.unsplash.com/photo-1746106360686-aa1535588c01?auto=format&fit=crop&w=900&q=85",
+  portrait:
+    "https://images.unsplash.com/photo-1583302111248-e8f8863c5843?auto=format&fit=crop&w=700&q=85",
+} as const;
 
-export const heroMoodIcons = [
-  "/img/Emojis/FaceVerySad.png",
-  "/img/Emojis/FaceSad.png",
-  "/img/Emojis/FaceNeutral.png",
-  "/img/Emojis/FaceHappy.png",
-  "/img/Emojis/FaceVeryHappy.png",
+export const homeMarqueeMessages = [
+  "Kenali perasaanmu",
+  "Tulis tanpa takut dihakimi",
+  "Tumbuh dengan caramu",
+] as const;
+
+export const homeDiaryPoints = [
+  "Prompt menulis yang suportif",
+  "Catat mood bersama ceritamu",
+  "Lihat kembali perjalananmu",
 ] as const;
 
 export const homeFeatureItems: HomeFeatureItem[] = [
   {
-    iconSrc: "/img/DigitalDiaryLogo.svg",
-    title: "Digital Diary",
-    description:
-      "Tulis perasaan dan pikiranmu setiap hari dengan aman, privat, dan terstruktur.",
-    badge: "AI-Powered",
-  },
-  {
-    iconSrc: "/img/BraveChoiceLogo.svg",
+    icon: "spark",
     title: "Brave Choice Simulator",
-    description:
-      "Latih dirimu menghadapi situasi sosial yang sulit melalui simulasi interaktif.",
-    badge: "Gamifikasi",
+    text: "Latih pilihanmu lewat skenario ringan sebelum menghadapi situasi nyata.",
+    color: "peach",
   },
   {
-    iconSrc: "/img/MoodCheckinLogo.svg",
+    icon: "heart",
     title: "Mood Check-in",
-    description:
-      "Lacak suasana hatimu setiap hari dan kenali pola emosi dari waktu ke waktu.",
-    badge: "Harian",
+    text: "Kenali perubahan suasana hati lewat check-in singkat setiap hari.",
+    color: "lilac",
   },
   {
-    iconSrc: "/img/InsightDashboardLogo.svg",
+    icon: "chart",
     title: "Insight Dashboard",
-    description:
-      "Visualisasi tren emosimu dan dapatkan rekomendasi yang relevan untukmu.",
-    badge: "Premium",
+    text: "Lihat pola perjalananmu dan pahami hal-hal yang membuatmu bertumbuh.",
+    color: "sky",
   },
 ];
 
-export const homeHowTracks: HomeHowTrack[] = [
+export const homeValueItems: HomeValueItem[] = [
   {
-    tag: "Untuk Anak & Remaja",
-    title: "Mulai dengan Diary Harian",
-    bulletPoints: [
-      "Tulis perasaanmu dalam 2 menit",
-      "Ceritakan harimu ke AI Diary",
-      "Jawab Brave Choice Tools",
-      "Lihat perkembangan moodmu",
-    ],
-    ctaLabel: "Coba Sekarang",
-    theme: "teal",
-  },
-  {
-    tag: "Untuk Orang Tua",
-    title: "Pantau dengan Laporan Khusus",
-    bulletPoints: [
-      "Terima undangan dari anak",
-      "Akses laporan mood mingguan",
-      "Pantau tren emosi tanpa mengganggu privasi diary",
-    ],
-    ctaLabel: "Pelajari Lebih Lanjut",
-    theme: "gold",
-  },
-];
-
-export const homePurposeItems: HomePurposeItem[] = [
-  {
-    title: "Ruang Aman",
-    description:
-      "Privasi penggunanya terlindungi. Diary tidak bisa diakses siapa pun tanpa izin.",
-    tag: "Privasi",
+    title: "Ruang yang aman",
+    text: "Privasi untuk bercerita dengan lebih nyaman.",
     icon: "shield",
   },
   {
-    title: "Dukungan Keluarga",
-    description:
-      "Sambungkan orang tua dengan perkembangan anak melalui laporan ringkas yang aman.",
-    tag: "Keluarga",
-    icon: "users",
+    title: "Dukungan keluarga",
+    text: "Jembatan komunikasi yang lebih sehat dan terbuka.",
+    icon: "people",
   },
   {
-    title: "Berbasis Riset",
-    description:
-      "Mendorong daya kognitif psikologis positif dan praktik kesehatan mental terbaik.",
-    tag: "Riset",
-    icon: "brain",
+    title: "Berbasis riset",
+    text: "Dirancang dari pendekatan psikologi positif dan perilaku.",
+    icon: "compass",
   },
 ];
 
-export const homeTestimonialItems: HomeTestimonialItem[] = [
-  {
-    name: "Ayla Putri",
-    role: "Pelajar SMA, 16 tahun",
-    quote: "TemanTumbuh benar-benar membantu aku memahami perasaanku.",
-  },
-  {
-    name: "Rizky Firmansyah",
-    role: "Mahasiswa, 20 tahun",
-    quote: "Brave Choice membantu aku buat keputusan lebih bijak.",
-  },
-  {
-    name: "Kasandra Daud",
-    role: "Ibu, Bandung",
-    quote:
-      "Sebagai orang tua, aku merasa tenang karena bisa memantau perkembangan anak tanpa mengganggu privasinya.",
-  },
-];
+// Testimoni contoh dari desain referensi, belum testimoni terverifikasi.
+export const homeTestimonial = {
+  name: "Ayla Putri",
+  role: "Pelajar SMA, 16 tahun",
+  quote:
+    "TemanTumbuh benar-benar membantu aku memahami perasaanku. Sekarang aku punya ruang untuk berhenti sebentar dan jujur sama diri sendiri.",
+} as const;
