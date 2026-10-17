@@ -2,7 +2,10 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Instagram, Mail, Twitter, Youtube } from "lucide-react";
+
+import "@/components/landing/home/landing-redesign.css";
 
 const footerLinks = [
   { label: "Tentang TemanTumbuh", href: "/about" },
@@ -18,7 +21,70 @@ const socialLinks = [
   { label: "YouTube", href: "#", icon: <Youtube size={18} /> },
 ];
 
+const copyrightText =
+  "TemanTumbuh © 2026. All rights reserved. · Proyek Perangkat Lunak I · Kelompok Cegukan · Universitas Padjadjaran";
+
+// Footer gaya landing page baru; isi (logo, tautan, kontak, sosial) sama dengan footer existing.
+function LandingFooter() {
+  return (
+    <div className="tt-landing">
+      <footer>
+        <div className="shell footer-grid">
+          <div className="footer-brand">
+            <Link className="brand" href="/" aria-label="TemanTumbuh - Beranda">
+              <Image
+                src="/img/LOGO_TEMANTUMBUH.svg"
+                alt=""
+                width={34}
+                height={34}
+              />
+              <span>TemanTumbuh</span>
+            </Link>
+            <p>
+              Platform refleksi diri dan kesadaran sosial untuk usia 10-29
+              tahun. Tumbuh bersama, lebih aman.
+            </p>
+            <a href="mailto:temantumbuh.team@gmail.com">
+              temantumbuh.team@gmail.com
+            </a>
+          </div>
+          <div>
+            <h3>Tautan</h3>
+            {footerLinks.map((item) => (
+              <Link key={item.label} href={item.href}>
+                {item.label}
+              </Link>
+            ))}
+          </div>
+          <div>
+            <h3>Ikuti Kami</h3>
+            <div className="socials">
+              {socialLinks.map((item) => (
+                <a key={item.label} href={item.href} aria-label={item.label}>
+                  {item.icon}
+                </a>
+              ))}
+            </div>
+            <Link className="footer-button" href="/register">
+              Mulai Diary
+            </Link>
+          </div>
+        </div>
+        <div className="shell copyright">
+          <span>{copyrightText}</span>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
 export function Footer() {
+  const pathname = usePathname();
+
+  if (pathname === "/") {
+    return <LandingFooter />;
+  }
+
   return (
     <footer className="relative overflow-hidden bg-white border-t border-brand-border">
       <div className="relative mx-auto max-w-7xl px-6 py-14">
@@ -99,8 +165,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 border-t border-brand-border pt-6 text-center text-xs font-medium text-text-brand-muted">
-          TemanTumbuh © 2026. All rights reserved. · Proyek Perangkat Lunak I ·
-          Kelompok Cegukan · Universitas Padjadjaran
+          {copyrightText}
         </div>
       </div>
     </footer>

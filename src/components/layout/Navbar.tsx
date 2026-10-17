@@ -935,6 +935,7 @@ export function Navbar() {
   const isLoggedIn = session.role !== "guest";
   const isUserHomepage = isLoggedIn;
   const homeIsActive = pathname === "/" || pathname === "/home";
+  const isLandingPage = pathname === "/";
 
   useEffect(() => {
     setMobileOpen(false);
@@ -999,9 +1000,13 @@ export function Navbar() {
     <header
       className="sticky top-0 z-50 transition-shadow duration-300"
       style={{
-        background: scrolled
-          ? "rgba(250,251,255,0.97)"
-          : "rgba(250,251,255,0.92)",
+        background: isLandingPage
+          ? scrolled
+            ? "rgba(251,250,246,0.97)"
+            : "#fbfaf6"
+          : scrolled
+            ? "rgba(250,251,255,0.97)"
+            : "rgba(250,251,255,0.92)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
         borderBottom: `1px solid ${scrolled ? C.border : "transparent"}`,
