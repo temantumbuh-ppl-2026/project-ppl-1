@@ -29,7 +29,7 @@ test.describe("Auth dan route guard utama", () => {
 
     await expect(page).toHaveURL(/\/login/);
     await expect(
-      page.getByRole("heading", { name: /selamat datang kembali/i }),
+      page.getByRole("heading", { name: /senang kamu kembali/i }),
     ).toBeVisible();
 
     await page.getByRole("button", { name: "Masuk", exact: true }).click();

@@ -21,22 +21,19 @@ test("FE-01/02 login uses the PB20 palette, full targets and visible keyboard fo
   const email = page.getByRole("textbox", { name: "Email", exact: true });
   const submit = page.getByRole("button", { name: "Masuk", exact: true });
   await expect(email).toBeVisible();
-  await expect(submit).toHaveCSS("background-color", "rgb(42, 122, 116)");
-  await expect(submit).toHaveCSS("border-radius", "12px");
-  await expect(page.locator("body")).toHaveCSS(
+  // Redesign auth: teal-dark (#087f76) dengan latar "paper" landing page.
+  await expect(submit).toHaveCSS("background-color", "rgb(8, 127, 118)");
+  await expect(submit).toHaveCSS("border-radius", "11px");
+  await expect(page.locator(".tt-auth-redesign")).toHaveCSS(
     "background-color",
-    "rgb(247, 250, 250)",
+    "rgb(251, 250, 246)",
   );
-  const background = page.locator('[data-slot="brand-page-background"]');
-  await expect(background).toHaveCSS("background-color", "rgb(247, 250, 250)");
-  await expect(background).toHaveCSS("background-image", "none");
   for (const control of [
     email,
     page.getByLabel("Password", { exact: true }),
     submit,
     page.getByRole("button", { name: "Tampilkan password" }),
   ]) {
-    await expect(control).toHaveCSS("height", "44px");
     await expect
       .poll(async () => Math.round((await control.boundingBox())!.height))
       .toBeGreaterThanOrEqual(44);
@@ -45,10 +42,10 @@ test("FE-01/02 login uses the PB20 palette, full targets and visible keyboard fo
   await page.keyboard.press("Tab");
   await page.keyboard.press("Shift+Tab");
   await expect(email).toBeFocused();
-  await expect(email).toHaveCSS("border-color", "rgb(61, 158, 152)");
+  await expect(email).toHaveCSS("border-color", "rgb(8, 127, 118)");
   await expect(email).toHaveCSS(
     "box-shadow",
-    "rgb(184, 228, 225) 0px 0px 0px 3px",
+    "rgb(223, 247, 238) 0px 0px 0px 4px",
   );
   await page.keyboard.press("Tab");
   await page.keyboard.press("Tab");
@@ -138,10 +135,13 @@ test("FE-02 profile dropdowns retain the shared keyboard ring and linked errors"
     await page.keyboard.press("Tab");
     await page.keyboard.press("Shift+Tab");
     await expect(control).toBeFocused();
-    await expect(control).toHaveCSS("height", "44px");
+    await expect
+      .poll(async () => Math.round((await control.boundingBox())!.height))
+      .toBeGreaterThanOrEqual(44);
+    await expect(control).toHaveCSS("border-color", "rgb(8, 127, 118)");
     await expect(control).toHaveCSS(
       "box-shadow",
-      "rgb(184, 228, 225) 0px 0px 0px 3px",
+      "rgb(223, 247, 238) 0px 0px 0px 4px",
     );
   }
   await page.screenshot({

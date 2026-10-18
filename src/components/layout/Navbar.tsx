@@ -925,9 +925,17 @@ export function Navbar() {
   const isLoggedIn = session.role !== "guest";
   const isUserHomepage = isLoggedIn;
   const homeIsActive = pathname === "/" || pathname === "/home";
-  const isLandingPage = ["/", "/about", "/features", "/pricing"].includes(
-    pathname,
-  );
+  // Login, register, dan halaman legal memakai latar "paper" yang sama dengan halaman marketing.
+  const isLandingPage = [
+    "/",
+    "/about",
+    "/features",
+    "/pricing",
+    "/login",
+    "/register",
+    "/terms",
+    "/privacy",
+  ].includes(pathname);
 
   useEffect(() => {
     setMobileOpen(false);

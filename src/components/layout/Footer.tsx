@@ -13,6 +13,8 @@ const footerLinks = [
   { label: "Harga", href: "/pricing" },
   { label: "Cara Kerja", href: "/#how" },
   { label: "Testimoni", href: "/#testi" },
+  { label: "Syarat & Ketentuan", href: "/terms" },
+  { label: "Kebijakan Privasi", href: "/privacy" },
 ];
 
 const socialLinks = [
@@ -81,7 +83,18 @@ function LandingFooter() {
 export function Footer() {
   const pathname = usePathname();
 
-  if (["/", "/about", "/features", "/pricing"].includes(pathname)) {
+  if (
+    [
+      "/",
+      "/about",
+      "/features",
+      "/pricing",
+      "/login",
+      "/register",
+      "/terms",
+      "/privacy",
+    ].includes(pathname)
+  ) {
     return <LandingFooter />;
   }
 
