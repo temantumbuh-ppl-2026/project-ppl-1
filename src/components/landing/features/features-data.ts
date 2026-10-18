@@ -132,17 +132,17 @@ export const braveChoiceOptions = [
     id: "talk",
     text: "Ajak bicara baik-baik dan jujur.",
     isBrave: true,
-    title: "Langkah ini bisa membantumu",
+    title: "Pilihan Berani!",
     explanation:
-      "Menyampaikan kebutuhanmu dengan jelas membuka ruang untuk mencari solusi bersama.",
+      "Kamu menyampaikan kebutuhanmu dengan jelas dan membuka ruang untuk mencari solusi bersama.",
   },
   {
     id: "wait",
     text: "Tunggu dia mengingatnya sendiri.",
     isBrave: false,
-    title: "Ada langkah lain yang bisa kamu coba",
+    title: "Coba Pikirkan Lagi",
     explanation:
-      "Wajar kalau kamu ingin menghindari suasana canggung. Langkah yang disarankan: ajak bicara baik-baik dan jujur, supaya kebutuhanmu tersampaikan dan rasa kesal tidak menumpuk.",
+      "Menunggu tanpa bicara membuat kebutuhanmu belum tersampaikan, dan itu bisa menambah rasa kesal.",
   },
 ] as const;
 

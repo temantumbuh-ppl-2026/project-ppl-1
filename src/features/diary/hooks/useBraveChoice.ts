@@ -24,7 +24,6 @@ export function useBraveChoice(user: UserProfile | null) {
   const [isQuestionPoolExhausted, setIsQuestionPoolExhausted] = useState(false);
   const [isQuotaReached, setIsQuotaReached] = useState(false);
   const [quizUsedToday, setQuizUsedToday] = useState(user?.quizUsedToday ?? 0);
-  const [loadError, setLoadError] = useState(false);
 
   const planCfg = user ? PLAN_CONFIG[user.plan] : PLAN_CONFIG.free;
   const quizRemaining =
@@ -70,7 +69,6 @@ export function useBraveChoice(user: UserProfile | null) {
 
   const loadQuiz = useCallback(async () => {
     setShowModal(true);
-    setLoadError(false);
 
     if (user?.plan === "free" && (isQuotaReached || quizRemaining <= 0)) {
       setCurrentQuiz(null);
@@ -109,9 +107,8 @@ export function useBraveChoice(user: UserProfile | null) {
       setIsQuestionPoolExhausted(false);
       setCurrentQuiz(result.quiz);
     } catch {
-      // Modal tetap terbuka dan menampilkan pesan gagal memuat + tombol coba lagi.
+      setShowModal(false);
       setCurrentQuiz(null);
-      setLoadError(true);
     } finally {
       setIsLoading(false);
     }
@@ -133,7 +130,6 @@ export function useBraveChoice(user: UserProfile | null) {
     }
 
     setIsLoading(true);
-    setLoadError(false);
     setCurrentQuiz(null);
 
     try {
@@ -156,15 +152,15 @@ export function useBraveChoice(user: UserProfile | null) {
       setIsQuestionPoolExhausted(false);
       setCurrentQuiz(result.quiz);
     } catch {
+      setShowModal(false);
       setCurrentQuiz(null);
-      setLoadError(true);
     } finally {
       setIsLoading(false);
     }
   }, [isQuotaReached, quizRemaining, user?.plan]);
 
   const handleAnswerSubmit = useCallback(
-    async (quizId: string, selectedLabel: string): Promise<boolean> => {
+    async (quizId: string, selectedLabel: string) => {
       try {
         const result = await submitQuizAnswer(quizId, selectedLabel);
         setQuizUsedToday(result.quizUsedToday);
@@ -172,10 +168,8 @@ export function useBraveChoice(user: UserProfile | null) {
           user?.plan === "free" &&
             result.quizUsedToday >= PLAN_CONFIG.free.quizPerDay,
         );
-        return true;
       } catch {
-        // Jawaban belum tersimpan: modal meminta pengguna mencoba lagi.
-        return false;
+        return;
       }
     },
     [user?.plan],
@@ -197,7 +191,6 @@ export function useBraveChoice(user: UserProfile | null) {
   const closeModal = useCallback(() => {
     setShowModal(false);
     setCurrentQuiz(null);
-    setLoadError(false);
   }, []);
 
   return {
@@ -207,7 +200,6 @@ export function useBraveChoice(user: UserProfile | null) {
     isResetting,
     isQuestionPoolExhausted,
     isQuotaReached,
-    loadError,
     quizRemaining,
     quizUsedToday,
     canDoQuiz,
