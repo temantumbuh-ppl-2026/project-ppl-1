@@ -1,24 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import { Compass, Loader2, Play } from "lucide-react";
+import { ArrowRight, Compass, Loader2 } from "lucide-react";
 import { useQueryClient, useIsFetching } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { DonutRing } from "./home-dashboard-primitives";
 import { BraveChoiceModal } from "@/features/diary/components/BraveChoiceModal";
 import { useBraveChoice } from "@/features/diary/hooks/useBraveChoice";
 import type { UserProfile } from "@/features/diary/types";
 
+// `total` berasal dari /api/diary/brave-choice/stats (jumlah jawaban tersimpan).
+// Skenario bisa muncul lagi, jadi ditampilkan sebagai "latihan diselesaikan",
+// bukan jumlah skenario unik. Data ketepatan tetap internal dan tidak ditampilkan.
 export function HomeDashboardBraveChoiceCard({
-  correct,
   total,
-  pct,
   userId,
   plan,
 }: {
-  correct: number;
   total: number;
-  pct: number;
   userId?: string;
   plan?: "free" | "premium";
 }) {
@@ -42,7 +40,10 @@ export function HomeDashboardBraveChoiceCard({
 
   const quiz = useBraveChoice(userProfile);
 
+  // Tombol tidak di-disable saat memuat agar fokus tetap pada pemicu dan bisa
+  // dikembalikan setelah modal ditutup; pembukaan ganda dicegah di sini.
   const handlePlay = () => {
+    if (quiz.showModal || quiz.isLoading) return;
     void quiz.loadQuiz();
   };
 
@@ -57,10 +58,9 @@ export function HomeDashboardBraveChoiceCard({
   };
 
   const planCfg = quiz.planCfg;
-
-  const showSkeleton = isRefreshing || (isFetchingStats > 0 && isRefreshing);
-
-  const hasPlayed = total > 0;
+  const showSkeleton = isRefreshing && isFetchingStats > 0;
+  const hasActivity = total > 0;
+  const isFree = (plan ?? "free") === "free";
 
   return (
     <>
@@ -68,27 +68,29 @@ export function HomeDashboardBraveChoiceCard({
         <div className="support-icon peach" aria-hidden="true">
           <Compass size={23} />
         </div>
-        <span className={`support-badge ${hasPlayed ? "success" : ""}`}>
-          {hasPlayed ? `${pct}% tepat` : "Belum ada aktivitas"}
-        </span>
         <h3 id="brave-choice-title">Brave Choice</h3>
         <p>Jelajahi pilihan dan konsekuensinya lewat situasi sehari-hari.</p>
 
         {showSkeleton ? (
           <div className="support-skeleton" aria-hidden="true" />
-        ) : hasPlayed ? (
-          <div className="brave-stats">
-            <div className="brave-ring" aria-hidden="true">
-              <DonutRing pct={pct} color="#A86500" size={48} stroke={5} />
-              <b>{pct}%</b>
-            </div>
+        ) : (
+          <div className="brave-activity" aria-live="polite">
             <p>
-              <strong>
-                {correct}/{total}
-              </strong>
-              pilihan benar
+              {hasActivity ? (
+                <>
+                  <strong>{total}</strong> latihan diselesaikan
+                </>
+              ) : (
+                "Mulai dari satu situasi sederhana."
+              )}
             </p>
           </div>
+        )}
+
+        {isFree && Number.isFinite(quiz.quizRemaining) ? (
+          <p className="brave-quota">
+            Sisa kesempatan hari ini: {quiz.quizRemaining}
+          </p>
         ) : null}
 
         <div className="support-actions">
@@ -96,15 +98,14 @@ export function HomeDashboardBraveChoiceCard({
             type="button"
             className="support-action"
             onClick={handlePlay}
-            disabled={quiz.isLoading}
             aria-busy={quiz.isLoading}
+            aria-haspopup="dialog"
           >
             {quiz.isLoading ? (
               <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-            ) : (
-              <Play size={15} fill="currentColor" aria-hidden="true" />
-            )}
-            {hasPlayed ? "Main lagi" : "Mulai Brave Choice"}
+            ) : null}
+            {hasActivity ? "Coba Skenario Lain" : "Jelajahi Pilihan"}
+            <ArrowRight size={16} aria-hidden="true" />
           </button>
         </div>
       </article>
@@ -117,6 +118,8 @@ export function HomeDashboardBraveChoiceCard({
         isResetting={quiz.isResetting}
         isQuestionPoolExhausted={quiz.isQuestionPoolExhausted}
         isQuotaReached={quiz.isQuotaReached}
+        loadError={quiz.loadError}
+        onRetryLoad={() => void quiz.loadNextQuiz()}
         quizRemaining={
           quiz.quizRemaining === Infinity ? 999 : quiz.quizRemaining
         }
@@ -130,10 +133,7 @@ export function HomeDashboardBraveChoiceCard({
           router.push("/subscription");
         }}
         onAnswerSubmit={quiz.handleAnswerSubmit}
-        onContinueWriting={() => {
-          handleClose();
-          router.push("/diary");
-        }}
+        origin="dashboard"
       />
     </>
   );

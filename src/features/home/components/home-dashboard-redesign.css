@@ -918,35 +918,42 @@
   .support-meta.mint span {
     color: #3f6660;
   }
-  .brave-stats {
+  .brave-activity {
     display: flex;
     margin-top: 15px;
+    padding: 11px 13px;
     align-items: center;
-    gap: 12px;
+    gap: 11px;
+    border-radius: 12px;
+    background: var(--mint-light);
   }
-  .brave-ring {
-    position: relative;
+  .brave-activity-icon {
     display: grid;
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
     place-items: center;
+    border-radius: 50%;
+    color: var(--teal-dark);
+    background: white;
   }
-  .brave-ring b {
-    position: absolute;
-    font-size: 12px;
-    font-weight: 900;
-  }
-  .brave-stats p {
-    display: grid;
-    gap: 2px;
+  .brave-activity p {
     margin: 0;
+    color: #3f5260;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.45;
+  }
+  .brave-activity strong {
+    color: var(--navy);
+    font-family: var(--serif);
+    font-size: 20px;
+  }
+  .brave-quota {
+    margin: 9px 0 0;
     color: #5c6d79;
     font-size: 12px;
     font-weight: 700;
-  }
-  .brave-stats p strong {
-    color: var(--navy);
-    font-family: var(--serif);
-    font-size: 24px;
-    line-height: 1;
   }
   .support-actions {
     display: flex;
