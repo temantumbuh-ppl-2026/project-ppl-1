@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { format } from "date-fns";
+import { id as localeId } from "date-fns/locale";
 import { CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -9,123 +11,145 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
+/** Batas awal pemilih tanggal, sama dengan rentang tahun datepicker existing. */
+export const MOOD_HISTORY_MIN_DATE = new Date(2020, 0, 1);
+
+// Minggu riwayat mood dimulai hari Minggu, sehingga kalender mengikuti urutan yang sama.
+const CALENDAR_LABELS = {
+  labelMonthDropdown: () => "Pilih bulan",
+  labelYearDropdown: () => "Pilih tahun",
+  labelPrevious: () => "Bulan sebelumnya",
+  labelNext: () => "Bulan berikutnya",
+  labelDayButton: (
+    date: Date,
+    modifiers: { today?: boolean; selected?: boolean; disabled?: boolean },
+  ) =>
+    [
+      modifiers.today ? "Hari ini" : null,
+      format(date, "cccc, d MMMM yyyy", { locale: localeId }),
+      modifiers.selected ? "dipilih" : null,
+      modifiers.disabled ? "tidak tersedia" : null,
+    ]
+      .filter(Boolean)
+      .join(", "),
+};
+
 type Props = {
   selectedDate?: Date;
-  onDateChange: (date: Date | undefined) => void;
+  today: Date;
+  onDateChange: (date: Date) => void;
   onPrev: () => void;
   onNext: () => void;
+  onToday: () => void;
   disablePrev?: boolean;
   disableNext?: boolean;
+  isCurrentWeek: boolean;
 };
 
 export function WeekFilterBar({
   selectedDate,
+  today,
   onDateChange,
   onPrev,
   onNext,
+  onToday,
   disablePrev,
   disableNext,
+  isCurrentWeek,
 }: Props) {
   const [open, setOpen] = React.useState(false);
   const [visibleMonth, setVisibleMonth] = React.useState<Date>(
-    selectedDate ?? new Date(),
+    selectedDate ?? today,
   );
 
   React.useEffect(() => {
-    if (selectedDate) {
-      setVisibleMonth(selectedDate);
-    }
+    if (selectedDate) setVisibleMonth(selectedDate);
   }, [selectedDate]);
 
-  // Short label (e.g. "Apr 2026") for narrow screens, full label for wider
-  const shortLabel = React.useMemo(() => {
-    const base = selectedDate ?? new Date();
-    return new Intl.DateTimeFormat("id-ID", {
-      month: "short",
-      year: "numeric",
-    }).format(base);
-  }, [selectedDate]);
-
-  const fullLabel = React.useMemo(() => {
-    const base = selectedDate ?? new Date();
-    return new Intl.DateTimeFormat("id-ID", {
-      month: "long",
-      year: "numeric",
-    }).format(base);
-  }, [selectedDate]);
+  const monthLabel = React.useMemo(
+    () =>
+      new Intl.DateTimeFormat("id-ID", {
+        month: "long",
+        year: "numeric",
+      }).format(selectedDate ?? today),
+    [selectedDate, today],
+  );
 
   return (
-    <div className="flex shrink-0 items-center gap-1">
-      <button
-        onClick={onPrev}
-        disabled={disablePrev}
-        className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-30"
-        style={{
-          background: "var(--tt-dashboard-chip-bg)",
-          color: "var(--tt-dashboard-text)",
-        }}
-      >
-        <ChevronLeft size={13} />
-      </button>
+    <div className="week-controls">
+      <div className="week-nav">
+        <button
+          type="button"
+          className="week-nav-button"
+          onClick={onPrev}
+          disabled={disablePrev}
+          aria-label="Minggu sebelumnya"
+        >
+          <ChevronLeft size={18} aria-hidden="true" />
+        </button>
 
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            className="inline-flex h-7 cursor-pointer items-center justify-center gap-1 rounded-lg px-2 text-[12px] font-bold transition hover:opacity-80 sm:gap-1.5 sm:px-3 sm:text-[12px]"
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <button
+              type="button"
+              className="week-picker-trigger"
+              aria-label={`Pilih tanggal riwayat mood, saat ini ${monthLabel}`}
+            >
+              <CalendarDays size={16} aria-hidden="true" />
+              <span>{monthLabel}</span>
+            </button>
+          </PopoverTrigger>
+
+          <PopoverContent
+            align="end"
+            side="bottom"
+            sideOffset={8}
+            collisionPadding={12}
+            className="z-[9999] w-auto rounded-2xl border p-3 shadow-xl"
             style={{
-              background: "var(--tt-dashboard-chip-bg)",
-              color: "var(--tt-dashboard-text)",
+              background: "#FEFCF8",
+              borderColor: "var(--tt-dashboard-card-border)",
             }}
           >
-            <CalendarDays size={12} className="shrink-0" />
-            {/* Short label on mobile, full label on sm+ */}
-            <span className="whitespace-nowrap sm:hidden">{shortLabel}</span>
-            <span className="hidden whitespace-nowrap sm:inline">
-              {fullLabel}
-            </span>
-          </button>
-        </PopoverTrigger>
+            <Calendar
+              mode="single"
+              locale={localeId}
+              weekStartsOn={0}
+              labels={CALENDAR_LABELS}
+              selected={selectedDate}
+              month={visibleMonth}
+              onMonthChange={setVisibleMonth}
+              onSelect={(date) => {
+                if (!date) return;
+                onDateChange(date);
+                setOpen(false);
+              }}
+              captionLayout="dropdown"
+              startMonth={MOOD_HISTORY_MIN_DATE}
+              endMonth={today}
+              disabled={[{ before: MOOD_HISTORY_MIN_DATE }, { after: today }]}
+              autoFocus
+              className="mx-auto rounded-md"
+            />
+          </PopoverContent>
+        </Popover>
 
-        <PopoverContent
-          align="center"
-          side="bottom"
-          sideOffset={8}
-          className="z-[9999] w-[280px] rounded-2xl border p-3 shadow-xl"
-          style={{
-            background: "#FEFCF8",
-            borderColor: "var(--tt-dashboard-card-border)",
-          }}
+        <button
+          type="button"
+          className="week-nav-button"
+          onClick={onNext}
+          disabled={disableNext}
+          aria-label="Minggu berikutnya"
         >
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            month={visibleMonth}
-            onMonthChange={setVisibleMonth}
-            onSelect={(date) => {
-              onDateChange(date);
-              if (date) setOpen(false);
-            }}
-            captionLayout="dropdown"
-            fromYear={2020}
-            toYear={2035}
-            initialFocus
-            className="mx-auto rounded-md"
-          />
-        </PopoverContent>
-      </Popover>
+          <ChevronRight size={18} aria-hidden="true" />
+        </button>
+      </div>
 
-      <button
-        onClick={onNext}
-        disabled={disableNext}
-        className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-30"
-        style={{
-          background: "var(--tt-dashboard-chip-bg)",
-          color: "var(--tt-dashboard-text)",
-        }}
-      >
-        <ChevronRight size={13} />
-      </button>
+      {!isCurrentWeek ? (
+        <button type="button" className="week-today-button" onClick={onToday}>
+          Kembali ke hari ini
+        </button>
+      ) : null}
     </div>
   );
 }

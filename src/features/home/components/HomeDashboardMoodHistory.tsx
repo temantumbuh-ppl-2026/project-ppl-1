@@ -1,115 +1,173 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { MoodDayCard } from "./MoodDayCard";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { MoodFaceIcon } from "@/components/mood/mood-face-icons";
+import {
+  MoodDayCard,
+  getMoodDayState,
+  getMoodDayStatusLabel,
+  moodToneStyle,
+} from "./MoodDayCard";
 import { WeekFilterBar } from "./WeekFilterBar";
-import { fadeUp } from "./home-dashboard-motion";
+import { isSameLocalDay } from "../utils";
 import type { WeekData } from "../types";
 
+function formatRange(week: WeekData) {
+  const first = week.days[0]?.fullDate;
+  const last = week.days[6]?.fullDate;
+  if (!first || !last) return week.label;
+
+  const sameYear = first.getFullYear() === last.getFullYear();
+  const sameMonth = sameYear && first.getMonth() === last.getMonth();
+
+  if (sameMonth) {
+    const monthYear = new Intl.DateTimeFormat("id-ID", {
+      month: "long",
+      year: "numeric",
+    }).format(last);
+    return `${first.getDate()}–${last.getDate()} ${monthYear}`;
+  }
+
+  const fmt = new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "short",
+    ...(sameYear ? {} : { year: "numeric" }),
+  });
+  return `${fmt.format(first)} – ${fmt.format(last)}${sameYear ? ` ${last.getFullYear()}` : ""}`;
+}
+
 export function HomeDashboardMoodHistory({
+  week,
+  today,
   selectedDate,
-  onDateChange,
+  onSelectDay,
+  onPickDate,
   onPrev,
   onNext,
+  onToday,
   disablePrev,
   disableNext,
-  currentWeek,
-  custom = 7,
+  isFetching,
+  isError,
+  onRetry,
 }: {
-  selectedDate: Date | undefined;
-  onDateChange: (date: Date | undefined) => void;
+  week: WeekData;
+  today: Date;
+  selectedDate: Date;
+  onSelectDay: (date: Date) => void;
+  onPickDate: (date: Date) => void;
   onPrev: () => void;
   onNext: () => void;
+  onToday: () => void;
   disablePrev: boolean;
   disableNext: boolean;
-  currentWeek?: WeekData;
-  custom?: number;
+  isFetching: boolean;
+  isError: boolean;
+  onRetry: () => void;
 }) {
-  return (
-    <motion.div
-      variants={fadeUp}
-      initial="hidden"
-      animate="visible"
-      custom={custom}
-      className="mt-3 pb-4"
-    >
-      <div
-        className="tt-dashboard-card relative overflow-visible rounded-[1.15rem] p-4 pb-2"
-        style={{ isolation: "isolate" }}
-      >
-        {/* Header row — always inline: title left, filter right */}
-        <div className="relative z-10 mb-4 flex flex-nowrap items-center justify-between gap-2">
-          {/* Title — shrinks but never wraps below the filter */}
-          <div className="min-w-0 flex-1">
-            <h2
-              className="truncate text-[15px] font-extrabold"
-              style={{ color: "var(--tt-dashboard-text)" }}
-            >
-              Riwayat Mood
-            </h2>
-            <p
-              className="truncate text-[12px]"
-              style={{ color: "var(--tt-dashboard-text-2)" }}
-            >
-              {currentWeek?.label ?? "Belum ada data"}
-            </p>
-          </div>
+  const isCurrentWeek = week.days.some((d) => d.today);
+  const selected =
+    week.days.find(
+      (d) => d.fullDate && isSameLocalDay(d.fullDate, selectedDate),
+    ) ?? null;
+  const selectedState = selected ? getMoodDayState(selected, today) : "empty";
+  const note = typeof selected?.note === "string" ? selected.note.trim() : "";
 
-          {/* Filter — never shrinks or wraps */}
-          <div className="shrink-0">
-            <WeekFilterBar
-              selectedDate={selectedDate}
-              onDateChange={onDateChange}
-              onPrev={onPrev}
-              onNext={onNext}
-              disablePrev={disablePrev}
-              disableNext={disableNext}
-            />
-          </div>
+  const selectedDateLabel = new Intl.DateTimeFormat("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(selectedDate);
+
+  return (
+    <section className="dash-mood-card" aria-labelledby="mood-history-title">
+      <div className="dash-section-header">
+        <div>
+          <span className="dash-kicker">Riwayat perasaan</span>
+          <h2 id="mood-history-title">
+            {isCurrentWeek ? "Perasaanmu minggu ini" : "Perasaanmu minggu itu"}
+          </h2>
+          <p aria-live="polite">{formatRange(week)}</p>
         </div>
 
-        {/* Day cards */}
-        {currentWeek?.days?.length ? (
-          <div className="relative z-20 -mx-4 overflow-x-auto overflow-y-visible px-4 pb-2 pt-4">
-            <div className="relative">
-              <div className="relative grid min-w-[700px] grid-flow-col auto-cols-[88px] gap-2 md:min-w-0 md:grid-flow-row md:auto-cols-auto md:grid-cols-7">
-                {currentWeek.days.map((d, i) => (
-                  <motion.div
-                    key={`${d.day}-${d.date}-${i}`}
-                    className="relative z-0 overflow-visible"
-                    style={{ isolation: "isolate" }}
-                    whileHover={{
-                      y: -8,
-                      scale: 1.02,
-                      zIndex: 60,
-                      transition: {
-                        duration: 0.2,
-                        ease: [0.16, 1, 0.3, 1] as const,
-                      },
-                    }}
-                    transition={{ duration: 0.18 }}
-                  >
-                    <div className="relative overflow-visible">
-                      <MoodDayCard d={d} />
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+        <WeekFilterBar
+          selectedDate={selectedDate}
+          today={today}
+          onDateChange={onPickDate}
+          onPrev={onPrev}
+          onNext={onNext}
+          onToday={onToday}
+          disablePrev={disablePrev}
+          disableNext={disableNext}
+          isCurrentWeek={isCurrentWeek}
+        />
+      </div>
+
+      {isError ? (
+        <div className="dash-state error" role="alert">
+          <AlertCircle size={22} aria-hidden="true" />
+          <p style={{ margin: 0 }}>
+            Riwayat mood gagal dimuat. Coba lagi untuk melihat catatanmu.
+          </p>
+          <button
+            type="button"
+            className="support-action"
+            onClick={onRetry}
+            disabled={isFetching}
+          >
+            {isFetching ? (
+              <Loader2 size={15} className="animate-spin" aria-hidden="true" />
+            ) : null}
+            Coba lagi
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="dash-mood-grid">
+            {week.days.map((d, i) => (
+              <MoodDayCard
+                key={`${week.id}-${i}`}
+                d={d}
+                today={today}
+                selected={
+                  !!d.fullDate && isSameLocalDay(d.fullDate, selectedDate)
+                }
+                onSelect={onSelectDay}
+              />
+            ))}
+          </div>
+
+          <div
+            className={`dash-mood-detail ${selectedState === "recorded" ? "recorded" : "empty"}`}
+            style={moodToneStyle(selected?.score ?? null)}
+            aria-live="polite"
+          >
+            <div className="detail-face" aria-hidden="true">
+              {selected && selectedState === "recorded" ? (
+                <MoodFaceIcon score={selected.score} size={32} />
+              ) : (
+                "·"
+              )}
+            </div>
+            <div>
+              <span>{selectedDateLabel}</span>
+              <strong>
+                {selected
+                  ? getMoodDayStatusLabel(selected, selectedState)
+                  : "Belum dicatat"}
+              </strong>
+              <p>
+                {selectedState === "recorded"
+                  ? note
+                    ? `Catatan: “${note}”`
+                    : "Kamu mencatat mood tanpa catatan tambahan."
+                  : "Tidak ada check-in mood pada tanggal ini. Tidak apa-apa—kamu bisa mulai lagi kapan saja."}
+              </p>
             </div>
           </div>
-        ) : (
-          <div
-            className="rounded-2xl border px-4 py-8 text-center text-sm"
-            style={{
-              borderColor: "var(--tt-dashboard-card-border)",
-              color: "var(--tt-dashboard-text-2)",
-              background: "var(--tt-dashboard-brand-soft)",
-            }}
-          >
-            Belum ada data mood untuk filter yang dipilih.
-          </div>
-        )}
-      </div>
-    </motion.div>
+        </>
+      )}
+    </section>
   );
 }

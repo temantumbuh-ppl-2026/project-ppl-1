@@ -1,221 +1,93 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import {
-  MoodFaceIcon,
-  getMoodColor,
-  getMoodLabel,
-} from "@/components/mood/mood-face-icons";
+import type { CSSProperties } from "react";
+import { MoodFaceIcon, getMoodLabel } from "@/components/mood/mood-face-icons";
+import { MOOD_COLORS } from "@/lib/mood/palette";
 import type { MoodDay } from "../types";
 
-type PopupPosition = {
-  top: number;
-  left: number;
-};
+const FULL_DAY = [
+  "Minggu",
+  "Senin",
+  "Selasa",
+  "Rabu",
+  "Kamis",
+  "Jumat",
+  "Sabtu",
+];
 
-export function MoodDayCard({ d }: { d: MoodDay }) {
-  const color = getMoodColor(d.score);
-  const hasMood = d.score !== null;
-  const note = typeof d.note === "string" ? d.note.trim() : "";
-  const hasNote = note.length > 0;
+export type MoodDayState = "recorded" | "empty" | "future";
 
-  const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [popupPos, setPopupPos] = useState<PopupPosition | null>(null);
+export function getMoodDayState(d: MoodDay, today: Date): MoodDayState {
+  if (d.score !== null) return "recorded";
+  if (d.fullDate && d.fullDate > today && !d.today) return "future";
+  return "empty";
+}
 
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const triggerRef = useRef<HTMLButtonElement | null>(null);
+/** Variabel warna kartu mengikuti palet mood redesign. */
+export function moodToneStyle(score: number | null): CSSProperties {
+  const tone = score !== null ? MOOD_COLORS[score] : undefined;
+  if (!tone) return {};
+  return {
+    "--day-color": tone.stroke,
+    "--day-tint": tone.bg,
+    "--day-tint-strong": `${tone.stroke}38`,
+    "--day-border": `${tone.stroke}59`,
+    "--detail-color": tone.stroke,
+    "--detail-tint": tone.bg,
+  } as CSSProperties;
+}
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+export function getMoodDayStatusLabel(d: MoodDay, state: MoodDayState) {
+  if (state === "recorded") return getMoodLabel(d.score);
+  if (state === "future") return "Belum tiba";
+  return "Belum dicatat";
+}
 
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent | TouchEvent) {
-      if (!rootRef.current) return;
-      if (!rootRef.current.contains(event.target as Node)) {
-        setOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("touchstart", handleClickOutside);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("touchstart", handleClickOutside);
-    };
-  }, []);
-
-  useLayoutEffect(() => {
-    function updatePopupPosition() {
-      if (!triggerRef.current || !open) return;
-
-      const rect = triggerRef.current.getBoundingClientRect();
-      const popupWidth = 210;
-      const gap = 12;
-
-      let left = rect.left + rect.width / 2;
-      const top = rect.top - gap;
-
-      const minX = popupWidth / 2 + 12;
-      const maxX = window.innerWidth - popupWidth / 2 - 12;
-
-      if (left < minX) left = minX;
-      if (left > maxX) left = maxX;
-
-      setPopupPos({
-        top,
-        left,
-      });
-    }
-
-    updatePopupPosition();
-
-    if (open) {
-      window.addEventListener("resize", updatePopupPosition);
-      window.addEventListener("scroll", updatePopupPosition, true);
-    }
-
-    return () => {
-      window.removeEventListener("resize", updatePopupPosition);
-      window.removeEventListener("scroll", updatePopupPosition, true);
-    };
-  }, [open]);
+export function MoodDayCard({
+  d,
+  today,
+  selected,
+  onSelect,
+}: {
+  d: MoodDay;
+  today: Date;
+  selected: boolean;
+  onSelect: (date: Date) => void;
+}) {
+  const state = getMoodDayState(d, today);
+  const label = getMoodDayStatusLabel(d, state);
+  const fullDay = d.fullDate ? FULL_DAY[d.fullDate.getDay()] : d.day;
+  const longDate = d.fullDate
+    ? new Intl.DateTimeFormat("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }).format(d.fullDate)
+    : `${d.date} ${d.month}`;
 
   return (
-    <div
-      ref={rootRef}
-      className="group relative z-0 h-full overflow-visible"
-      style={{ isolation: "isolate" }}
-      onPointerEnter={() => {
-        if (hasNote) setOpen(true);
-      }}
-      onPointerLeave={() => setOpen(false)}
+    <button
+      type="button"
+      className={`dash-day ${state} ${d.today ? "today" : ""} ${selected ? "selected" : ""}`}
+      style={moodToneStyle(d.score)}
+      disabled={state === "future"}
+      aria-pressed={state === "future" ? undefined : selected}
+      aria-label={`${fullDay}, ${longDate}: ${label}${d.today ? " (hari ini)" : ""}`}
+      onClick={() => d.fullDate && onSelect(d.fullDate)}
     >
-      <div
-        className="relative z-0 flex h-full min-h-[128px] flex-col items-center rounded-[0.95rem] px-2 py-2.5 text-center transition-all duration-300 ease-out will-change-transform md:min-h-[138px]"
-        style={{
-          background: d.today
-            ? "rgba(214, 161, 27, 0.09)"
-            : "var(--tt-dashboard-brand-soft)",
-          border: d.today
-            ? "1.5px solid var(--tt-dashboard-warning)"
-            : "1px solid rgba(26, 150, 136, 0.18)",
-        }}
-      >
-        <p
-          className="text-[12px] font-semibold"
-          style={{ color: "var(--tt-dashboard-text-2)" }}
-        >
-          {d.day}
-        </p>
-
-        <div className="my-2 flex h-8 items-center justify-center">
-          {hasMood ? (
-            <div className="relative flex items-center justify-center">
-              <button
-                ref={triggerRef}
-                type="button"
-                onClick={() => hasNote && setOpen((prev) => !prev)}
-                className="flex h-10 w-10 items-center justify-center rounded-full outline-none transition-transform duration-200 group-hover:scale-105"
-                style={{
-                  background: "transparent",
-                  boxShadow: "none",
-                  WebkitTapHighlightColor: "transparent",
-                }}
-                aria-label={`Lihat catatan mood ${d.day}`}
-              >
-                <MoodFaceIcon score={d.score} size={24} />
-              </button>
-            </div>
-          ) : (
-            <div
-              className="flex h-7 w-7 items-center justify-center rounded-full transition-transform duration-200 group-hover:scale-105"
-              style={{
-                border: "1px dashed #d9e6e4",
-                color: "var(--tt-dashboard-text-3)",
-                background: "#fff",
-              }}
-            >
-              -
-            </div>
-          )}
-        </div>
-
-        <p
-          className="text-[12px] font-semibold"
-          style={{ color: "var(--tt-dashboard-text)" }}
-        >
-          {d.date}
-        </p>
-
-        <p
-          className="mt-1.5 text-[12px] font-extrabold md:text-sm"
-          style={{ color: hasMood ? color : "var(--tt-dashboard-text)" }}
-        >
-          {hasMood ? `${d.score}/5` : "–"}
-        </p>
-
-        <p
-          className="mt-1 min-h-[20px] text-[12px] leading-4"
-          style={{ color: "var(--tt-dashboard-text-2)" }}
-        >
-          {getMoodLabel(d.score)}
-        </p>
-
-        <div className="mt-auto pt-1.5">
-          {d.today ? (
-            <div
-              className="inline-flex rounded-full px-2 py-0.5 text-[12px] font-bold"
-              style={{
-                background: "var(--tt-dashboard-warning-soft)",
-                color: "var(--tt-dashboard-warning)",
-              }}
-            >
-              Hari ini
-            </div>
-          ) : (
-            <div className="h-[14px]" />
-          )}
-        </div>
-      </div>
-
-      {mounted && hasNote && open && popupPos
-        ? createPortal(
-            <div
-              className="pointer-events-none fixed z-[99999] w-[210px] -translate-x-1/2 -translate-y-full rounded-2xl px-3 py-2.5 text-xs"
-              style={{
-                top: popupPos.top,
-                left: popupPos.left,
-                background: "#FFF9EE",
-                border: `1.5px solid ${hasMood ? `${color}80` : "#D9E3E2"}`,
-                color: "var(--tt-dashboard-text)",
-                boxShadow:
-                  "0 18px 34px rgba(26,40,64,0.16), 0 6px 14px rgba(26,40,64,0.10)",
-              }}
-            >
-              <div
-                className="absolute left-1/2 top-full h-3 w-3 -translate-x-1/2 -translate-y-[6px] rotate-45"
-                style={{
-                  background: "#FFF9EE",
-                  borderRight: `1.5px solid ${hasMood ? `${color}80` : "#D9E3E2"}`,
-                  borderBottom: `1.5px solid ${hasMood ? `${color}80` : "#D9E3E2"}`,
-                }}
-              />
-
-              <p className="text-[12px] font-bold" style={{ color }}>
-                {getMoodLabel(d.score)}
-              </p>
-
-              <p className="mt-1 break-words text-[12px] leading-relaxed">
-                {note}
-              </p>
-            </div>,
-            document.body,
-          )
-        : null}
-    </div>
+      <span aria-hidden="true">
+        {d.day}
+        <b>{d.date}</b>
+      </span>
+      <i aria-hidden="true">
+        {state === "recorded" ? (
+          <MoodFaceIcon score={d.score} size={30} />
+        ) : (
+          "·"
+        )}
+      </i>
+      <strong aria-hidden="true">{label}</strong>
+      {d.today ? <small aria-hidden="true">Hari ini</small> : null}
+    </button>
   );
 }

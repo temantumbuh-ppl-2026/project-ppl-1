@@ -42,11 +42,7 @@ export function getWeekOfMonth(date: Date) {
   return Math.ceil(date.getDate() / 7);
 }
 
-export function buildWeeksFromLogs(
-  logs: MoodLog[],
-  timezone: string,
-  totalWeeks = 24,
-): WeekData[] {
+function indexLogsByLocalDate(logs: MoodLog[], timezone: string) {
   const logByDate = new Map<string, MoodLog>();
 
   for (const log of logs) {
@@ -56,58 +52,106 @@ export function buildWeeksFromLogs(
     }
   }
 
+  return logByDate;
+}
+
+/** Awal minggu (Minggu, 00:00 waktu lokal) untuk tanggal yang diberikan. */
+export function getStartOfWeek(date: Date): Date {
+  const start = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  start.setDate(start.getDate() - start.getDay());
+  return start;
+}
+
+export function isSameLocalDay(a: Date, b: Date) {
+  return a.toDateString() === b.toDateString();
+}
+
+function buildWeek(
+  startOfWeek: Date,
+  logByDate: Map<string, MoodLog>,
+  timezone: string,
+  today: Date,
+): WeekData {
+  const days: MoodDay[] = [];
+
+  for (let d = 0; d < 7; d++) {
+    const dayDate = new Date(startOfWeek);
+    dayDate.setDate(startOfWeek.getDate() + d);
+
+    const isToday = dayDate.toDateString() === today.toDateString();
+    const isFuture = dayDate > today;
+    const key = getLocalDateString(dayDate, timezone);
+    const log = logByDate.get(key) ?? null;
+
+    days.push({
+      day: DAY_LABELS_ID[dayDate.getDay()]!,
+      date: dayDate.getDate(),
+      month: dayDate.toLocaleDateString("id-ID", { month: "short" }),
+      score: isFuture ? null : (log?.moodScore ?? null),
+      note: log?.note ?? null,
+      today: isToday,
+      fullDate: dayDate,
+    });
+  }
+
+  const first = days[0]!;
+  const last = days[6]!;
+  const firstDate = first.fullDate ?? new Date();
+
+  const monthIndex = firstDate.getMonth();
+  const year = firstDate.getFullYear();
+  const monthName = MONTH_LABELS_ID[monthIndex]!;
+  const weekOfMonth = getWeekOfMonth(firstDate);
+
+  return {
+    id: `${year}-${monthIndex + 1}-w${weekOfMonth}-${first.date}-${last.date}`,
+    label: `${first.date} – ${last.date} ${last.month} ${year}`,
+    shortLabel: `Minggu ${weekOfMonth}`,
+    monthYearLabel: `${monthName} ${year}`,
+    weekOfMonth,
+    year,
+    monthIndex,
+    monthName,
+    days,
+  };
+}
+
+export function buildWeeksFromLogs(
+  logs: MoodLog[],
+  timezone: string,
+  totalWeeks = 24,
+): WeekData[] {
+  const logByDate = indexLogsByLocalDate(logs, timezone);
   const today = new Date();
   const todayDow = today.getDay();
   const weeks: WeekData[] = [];
 
   for (let w = totalWeeks - 1; w >= 0; w--) {
-    const days: MoodDay[] = [];
     const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() - todayDow - w * 7);
-
-    for (let d = 0; d < 7; d++) {
-      const dayDate = new Date(startOfWeek);
-      dayDate.setDate(startOfWeek.getDate() + d);
-
-      const isToday = dayDate.toDateString() === today.toDateString();
-      const isFuture = dayDate > today;
-      const key = getLocalDateString(dayDate, timezone);
-      const log = logByDate.get(key) ?? null;
-
-      days.push({
-        day: DAY_LABELS_ID[dayDate.getDay()]!,
-        date: dayDate.getDate(),
-        month: dayDate.toLocaleDateString("id-ID", { month: "short" }),
-        score: isFuture ? null : (log?.moodScore ?? null),
-        note: log?.note ?? null,
-        today: isToday,
-        fullDate: dayDate,
-      });
-    }
-
-    const first = days[0]!;
-    const last = days[6]!;
-    const firstDate = first.fullDate ?? new Date();
-
-    const monthIndex = firstDate.getMonth();
-    const year = firstDate.getFullYear();
-    const monthName = MONTH_LABELS_ID[monthIndex]!;
-    const weekOfMonth = getWeekOfMonth(firstDate);
-
-    weeks.push({
-      id: `${year}-${monthIndex + 1}-w${weekOfMonth}-${first.date}-${last.date}`,
-      label: `${first.date} – ${last.date} ${last.month} ${year}`,
-      shortLabel: `Minggu ${weekOfMonth}`,
-      monthYearLabel: `${monthName} ${year}`,
-      weekOfMonth,
-      year,
-      monthIndex,
-      monthName,
-      days,
-    });
+    weeks.push(buildWeek(startOfWeek, logByDate, timezone, today));
   }
 
   return weeks;
+}
+
+/**
+ * Membangun minggu (Minggu–Sabtu) yang memuat `date`, memakai aturan yang sama
+ * dengan buildWeeksFromLogs. Dipakai agar tanggal pilihan di bulan/tahun mana pun
+ * tetap menampilkan periode yang benar.
+ */
+export function buildWeekForDate(
+  logs: MoodLog[],
+  timezone: string,
+  date: Date,
+  today = new Date(),
+): WeekData {
+  return buildWeek(
+    getStartOfWeek(date),
+    indexLogsByLocalDate(logs, timezone),
+    timezone,
+    today,
+  );
 }
 
 export function computeLongestStreak(
