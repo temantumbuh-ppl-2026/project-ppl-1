@@ -5,10 +5,10 @@ import { useQuery } from "@tanstack/react-query";
 import {
   ChevronLeft,
   ChevronRight,
+  HelpCircle,
   Crown,
   Flame,
-  Info,
-  Compass,
+  AlertTriangle,
   PanelLeftClose,
 } from "lucide-react";
 
@@ -331,6 +331,7 @@ function PanelContent({
   selectedEntry,
   activeMonth,
   selectedDate,
+  planCfg,
   quizRemaining,
   canDoQuiz,
   isQuestionPoolExhausted,
@@ -537,27 +538,39 @@ function PanelContent({
             opacity: canOpenQuiz ? 1 : 0.7,
           }}
         >
-          <Compass size={14} color={canOpenQuiz ? C.ink : C.sub} />
-          <span>Brave Choice</span>
+          <HelpCircle size={14} color={canOpenQuiz ? C.ink : C.sub} />
+          <span>Brave Choice Quiz</span>
           <div style={{ flex: 1 }} />
           {user.plan === "free" ? (
             <span
               style={{
                 fontSize: 12,
                 fontWeight: 800,
-                color:
-                  isQuestionPoolExhausted || !canOpenQuiz ? C.amber : C.ink,
+                color: isQuestionPoolExhausted
+                  ? C.amber
+                  : canOpenQuiz
+                    ? C.ink
+                    : C.redD,
                 padding: "3px 7px",
                 borderRadius: 999,
-                background:
-                  isQuestionPoolExhausted || !canOpenQuiz ? C.goldS : C.inkT,
+                background: isQuestionPoolExhausted
+                  ? C.goldS
+                  : canOpenQuiz
+                    ? C.inkT
+                    : C.redL,
                 border: `1px solid ${
-                  isQuestionPoolExhausted || !canOpenQuiz ? C.goldL : C.bd
+                  isQuestionPoolExhausted
+                    ? C.goldL
+                    : canOpenQuiz
+                      ? C.bd
+                      : "#F7B6B6"
                 }`,
                 whiteSpace: "nowrap",
               }}
             >
-              {isQuestionPoolExhausted ? "Selesai" : `Sisa ${quizRemaining}`}
+              {isQuestionPoolExhausted
+                ? "HABIS"
+                : `${quizRemaining}/${planCfg.quizPerDay}`}
             </span>
           ) : (
             <Crown size={13} color={C.gold} />
@@ -576,7 +589,7 @@ function PanelContent({
               alignItems: "flex-start",
             }}
           >
-            <Info
+            <AlertTriangle
               size={13}
               color={C.amber}
               style={{ flexShrink: 0, marginTop: 1 }}
@@ -590,8 +603,8 @@ function PanelContent({
                 fontWeight: 600,
               }}
             >
-              Semua situasi sudah kamu jelajahi. Buka Brave Choice untuk
-              mengulang dari awal.
+              Semua soal sudah selesai. Buka Brave Choice Quiz untuk reset soal
+              jika ingin mengulang.
             </p>
           </div>
         ) : null}
@@ -601,16 +614,16 @@ function PanelContent({
             style={{
               padding: "7px 9px",
               borderRadius: 10,
-              background: C.goldS,
-              border: `1px solid ${C.goldL}`,
+              background: C.redL,
+              border: `1px solid #F5BBBB`,
               display: "flex",
               gap: 7,
               alignItems: "flex-start",
             }}
           >
-            <Info
+            <AlertTriangle
               size={13}
-              color={C.amber}
+              color={C.red}
               style={{ flexShrink: 0, marginTop: 1 }}
             />
             <p
@@ -618,12 +631,12 @@ function PanelContent({
                 margin: 0,
                 fontSize: 12,
                 lineHeight: 1.45,
-                color: C.amber,
+                color: C.redD,
                 fontWeight: 600,
               }}
             >
-              Kesempatan Brave Choice hari ini sudah habis. Lanjut besok, atau
-              buka akses tanpa batas dengan Premium.
+              Kuota quiz hari ini habis. Upgrade ke Premium untuk akses
+              unlimited.
             </p>
           </div>
         ) : null}

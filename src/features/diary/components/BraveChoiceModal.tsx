@@ -1,26 +1,56 @@
-"use client";
-
 import {
-  ArrowRight,
-  Compass,
-  Crown,
-  Info,
-  Lightbulb,
-  MessagesSquare,
-  RotateCcw,
-  Sparkles,
   X,
+  HelpCircle,
+  Crown,
+  CheckCircle2,
+  AlertCircle,
+  ChevronRight,
+  RotateCcw,
 } from "lucide-react";
-import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-
-import "./brave-choice.css";
-
+import { useState, useEffect, type CSSProperties } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { colors as C, fonts } from "../constants/tokens";
 import type { BraveChoiceQuiz, PlanType } from "../types";
-import { buildBraveChoiceFeedback } from "./brave-choice-feedback";
 
-type Origin = "diary" | "dashboard";
+// ─── animation variants ───────────────────────────────────────────────────────
+
+const overlayVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.22 } },
+  exit: { opacity: 0, transition: { duration: 0.18 } },
+};
+
+const sheetVariants = {
+  hidden: { opacity: 0, y: 28, scale: 0.97 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.3, ease: [0.16, 1, 0.3, 1] as const },
+  },
+  exit: {
+    opacity: 0,
+    y: 16,
+    scale: 0.98,
+    transition: { duration: 0.2, ease: [0.4, 0, 1, 1] as const },
+  },
+};
+
+const fadeSlide = {
+  hidden: { opacity: 0, y: 10 },
+  visible: (i = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.06,
+      duration: 0.28,
+      ease: [0.16, 1, 0.3, 1] as const,
+    },
+  }),
+  exit: { opacity: 0, y: -6, transition: { duration: 0.16 } },
+};
+
+// ─── types ────────────────────────────────────────────────────────────────────
 
 type Props = {
   isOpen: boolean;
@@ -30,9 +60,6 @@ type Props = {
   isResetting: boolean;
   isQuestionPoolExhausted: boolean;
   isQuotaReached: boolean;
-  /** Gagal memuat skenario (ditangani tanpa menutup modal). */
-  loadError?: boolean;
-  onRetryLoad?: () => void;
   quizRemaining: number;
   quizPerDay: number;
   plan: PlanType;
@@ -40,510 +67,1203 @@ type Props = {
   onNextQuiz: () => void;
   onResetQuestions: () => void;
   onUpgrade: () => void;
-  /** Mengembalikan false jika jawaban gagal tersimpan. */
-  onAnswerSubmit: (
-    quizId: string,
-    label: string,
-  ) => void | boolean | Promise<void | boolean>;
-  /** Asal pembukaan modal; menentukan CTA penutup. */
-  origin?: Origin;
+  onAnswerSubmit: (quizId: string, label: string) => void | Promise<void>;
   onContinueWriting?: () => void;
 };
 
-const FOCUSABLE =
-  'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+// ─── main component ───────────────────────────────────────────────────────────
 
-export function BraveChoiceModal(props: Props) {
-  const { isOpen } = props;
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
-
-  if (!mounted) return null;
-
-  // Portal ke body agar overlay selalu menutupi seluruh layar, termasuk saat
-  // dirender di dalam container query dashboard.
-  return createPortal(
-    <AnimatePresence>
-      {isOpen ? <BraveChoiceDialog key="brave-choice" {...props} /> : null}
-    </AnimatePresence>,
-    document.body,
-  );
-}
-
-function BraveChoiceDialog({
+export function BraveChoiceModal({
+  isOpen,
   onClose,
   quiz,
   isLoading,
   isResetting,
   isQuestionPoolExhausted,
   isQuotaReached,
-  loadError = false,
-  onRetryLoad,
   quizRemaining,
+  quizPerDay,
   plan,
   canLoadNext,
   onNextQuiz,
   onResetQuestions,
   onUpgrade,
   onAnswerSubmit,
-  origin = "diary",
   onContinueWriting,
 }: Props) {
-  const reduceMotion = useReducedMotion();
-  const titleId = useId();
-  const descId = useId();
-  const sheetRef = useRef<HTMLDivElement>(null);
-  const closeRef = useRef<HTMLButtonElement>(null);
-
-  const [chosenIdx, setChosenIdx] = useState<number | null>(null);
-  const [isAnswered, setIsAnswered] = useState(false);
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const [isChecked, setIsChecked] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState(false);
 
   useEffect(() => {
-    setChosenIdx(null);
-    setIsAnswered(false);
+    setSelectedIdx(null);
+    setIsChecked(false);
     setIsSubmitting(false);
-    setSubmitError(false);
   }, [quiz?.id]);
 
-  // Ref agar efek fokus hanya berjalan saat dialog dibuka/ditutup,
-  // walaupun induk mengirim onClose baru di setiap render.
-  const onCloseRef = useRef(onClose);
+  // Enter key handler for check answer / continue
   useEffect(() => {
-    onCloseRef.current = onClose;
-  }, [onClose]);
-  const handleClose = useCallback(() => onCloseRef.current(), []);
-
-  // Fokus masuk ke dialog, dijebak selama terbuka, lalu kembali ke pemicu.
-  useEffect(() => {
-    const trigger =
-      document.activeElement instanceof HTMLElement
-        ? document.activeElement
-        : null;
-    closeRef.current?.focus();
+    if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        handleClose();
-        return;
-      }
-      if (e.key !== "Tab" || !sheetRef.current) return;
+      if (e.key !== "Enter") return;
+      e.preventDefault();
 
-      const focusables = Array.from(
-        sheetRef.current.querySelectorAll<HTMLElement>(FOCUSABLE),
-      );
-      if (!focusables.length) return;
-      const first = focusables[0]!;
-      const last = focusables[focusables.length - 1]!;
-
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
+      if (isChecked) {
+        // After checking, Enter = continue writing
+        if (onContinueWriting) {
+          onContinueWriting();
+        } else {
+          onClose();
+        }
+      } else if (selectedIdx !== null && quiz && !isSubmitting) {
+        // Before checking, Enter = check answer
+        const opt = quiz.options[selectedIdx];
+        setIsSubmitting(true);
+        void Promise.resolve(onAnswerSubmit(quiz.id, opt.label)).finally(() => {
+          setTimeout(() => {
+            setIsChecked(true);
+            setIsSubmitting(false);
+          }, 320);
+        });
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      trigger?.focus();
-    };
-  }, [handleClose]);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [
+    isOpen,
+    isChecked,
+    selectedIdx,
+    quiz,
+    isSubmitting,
+    onAnswerSubmit,
+    onContinueWriting,
+    onClose,
+  ]);
 
-  const handleChoose = async (idx: number) => {
-    if (!quiz || isSubmitting || isAnswered) return;
-    const option = quiz.options[idx];
-    if (!option) return;
+  if (!isOpen) return null;
 
-    setChosenIdx(idx);
+  const handleCheck = async () => {
+    if (selectedIdx === null || !quiz || isSubmitting) return;
+    const opt = quiz.options[selectedIdx];
     setIsSubmitting(true);
-    setSubmitError(false);
-
-    const result = await Promise.resolve(onAnswerSubmit(quiz.id, option.label));
-
-    if (result === false) {
-      setChosenIdx(null);
-      setSubmitError(true);
-    } else {
-      setIsAnswered(true);
-    }
+    await Promise.resolve(onAnswerSubmit(quiz.id, opt.label));
+    // small delay so animation feels intentional
+    await new Promise((r) => setTimeout(r, 320));
+    setIsChecked(true);
     setIsSubmitting(false);
   };
 
-  const exitLabel =
-    origin === "dashboard" ? "Kembali ke Dashboard" : "Lanjutkan Menulis";
-  const handleExit =
-    origin === "diary" && onContinueWriting ? onContinueWriting : handleClose;
+  const handleClose = () => {
+    setSelectedIdx(null);
+    setIsChecked(false);
+    setIsSubmitting(false);
+    onClose();
+  };
 
-  const isFree = plan === "free";
-  const showQuotaState =
-    !quiz &&
-    !isLoading &&
-    !loadError &&
-    isFree &&
-    (isQuotaReached || quizRemaining <= 0);
+  const selectedOpt = quiz?.options[selectedIdx ?? -1];
+  const selectedBrave = selectedOpt?.isBrave ?? false;
+  const shouldShowQuotaState =
+    plan === "free" && (isQuotaReached || quizRemaining <= 0) && !quiz;
 
-  const quotaLabel = isFree
-    ? quizRemaining > 0
-      ? `${quizRemaining} kesempatan tersisa hari ini`
-      : "Kesempatan hari ini sudah habis"
-    : "Tanpa batas harian";
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          key="brave-overlay"
+          variants={overlayVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) handleClose();
+          }}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(10, 30, 40, 0.52)",
+            backdropFilter: "blur(6px)",
+            WebkitBackdropFilter: "blur(6px)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 100,
+            padding: 20,
+          }}
+        >
+          <motion.div
+            key="brave-sheet"
+            variants={sheetVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            style={{
+              width: "100%",
+              maxWidth: 492,
+              borderRadius: 24,
+              overflow: "hidden",
+              background: "#f5faf9",
+              border: "1px solid rgba(26, 150, 136, 0.14)",
+              boxShadow: "0 32px 80px rgba(10, 40, 50, 0.22)",
+            }}
+          >
+            {/* ── Header ── */}
+            <div
+              style={{
+                padding: "14px 18px",
+                background:
+                  "linear-gradient(135deg, #144949 0%, #1b6b6b 55%, #1a9688 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderBottom: "1px solid rgba(255,255,255,0.10)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 10,
+                    background: "rgba(255,255,255,0.14)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                  }}
+                >
+                  <HelpCircle size={17} color="rgba(255,255,255,0.95)" />
+                </div>
+                <div>
+                  <p
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 800,
+                      color: "#fff",
+                      margin: 0,
+                      letterSpacing: 0.1,
+                    }}
+                  >
+                    Brave Choice Quiz
+                  </p>
+                  <p
+                    style={{
+                      fontSize: 12,
+                      color: "rgba(255,255,255,0.65)",
+                      margin: 0,
+                    }}
+                  >
+                    Pilih keputusan paling bijak
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {plan === "free" ? (
+                  <QuotaBadge remaining={quizRemaining} perDay={quizPerDay} />
+                ) : (
+                  <UnlimitedBadge />
+                )}
+                <button
+                  onClick={handleClose}
+                  style={{
+                    width: 30,
+                    height: 30,
+                    borderRadius: 9,
+                    border: "none",
+                    background: "rgba(255,255,255,0.14)",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "background 0.15s",
+                  }}
+                >
+                  <X size={13} color="rgba(255,255,255,0.9)" />
+                </button>
+              </div>
+            </div>
+
+            {/* ── Body ── */}
+            <div style={{ padding: "18px 20px" }}>
+              <AnimatePresence mode="wait">
+                {isLoading ? (
+                  <motion.div
+                    key="loading"
+                    variants={fadeSlide}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                  >
+                    <LoadingState />
+                  </motion.div>
+                ) : shouldShowQuotaState ? (
+                  <motion.div
+                    key="quota-reached"
+                    variants={fadeSlide}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                  >
+                    <QuotaReachedState
+                      onClose={handleClose}
+                      onUpgrade={onUpgrade}
+                    />
+                  </motion.div>
+                ) : quiz ? (
+                  <motion.div
+                    key={`quiz-${quiz.id}`}
+                    variants={fadeSlide}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                  >
+                    <QuizBody
+                      quiz={quiz}
+                      selectedIdx={selectedIdx}
+                      isChecked={isChecked}
+                      isSubmitting={isSubmitting}
+                      selectedBrave={selectedBrave}
+                      plan={plan}
+                      quizRemaining={quizRemaining}
+                      canLoadNext={canLoadNext}
+                      isQuotaReached={isQuotaReached}
+                      onSelect={(i) => {
+                        if (!isChecked && !isSubmitting) setSelectedIdx(i);
+                      }}
+                      onCheck={handleCheck}
+                      onNext={onNextQuiz}
+                      onClose={onContinueWriting ?? handleClose}
+                      onUpgrade={onUpgrade}
+                    />
+                  </motion.div>
+                ) : isQuotaReached ? (
+                  <motion.div
+                    key="quota-reached"
+                    variants={fadeSlide}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                  >
+                    <QuotaReachedState
+                      onClose={handleClose}
+                      onUpgrade={onUpgrade}
+                    />
+                  </motion.div>
+                ) : isQuestionPoolExhausted ? (
+                  <motion.div
+                    key="exhausted"
+                    variants={fadeSlide}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                  >
+                    <ExhaustedState
+                      isResetting={isResetting}
+                      onResetQuestions={onResetQuestions}
+                      onClose={handleClose}
+                      onUpgrade={onUpgrade}
+                      plan={plan}
+                    />
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+// ─── QuizBody ─────────────────────────────────────────────────────────────────
+
+function QuizBody({
+  quiz,
+  selectedIdx,
+  isChecked,
+  isSubmitting,
+  selectedBrave,
+  plan,
+  quizRemaining,
+  canLoadNext,
+  isQuotaReached,
+  onSelect,
+  onCheck,
+  onNext,
+  onClose,
+  onUpgrade,
+}: {
+  quiz: BraveChoiceQuiz;
+  selectedIdx: number | null;
+  isChecked: boolean;
+  isSubmitting: boolean;
+  selectedBrave: boolean;
+  plan: PlanType;
+  quizRemaining: number;
+  canLoadNext: boolean;
+  isQuotaReached: boolean;
+  onSelect: (i: number) => void;
+  onCheck: () => void;
+  onNext: () => void;
+  onClose: () => void;
+  onUpgrade: () => void;
+}) {
+  const selectedOpt = quiz.options[selectedIdx ?? -1];
+  const shouldShowUpgradeAction =
+    plan === "free" && (isQuotaReached || quizRemaining <= 0 || !canLoadNext);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+      {/* Scenario card */}
+      <motion.div
+        custom={0}
+        variants={fadeSlide}
+        initial="hidden"
+        animate="visible"
+        style={{
+          padding: "13px 15px",
+          borderRadius: 14,
+          background: "rgba(255, 255, 255, 0.75)",
+          border: "1px solid rgba(26, 150, 136, 0.16)",
+        }}
+      >
+        <p
+          style={{
+            fontSize: 12,
+            fontWeight: 700,
+            color: "#1a9688",
+            textTransform: "uppercase",
+            letterSpacing: 1.2,
+            margin: "0 0 7px",
+          }}
+        >
+          Skenario
+        </p>
+        <p
+          style={{
+            fontSize: 13,
+            color: C.text,
+            lineHeight: 1.75,
+            fontFamily: fonts.serif,
+            margin: 0,
+          }}
+        >
+          {quiz.scenario}
+        </p>
+      </motion.div>
+
+      {/* Options */}
+      <div style={{ display: "flex", gap: 10, alignItems: "stretch" }}>
+        {quiz.options.map((opt, i) => (
+          <motion.div
+            key={opt.label}
+            custom={i + 1}
+            variants={fadeSlide}
+            initial="hidden"
+            animate="visible"
+            style={{ flex: 1 }}
+          >
+            <OptionCard
+              option={opt}
+              isSelected={selectedIdx === i}
+              isChecked={isChecked}
+              onClick={() => onSelect(i)}
+            />
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Explanation — slides in after answer */}
+      <AnimatePresence>
+        {isChecked && selectedOpt && (
+          <motion.div
+            key="explanation"
+            initial={{ opacity: 0, y: 8, height: 0 }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              height: "auto",
+              transition: { duration: 0.32, ease: [0.16, 1, 0.3, 1] },
+            }}
+            exit={{
+              opacity: 0,
+              y: -4,
+              height: 0,
+              transition: { duration: 0.18 },
+            }}
+          >
+            <ExplanationCard
+              isBrave={selectedBrave}
+              text={
+                selectedBrave ? quiz.explanationRight : quiz.explanationWrong
+              }
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Action buttons */}
+      <motion.div
+        custom={3}
+        variants={fadeSlide}
+        initial="hidden"
+        animate="visible"
+        style={{ display: "flex", gap: 8 }}
+      >
+        {!isChecked ? (
+          <>
+            <motion.button
+              onClick={onCheck}
+              disabled={selectedIdx === null || isSubmitting}
+              whileHover={
+                selectedIdx !== null && !isSubmitting
+                  ? { y: -1, boxShadow: "0 10px 24px rgba(20,73,73,0.22)" }
+                  : {}
+              }
+              whileTap={
+                selectedIdx !== null && !isSubmitting ? { scale: 0.975 } : {}
+              }
+              style={{
+                flex: 1,
+                height: 44,
+                borderRadius: 13,
+                border: "none",
+                background:
+                  selectedIdx !== null
+                    ? "linear-gradient(135deg, #144949 0%, #1a9688 100%)"
+                    : "rgba(220, 230, 228, 0.8)",
+                color: selectedIdx !== null ? "#fff" : C.muted,
+                fontSize: 13,
+                fontWeight: 700,
+                fontFamily: fonts.sans,
+                cursor:
+                  selectedIdx !== null && !isSubmitting
+                    ? "pointer"
+                    : "not-allowed",
+                transition: "background 0.2s, color 0.2s",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+              }}
+            >
+              {isSubmitting ? <MiniSpinner /> : "Cek Jawaban"}
+            </motion.button>
+
+            {shouldShowUpgradeAction ? (
+              <motion.button
+                onClick={onUpgrade}
+                whileHover={{ y: -1 }}
+                whileTap={{ scale: 0.975 }}
+                style={upgradeButtonStyle}
+              >
+                <Crown size={14} color={C.gold} />
+                Upgrade
+              </motion.button>
+            ) : (
+              <motion.button
+                onClick={onNext}
+                whileHover={{ y: -1 }}
+                whileTap={{ scale: 0.975 }}
+                style={{
+                  height: 44,
+                  padding: "0 18px",
+                  borderRadius: 13,
+                  border: "1px solid rgba(26, 150, 136, 0.22)",
+                  background: "rgba(255, 255, 255, 0.80)",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: C.ink,
+                  cursor: "pointer",
+                  fontFamily: fonts.sans,
+                }}
+              >
+                Lewati
+              </motion.button>
+            )}
+          </>
+        ) : (
+          <>
+            <motion.button
+              onClick={onClose}
+              whileHover={{
+                y: -1,
+                boxShadow: "0 10px 24px rgba(20,73,73,0.22)",
+              }}
+              whileTap={{ scale: 0.975 }}
+              style={{
+                flex: 1,
+                height: 44,
+                borderRadius: 13,
+                border: "none",
+                background: "linear-gradient(135deg, #144949 0%, #1a9688 100%)",
+                color: "#fff",
+                fontSize: 13,
+                fontWeight: 700,
+                fontFamily: fonts.sans,
+                cursor: "pointer",
+              }}
+            >
+              Lanjutkan Menulis
+            </motion.button>
+
+            {!shouldShowUpgradeAction ? (
+              <motion.button
+                onClick={onNext}
+                whileHover={{ y: -1 }}
+                whileTap={{ scale: 0.975 }}
+                style={{
+                  height: 44,
+                  padding: "0 16px",
+                  borderRadius: 13,
+                  border: "1px solid rgba(26, 150, 136, 0.22)",
+                  background: "rgba(255, 255, 255, 0.80)",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: C.ink,
+                  cursor: "pointer",
+                  fontFamily: fonts.sans,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                Soal Lagi
+                <ChevronRight size={13} color={C.ink} />
+              </motion.button>
+            ) : (
+              <motion.button
+                onClick={onUpgrade}
+                whileHover={{ y: -1 }}
+                whileTap={{ scale: 0.975 }}
+                style={upgradeButtonStyle}
+              >
+                <Crown size={14} color={C.gold} />
+                Upgrade
+              </motion.button>
+            )}
+          </>
+        )}
+      </motion.div>
+
+      {/* Upgrade nudge */}
+      <AnimatePresence>
+        {plan === "free" && quizRemaining <= 1 && (
+          <motion.div
+            key="nudge"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0, transition: { duration: 0.28 } }}
+            exit={{ opacity: 0, y: -4 }}
+          >
+            <UpgradeNudge onUpgrade={onUpgrade} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function QuotaBadge({
+  remaining,
+  perDay,
+}: {
+  remaining: number;
+  perDay: number;
+}) {
+  return (
+    <div
+      style={{
+        height: 26,
+        padding: "0 10px",
+        borderRadius: 10,
+        background: "rgba(255,255,255,0.16)",
+        border: "1px solid rgba(255,255,255,0.18)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <span
+        style={{
+          fontSize: 12,
+          color: "rgba(255,255,255,0.90)",
+          fontWeight: 600,
+          lineHeight: 1,
+        }}
+      >
+        {remaining}/{perDay} tersisa
+      </span>
+    </div>
+  );
+}
+
+function UnlimitedBadge() {
+  return (
+    <div
+      style={{
+        height: 26,
+        display: "flex",
+        alignItems: "center",
+        gap: 5,
+        padding: "0 10px",
+        borderRadius: 10,
+        background: "rgba(255,255,255,0.16)",
+        border: "1px solid rgba(255,255,255,0.18)",
+      }}
+    >
+      <Crown size={11} color="#FCD34D" />
+      <span
+        style={{
+          fontSize: 12,
+          color: "#FCD34D",
+          fontWeight: 600,
+          lineHeight: 1,
+        }}
+      >
+        Unlimited
+      </span>
+    </div>
+  );
+}
+
+function MiniSpinner() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 18 18"
+      fill="none"
+      style={{ animation: "ttSpin 0.72s linear infinite" }}
+    >
+      <style>{`@keyframes ttSpin { to { transform: rotate(360deg); } }`}</style>
+      <circle
+        cx="9"
+        cy="9"
+        r="7"
+        stroke="rgba(255,255,255,0.3)"
+        strokeWidth="2"
+      />
+      <path
+        d="M9 2a7 7 0 0 1 7 7"
+        stroke="white"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function LoadingState() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 16,
+        padding: "40px 0",
+      }}
+    >
+      {/* PageLoader-style teal spinner */}
+      <svg
+        width="36"
+        height="36"
+        viewBox="0 0 36 36"
+        fill="none"
+        style={{ animation: "ttSpin 0.8s linear infinite" }}
+      >
+        <style>{`@keyframes ttSpin { to { transform: rotate(360deg); } }`}</style>
+        <circle
+          cx="18"
+          cy="18"
+          r="15"
+          stroke="rgba(26,150,136,0.18)"
+          strokeWidth="3"
+        />
+        <path
+          d="M18 3a15 15 0 0 1 15 15"
+          stroke="#1a9688"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
+      </svg>
+      <p
+        style={{
+          margin: 0,
+          fontSize: 12,
+          color: C.muted,
+          fontFamily: fonts.sans,
+        }}
+      >
+        Memuat soal...
+      </p>
+    </div>
+  );
+}
+
+function QuotaReachedState({
+  onClose,
+  onUpgrade,
+}: {
+  onClose: () => void;
+  onUpgrade: () => void;
+}) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div
+        style={{
+          padding: "14px 16px",
+          borderRadius: 14,
+          background: "rgba(253, 240, 204, 0.72)",
+          border: "1px solid rgba(214, 161, 27, 0.28)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+          display: "flex",
+          gap: 10,
+          alignItems: "flex-start",
+        }}
+      >
+        <Crown
+          size={18}
+          color={C.gold}
+          style={{ flexShrink: 0, marginTop: 2 }}
+        />
+        <div>
+          <p
+            style={{
+              margin: "0 0 5px",
+              fontSize: 13,
+              fontWeight: 800,
+              color: C.amber,
+              fontFamily: fonts.sans,
+            }}
+          >
+            Upgrade ke Premium
+          </p>
+          <p
+            style={{
+              margin: 0,
+              fontSize: 12,
+              lineHeight: 1.65,
+              color: C.text,
+              fontFamily: fonts.serif,
+            }}
+          >
+            Brave Choice gratis hari ini sudah habis. Premium membuka akses
+            unlimited, jadi kamu bisa lanjut latihan keputusan bijak tanpa
+            menunggu besok.
+          </p>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", gap: 8 }}>
+        <motion.button
+          onClick={onUpgrade}
+          whileHover={{ y: -1 }}
+          whileTap={{ scale: 0.975 }}
+          style={upgradeButtonStyle}
+        >
+          <Crown size={14} color={C.gold} />
+          Upgrade Premium
+        </motion.button>
+
+        <motion.button
+          onClick={onClose}
+          whileHover={{ y: -1 }}
+          whileTap={{ scale: 0.975 }}
+          style={{
+            height: 44,
+            padding: "0 18px",
+            borderRadius: 13,
+            border: "1px solid rgba(26, 150, 136, 0.22)",
+            background: "rgba(237, 249, 247, 0.60)",
+            fontSize: 13,
+            fontWeight: 600,
+            color: C.ink,
+            cursor: "pointer",
+            fontFamily: fonts.sans,
+            backdropFilter: "blur(6px)",
+            WebkitBackdropFilter: "blur(6px)",
+          }}
+        >
+          Tutup
+        </motion.button>
+      </div>
+    </div>
+  );
+}
+
+function ExhaustedState({
+  isResetting,
+  onResetQuestions,
+  onClose,
+  onUpgrade,
+  plan,
+}: {
+  isResetting: boolean;
+  onResetQuestions: () => void;
+  onClose: () => void;
+  onUpgrade: () => void;
+  plan: PlanType;
+}) {
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div
+        style={{
+          padding: "14px 16px",
+          borderRadius: 14,
+          background: "rgba(237, 249, 247, 0.65)",
+          border: "1px solid rgba(26, 150, 136, 0.18)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
+      >
+        <p
+          style={{
+            margin: 0,
+            fontSize: 13,
+            lineHeight: 1.7,
+            color: C.text,
+            fontFamily: fonts.serif,
+          }}
+        >
+          Semua soal di segmenmu sudah selesai. Tekan reset untuk membuka semua
+          soal lagi dari awal.
+        </p>
+      </div>
+
+      {plan === "free" && (
+        <motion.button
+          onClick={onUpgrade}
+          whileHover={{ y: -1 }}
+          whileTap={{ scale: 0.975 }}
+          style={upgradeButtonStyle}
+        >
+          <Crown size={14} color={C.gold} />
+          Upgrade Premium
+        </motion.button>
+      )}
+
+      <div style={{ display: "flex", gap: 8 }}>
+        <motion.button
+          onClick={onResetQuestions}
+          disabled={isResetting}
+          whileHover={
+            !isResetting
+              ? { y: -1, boxShadow: "0 10px 24px rgba(20,73,73,0.22)" }
+              : {}
+          }
+          whileTap={!isResetting ? { scale: 0.975 } : {}}
+          style={{
+            flex: 1,
+            height: 44,
+            borderRadius: 13,
+            border: "none",
+            background: "linear-gradient(135deg, #144949 0%, #1a9688 100%)",
+            color: "#fff",
+            fontSize: 13,
+            fontWeight: 700,
+            fontFamily: fonts.sans,
+            cursor: isResetting ? "wait" : "pointer",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+          }}
+        >
+          {isResetting ? <MiniSpinner /> : <RotateCcw size={14} />}
+          Reset Soal
+        </motion.button>
+
+        <motion.button
+          onClick={onClose}
+          whileHover={{ y: -1 }}
+          whileTap={{ scale: 0.975 }}
+          style={{
+            height: 44,
+            padding: "0 18px",
+            borderRadius: 13,
+            border: "1px solid rgba(26, 150, 136, 0.22)",
+            background: "rgba(237, 249, 247, 0.60)",
+            fontSize: 13,
+            fontWeight: 600,
+            color: C.ink,
+            cursor: "pointer",
+            fontFamily: fonts.sans,
+            backdropFilter: "blur(6px)",
+            WebkitBackdropFilter: "blur(6px)",
+          }}
+        >
+          Tutup
+        </motion.button>
+      </div>
+    </div>
+  );
+}
+
+function OptionCard({
+  option,
+  isSelected,
+  isChecked,
+  onClick,
+}: {
+  option: { label: string; text: string; isBrave: boolean };
+  isSelected: boolean;
+  isChecked: boolean;
+  onClick: () => void;
+}) {
+  const resultCorrect = isSelected && isChecked && option.isBrave;
+  const resultWrong = isSelected && isChecked && !option.isBrave;
+
+  const borderColor = resultCorrect
+    ? "#1a9688"
+    : resultWrong
+      ? "#ef4444"
+      : isSelected
+        ? "#1a9688"
+        : "rgba(26, 150, 136, 0.20)";
+
+  const bgColor = resultCorrect
+    ? "rgba(26, 150, 136, 0.09)"
+    : resultWrong
+      ? "rgba(239, 68, 68, 0.07)"
+      : isSelected
+        ? "rgba(26, 150, 136, 0.07)"
+        : "rgba(255, 255, 255, 0.80)";
+
+  const labelBg = resultCorrect
+    ? "#1a9688"
+    : resultWrong
+      ? "#ef4444"
+      : isSelected
+        ? "#1a9688"
+        : "rgba(26, 150, 136, 0.14)";
+
+  const labelColor = isSelected ? "#fff" : "#1a9688";
 
   return (
     <motion.div
-      className="bc-overlay"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: reduceMotion ? 0 : 0.2 }}
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) handleClose();
+      onClick={onClick}
+      animate={{
+        borderColor,
+        backgroundColor: bgColor,
+        scale: isSelected ? 1.01 : 1,
+      }}
+      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={
+        !isChecked
+          ? { y: -2, boxShadow: "0 8px 20px rgba(26,150,136,0.10)" }
+          : {}
+      }
+      whileTap={!isChecked ? { scale: 0.98 } : {}}
+      style={{
+        padding: "12px",
+        borderRadius: 14,
+        cursor: isChecked ? "default" : "pointer",
+        border: `1.5px solid ${borderColor}`,
+        background: bgColor,
+        height: "100%",
+        boxSizing: "border-box",
       }}
     >
       <motion.div
-        ref={sheetRef}
-        className="bc-sheet"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        aria-describedby={descId}
-        initial={reduceMotion ? false : { opacity: 0, y: 24, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 14 }}
-        transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+        animate={{ background: labelBg }}
+        transition={{ duration: 0.22 }}
+        style={{
+          width: 24,
+          height: 24,
+          borderRadius: 8,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: 9,
+        }}
       >
-        <header className="bc-header">
-          <div className="bc-header-icon" aria-hidden="true">
-            <Compass size={24} />
-          </div>
-          <div className="bc-header-copy">
-            <h2 id={titleId}>Brave Choice</h2>
-            <p id={descId}>
-              Jelajahi pilihan, temukan langkah yang lebih baik.
-            </p>
-            <span className="bc-quota" aria-live="polite">
-              {isFree ? (
-                <Sparkles size={13} aria-hidden="true" />
-              ) : (
-                <Crown size={13} aria-hidden="true" />
-              )}
-              {quotaLabel}
-            </span>
-          </div>
-          <button
-            ref={closeRef}
-            type="button"
-            className="bc-close"
-            onClick={handleClose}
-            aria-label="Tutup Brave Choice"
-          >
-            <X size={18} aria-hidden="true" />
-          </button>
-        </header>
-
-        <div className="bc-body">
-          {isLoading ? (
-            <div className="bc-state" role="status">
-              <span className="bc-spinner large" aria-hidden="true" />
-              <p>Menyiapkan situasi untukmu...</p>
-            </div>
-          ) : loadError ? (
-            <>
-              <div className="bc-state cream" role="alert">
-                <span className="bc-state-icon" aria-hidden="true">
-                  <Info size={22} />
-                </span>
-                <strong>Skenario belum berhasil dimuat</strong>
-                <p>Skenario belum berhasil dimuat. Coba lagi.</p>
-              </div>
-              <div className="bc-actions">
-                {onRetryLoad ? (
-                  <button
-                    type="button"
-                    className="bc-btn"
-                    onClick={onRetryLoad}
-                  >
-                    <RotateCcw size={16} aria-hidden="true" /> Coba lagi
-                  </button>
-                ) : null}
-                <button
-                  type="button"
-                  className="bc-btn secondary"
-                  onClick={handleExit}
-                >
-                  {exitLabel}
-                </button>
-              </div>
-            </>
-          ) : quiz ? (
-            <QuizView
-              quiz={quiz}
-              chosenIdx={chosenIdx}
-              isAnswered={isAnswered}
-              isSubmitting={isSubmitting}
-              submitError={submitError}
-              isFree={isFree}
-              quizRemaining={quizRemaining}
-              canLoadNext={canLoadNext}
-              exitLabel={exitLabel}
-              onChoose={(i) => void handleChoose(i)}
-              onNext={onNextQuiz}
-              onExit={handleExit}
-              onUpgrade={onUpgrade}
-            />
-          ) : showQuotaState || isQuotaReached ? (
-            <>
-              <div className="bc-state cream">
-                <span className="bc-state-icon" aria-hidden="true">
-                  <Lightbulb size={22} />
-                </span>
-                <strong>Kesempatan hari ini sudah habis</strong>
-                <p>
-                  Kamu bisa menjelajahi situasi baru lagi besok. Ingin lanjut
-                  sekarang? Premium membuka Brave Choice tanpa batas harian.
-                </p>
-              </div>
-              <div className="bc-actions">
-                <button
-                  type="button"
-                  className="bc-btn premium"
-                  onClick={onUpgrade}
-                >
-                  <Crown size={16} aria-hidden="true" /> Lihat Premium
-                </button>
-                <button
-                  type="button"
-                  className="bc-btn secondary"
-                  onClick={handleExit}
-                >
-                  {exitLabel}
-                </button>
-              </div>
-            </>
-          ) : isQuestionPoolExhausted ? (
-            <>
-              <div className="bc-state lilac">
-                <span className="bc-state-icon" aria-hidden="true">
-                  <MessagesSquare size={22} />
-                </span>
-                <strong>Semua situasi sudah kamu jelajahi</strong>
-                <p>
-                  Kamu bisa mengulang dari awal untuk melatih kembali cara
-                  menghadapi situasi-situasi ini.
-                </p>
-              </div>
-              <div className="bc-actions">
-                <button
-                  type="button"
-                  className="bc-btn"
-                  onClick={onResetQuestions}
-                  disabled={isResetting}
-                  aria-busy={isResetting}
-                >
-                  {isResetting ? (
-                    <span className="bc-spinner light" aria-hidden="true" />
-                  ) : (
-                    <RotateCcw size={16} aria-hidden="true" />
-                  )}
-                  Ulangi dari Awal
-                </button>
-                <button
-                  type="button"
-                  className="bc-btn secondary"
-                  onClick={handleExit}
-                >
-                  {exitLabel}
-                </button>
-              </div>
-            </>
-          ) : null}
-        </div>
+        <span
+          style={{
+            fontSize: 12,
+            fontWeight: 800,
+            color: labelColor,
+            fontFamily: fonts.sans,
+          }}
+        >
+          {option.label}
+        </span>
       </motion.div>
+
+      <AnimatePresence>
+        {isSelected && isChecked && (
+          <motion.p
+            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+            animate={{
+              opacity: 1,
+              height: "auto",
+              marginBottom: 4,
+              transition: { duration: 0.24 },
+            }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{
+              fontSize: 12,
+              fontWeight: 800,
+              color: option.isBrave ? "#1a9688" : "#ef4444",
+              textTransform: "uppercase",
+              letterSpacing: 0.6,
+              margin: 0,
+            }}
+          >
+            {option.isBrave ? "Bijak" : "Kurang Tepat"}
+          </motion.p>
+        )}
+      </AnimatePresence>
+
+      <p
+        style={{
+          fontSize: 12,
+          color: C.text,
+          lineHeight: 1.6,
+          fontFamily: fonts.serif,
+          margin: 0,
+        }}
+      >
+        {option.text}
+      </p>
     </motion.div>
   );
 }
 
-function QuizView({
-  quiz,
-  chosenIdx,
-  isAnswered,
-  isSubmitting,
-  submitError,
-  isFree,
-  quizRemaining,
-  canLoadNext,
-  exitLabel,
-  onChoose,
-  onNext,
-  onExit,
-  onUpgrade,
+function ExplanationCard({
+  isBrave,
+  text,
 }: {
-  quiz: BraveChoiceQuiz;
-  chosenIdx: number | null;
-  isAnswered: boolean;
-  isSubmitting: boolean;
-  submitError: boolean;
-  isFree: boolean;
-  quizRemaining: number;
-  canLoadNext: boolean;
-  exitLabel: string;
-  onChoose: (idx: number) => void;
-  onNext: () => void;
-  onExit: () => void;
-  onUpgrade: () => void;
+  isBrave: boolean;
+  text: string;
 }) {
-  const chosen = chosenIdx !== null ? quiz.options[chosenIdx] : undefined;
-  const feedback =
-    isAnswered && chosen ? buildBraveChoiceFeedback(quiz, chosen) : null;
-  const outOfQuota = isFree && (!canLoadNext || quizRemaining <= 0);
+  const teal = "#1a9688";
+  const red = "#ef4444";
 
   return (
-    <>
-      <section className="bc-scenario" aria-labelledby={`bc-sc-${quiz.id}`}>
-        <span className="bc-kicker" id={`bc-sc-${quiz.id}`}>
-          <MessagesSquare size={14} aria-hidden="true" /> Situasinya
-        </span>
-        <p>{quiz.scenario}</p>
-      </section>
-
-      <div role="group" aria-labelledby={`bc-pr-${quiz.id}`}>
-        <p className="bc-prompt" id={`bc-pr-${quiz.id}`}>
-          Apa yang mungkin kamu lakukan?
+    <div
+      style={{
+        padding: "12px 14px",
+        borderRadius: 14,
+        background: isBrave
+          ? "rgba(26, 150, 136, 0.08)"
+          : "rgba(239, 68, 68, 0.07)",
+        border: `1px solid ${isBrave ? "rgba(26,150,136,0.22)" : "rgba(239,68,68,0.22)"}`,
+        display: "flex",
+        gap: 10,
+        alignItems: "flex-start",
+      }}
+    >
+      {isBrave ? (
+        <CheckCircle2
+          size={17}
+          color={teal}
+          style={{ flexShrink: 0, marginTop: 1 }}
+        />
+      ) : (
+        <AlertCircle
+          size={17}
+          color={red}
+          style={{ flexShrink: 0, marginTop: 1 }}
+        />
+      )}
+      <div>
+        <p
+          style={{
+            fontSize: 12,
+            fontWeight: 700,
+            color: isBrave ? teal : red,
+            margin: "0 0 5px",
+            letterSpacing: 0.1,
+          }}
+        >
+          {isBrave ? "Pilihan Berani!" : "Coba Pikirkan Lagi"}
         </p>
-        <div className="bc-options" style={{ marginTop: 10 }}>
-          {quiz.options.map((option, i) => {
-            const isChosen = chosenIdx === i;
-            const locked = isAnswered || isSubmitting;
-            return (
-              <button
-                key={option.label}
-                type="button"
-                className={`bc-option ${isChosen ? "chosen" : ""} ${
-                  isAnswered && !isChosen ? "muted" : ""
-                }`}
-                onClick={() => onChoose(i)}
-                disabled={locked}
-                aria-pressed={isChosen}
-                aria-label={`Pilihan ${option.label}: ${option.text}${
-                  isChosen && isAnswered ? " (pilihanmu)" : ""
-                }`}
-              >
-                <span className="bc-option-letter" aria-hidden="true">
-                  {option.label}
-                </span>
-                <span className="bc-option-text" aria-hidden="true">
-                  {option.text}
-                </span>
-                {isChosen && isAnswered ? (
-                  <span className="bc-chosen-tag" aria-hidden="true">
-                    Pilihanmu
-                  </span>
-                ) : null}
-                {isChosen && isSubmitting ? (
-                  <span className="bc-option-saving" aria-hidden="true">
-                    <span className="bc-spinner" /> Menyimpan pilihanmu...
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
-        </div>
+        <p
+          style={{
+            fontSize: 12,
+            color: C.text,
+            lineHeight: 1.65,
+            fontFamily: fonts.serif,
+            margin: 0,
+          }}
+        >
+          {text}
+        </p>
       </div>
-
-      {submitError ? (
-        <div className="bc-inline-note" role="alert">
-          <Info size={16} aria-hidden="true" />
-          <span>Pilihanmu belum tersimpan. Coba pilih lagi.</span>
-        </div>
-      ) : null}
-
-      <div aria-live="polite">
-        {feedback ? (
-          <section className="bc-feedback" aria-labelledby="bc-feedback-title">
-            <div className="bc-feedback-head">
-              <Lightbulb size={20} aria-hidden="true" />
-              <h3 id="bc-feedback-title">{feedback.title}</h3>
-            </div>
-
-            {feedback.kind === "recommended" ? (
-              <p>{feedback.benefit}</p>
-            ) : (
-              <>
-                <p>{feedback.opener}</p>
-                {feedback.suggestedStep ? (
-                  <div className="bc-suggested">
-                    <span>
-                      <Compass size={13} aria-hidden="true" /> Langkah yang
-                      disarankan
-                    </span>
-                    <strong>{feedback.suggestedStep}</strong>
-                  </div>
-                ) : null}
-                <p>{feedback.reason}</p>
-                <div className="bc-note">
-                  <span>
-                    <Info size={13} aria-hidden="true" /> Yang perlu
-                    diperhatikan
-                  </span>
-                  <p>{feedback.risk}</p>
-                </div>
-              </>
-            )}
-          </section>
-        ) : null}
-      </div>
-
-      {isFree && quizRemaining <= 1 && (isAnswered || quizRemaining === 1) ? (
-        <div className="bc-inline-note">
-          <Crown size={16} aria-hidden="true" />
-          <span>
-            {quizRemaining <= 0
-              ? "Kesempatan hari ini sudah habis. Kamu bisa lanjut besok, atau buka akses tanpa batas dengan Premium."
-              : "Ini kesempatan terakhirmu hari ini."}
-          </span>
-        </div>
-      ) : null}
-
-      <div className="bc-actions">
-        {isAnswered ? (
-          <>
-            {outOfQuota ? (
-              <button
-                type="button"
-                className="bc-btn premium"
-                onClick={onUpgrade}
-              >
-                <Crown size={16} aria-hidden="true" /> Lihat Premium
-              </button>
-            ) : (
-              <button type="button" className="bc-btn" onClick={onNext}>
-                Coba Skenario Lain <ArrowRight size={16} aria-hidden="true" />
-              </button>
-            )}
-            <button type="button" className="bc-btn secondary" onClick={onExit}>
-              {exitLabel}
-            </button>
-          </>
-        ) : (
-          <>
-            {!outOfQuota ? (
-              <button
-                type="button"
-                className="bc-skip"
-                onClick={onNext}
-                disabled={isSubmitting}
-              >
-                Lewati situasi ini
-              </button>
-            ) : null}
-          </>
-        )}
-      </div>
-    </>
+    </div>
   );
 }
+
+function UpgradeNudge({ onUpgrade }: { onUpgrade: () => void }) {
+  return (
+    <div
+      style={{
+        padding: "10px 12px",
+        borderRadius: 12,
+        background: "rgba(253, 240, 204, 0.72)",
+        border: `1px solid rgba(214, 161, 27, 0.28)`,
+        backdropFilter: "blur(6px)",
+        WebkitBackdropFilter: "blur(6px)",
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+      }}
+    >
+      <Crown size={14} color={C.gold} style={{ flexShrink: 0 }} />
+      <p
+        style={{
+          fontSize: 12,
+          color: C.gold,
+          fontWeight: 600,
+          margin: 0,
+          flex: 1,
+        }}
+      >
+        Ini soal terakhirmu hari ini. Upgrade ke Premium untuk akses unlimited!
+      </p>
+      <button
+        onClick={onUpgrade}
+        style={{
+          height: 26,
+          padding: "0 10px",
+          borderRadius: 999,
+          border: `1px solid rgba(214, 161, 27, 0.35)`,
+          background: "rgba(253, 240, 204, 0.90)",
+          color: C.amber,
+          fontSize: 12,
+          fontWeight: 800,
+          cursor: "pointer",
+          fontFamily: fonts.sans,
+          flexShrink: 0,
+        }}
+      >
+        Upgrade
+      </button>
+    </div>
+  );
+}
+
+const upgradeButtonStyle: CSSProperties = {
+  flex: 1,
+  height: 44,
+  borderRadius: 13,
+  border: "1px solid rgba(214, 161, 27, 0.30)",
+  background: "rgba(253, 240, 204, 0.72)",
+  color: C.amber,
+  fontSize: 13,
+  fontWeight: 800,
+  fontFamily: fonts.sans,
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
+  backdropFilter: "blur(6px)",
+  WebkitBackdropFilter: "blur(6px)",
+};
