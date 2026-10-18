@@ -135,7 +135,7 @@
     align-items: center;
     gap: 9px;
     color: var(--teal-dark);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.16em;
     text-transform: uppercase;
@@ -226,7 +226,7 @@
   }
   .safe-note p {
     margin: 0;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.55;
     color: #657384;
   }
@@ -344,12 +344,12 @@
     align-items: center;
   }
   .mood-title span {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
   }
   .mood-title small {
     color: #788797;
-    font-size: 8px;
+    font-size: 12px;
   }
   .mood-row {
     display: flex;
@@ -562,7 +562,7 @@
   }
   .window-top small {
     color: var(--teal-dark);
-    font-size: 8px;
+    font-size: 12px;
     font-weight: 800;
     text-transform: uppercase;
   }
@@ -575,7 +575,7 @@
     border-radius: 10px;
     color: var(--teal-dark);
     background: #e6f7f2;
-    font-size: 7px;
+    font-size: 12px;
     font-weight: 700;
   }
   .writing {
@@ -599,7 +599,7 @@
     gap: 12px;
     padding: 15px 8px 0;
     border-top: 1px solid #e3e9e7;
-    font-size: 8px;
+    font-size: 12px;
   }
   .diary-bottom > span {
     color: #7b8894;
@@ -626,7 +626,7 @@
     border-radius: 8px;
     color: white;
     background: var(--teal);
-    font-size: 8px;
+    font-size: 12px;
     font-weight: 800;
   }
   .paper-tape {
@@ -685,7 +685,7 @@
     gap: 8px;
     margin-top: 18px;
     color: var(--teal-dark);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
   }
 
@@ -874,7 +874,7 @@
     gap: 4px;
     margin: 0;
     color: #71808e;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.5;
   }
   .value-list strong {
@@ -928,23 +928,23 @@
     border-radius: 50%;
     color: var(--teal-dark);
     background: var(--mint);
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
   }
   .person p {
     display: grid;
     margin: 0;
     gap: 3px;
-    font-size: 11px;
+    font-size: 12px;
   }
   .person small {
     color: #73808c;
-    font-size: 9px;
+    font-size: 12px;
   }
   .placeholder-note {
     margin: 20px 0 0;
     color: #8b979f;
-    font-size: 8px;
+    font-size: 12px;
     font-style: italic;
   }
 
@@ -1037,17 +1037,17 @@
     max-width: 330px;
     margin: 18px 0 13px;
     color: #697785;
-    font-size: 11px;
+    font-size: 12px;
     line-height: 1.7;
   }
   .footer-brand > a:not(.brand) {
     color: var(--teal-dark);
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 700;
   }
   .footer-grid h3 {
     margin: 0 0 18px;
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 0.13em;
     text-transform: uppercase;
   }
@@ -1059,7 +1059,7 @@
   }
   .footer-grid > div:not(:first-child) > a {
     color: #697785;
-    font-size: 10px;
+    font-size: 12px;
   }
   .socials {
     display: flex;
@@ -1073,7 +1073,7 @@
     border: 1px solid #c9ddda;
     border-radius: 50%;
     color: var(--teal-dark);
-    font-size: 8px;
+    font-size: 12px;
     font-weight: 800;
   }
   .footer-button {
@@ -1094,7 +1094,7 @@
     padding-top: 20px;
     border-top: 1px solid #e1e8e6;
     color: #8a969f;
-    font-size: 8px;
+    font-size: 12px;
   }
   .copyright div {
     display: flex;

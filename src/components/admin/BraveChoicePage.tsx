@@ -117,7 +117,7 @@ const mSelect: React.CSSProperties = {
   WebkitAppearance: "none",
 };
 const mLabel: React.CSSProperties = {
-  fontSize: 11,
+  fontSize: 12,
   fontWeight: 700,
   color: "#4a7a74",
   display: "block",
@@ -153,7 +153,7 @@ function SectionDivider({ label }: { label: string }) {
       <div style={{ flex: 1, height: 1, background: "#e0f0ee" }} />
       <span
         style={{
-          fontSize: 10,
+          fontSize: 12,
           fontWeight: 700,
           color: "#8bbdb7",
           textTransform: "uppercase",
@@ -683,7 +683,7 @@ function DeleteConfirm({
               border: "1px solid var(--tt-dashboard-card-border)",
             }}
           >
-            <p style={{ fontSize: 11, color: C.text3, marginBottom: 4 }}>
+            <p style={{ fontSize: 12, color: C.text3, marginBottom: 4 }}>
               Soal yang akan dihapus:
             </p>
             <p
@@ -790,7 +790,7 @@ function QuestionCard({
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           <span
             style={{
-              fontSize: 10,
+              fontSize: 12,
               color: C.text3,
               fontVariantNumeric: "tabular-nums",
               alignSelf: "center",
@@ -800,7 +800,7 @@ function QuestionCard({
           </span>
           <span
             style={{
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: 700,
               padding: "3px 10px",
               borderRadius: 100,
@@ -812,7 +812,7 @@ function QuestionCard({
           </span>
           <span
             style={{
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: 600,
               padding: "3px 10px",
               borderRadius: 100,
@@ -896,7 +896,7 @@ function QuestionCard({
             >
               <span
                 style={{
-                  fontSize: 10,
+                  fontSize: 12,
                   fontWeight: 800,
                   marginRight: 4,
                   opacity: 0.7,
@@ -906,7 +906,7 @@ function QuestionCard({
               </span>
               {opt === "A" ? q.optionA : q.optionB}
               {isCorrect && (
-                <span style={{ marginLeft: 4, fontSize: 10 }}>✓</span>
+                <span style={{ marginLeft: 4, fontSize: 12 }}>✓</span>
               )}
             </div>
           );
@@ -1332,7 +1332,7 @@ export function BraveChoicePage({
               >
                 {s.value}
               </p>
-              <p style={{ fontSize: 10, fontWeight: 600, color: C.text3 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: C.text3 }}>
                 {s.label}
               </p>
             </div>
@@ -1675,7 +1675,7 @@ export function BraveChoicePage({
                       style={{
                         textAlign: "left",
                         padding: "11px 14px",
-                        fontSize: 10,
+                        fontSize: 12,
                         fontWeight: 700,
                         color: C.text3,
                         textTransform: "uppercase",
@@ -1710,7 +1710,7 @@ export function BraveChoicePage({
                       <td
                         style={{
                           padding: "12px 14px",
-                          fontSize: 11,
+                          fontSize: 12,
                           color: C.text3,
                           borderBottom:
                             "1px solid var(--tt-dashboard-card-border)",
@@ -1807,7 +1807,7 @@ export function BraveChoicePage({
                       >
                         <span
                           style={{
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: 800,
                             padding: "3px 10px",
                             borderRadius: 100,
@@ -1828,7 +1828,7 @@ export function BraveChoicePage({
                       >
                         <span
                           style={{
-                            fontSize: 11,
+                            fontSize: 12,
                             fontWeight: 700,
                             padding: "3px 10px",
                             borderRadius: 100,

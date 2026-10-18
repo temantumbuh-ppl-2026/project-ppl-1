@@ -32,7 +32,7 @@ export function HomeDashboardInsightCard({
             </h3>
             <motion.span
               whileHover={{ scale: 1.05 }}
-              className="rounded-full px-2 py-0.5 text-[8px] font-black"
+              className="rounded-full px-2 py-0.5 text-[12px] font-black"
               style={{
                 background: "var(--tt-dashboard-warning-soft)",
                 color: "var(--tt-dashboard-warning)",
@@ -42,7 +42,7 @@ export function HomeDashboardInsightCard({
             </motion.span>
           </div>
           <p
-            className="mt-1 text-[11px]"
+            className="mt-1 text-[12px]"
             style={{ color: "var(--tt-dashboard-text-2)" }}
           >
             Analisis premium emosimu

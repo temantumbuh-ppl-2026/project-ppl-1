@@ -230,7 +230,7 @@ export function ParentReportContent({
             <h2 className="text-[15px] font-extrabold text-slate-900 sm:text-base">
               Konfigurasi Laporan
             </h2>
-            <p className="mt-0.5 text-[11px] text-slate-500">
+            <p className="mt-0.5 text-[12px] text-slate-500">
               Atur pengiriman laporan kepada orang tua atau wali.
             </p>
           </div>
@@ -243,13 +243,13 @@ export function ParentReportContent({
                 Email Orang Tua
               </p>
               <span
-                className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-bold ${statusBadge.className}`}
+                className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[12px] font-bold ${statusBadge.className}`}
               >
                 {statusBadge.label}
               </span>
             </div>
 
-            <p className="mt-0.5 text-[11px] leading-relaxed text-slate-500">
+            <p className="mt-0.5 text-[12px] leading-relaxed text-slate-500">
               Laporan mingguan akan dikirimkan ke email ini.
             </p>
           </div>
@@ -385,7 +385,7 @@ export function ParentReportContent({
             <h2 className="text-[15px] font-extrabold text-slate-900 sm:text-base">
               Yang Tidak Dikirim ke Orang Tua
             </h2>
-            <p className="mt-0.5 text-[11px] text-slate-500">
+            <p className="mt-0.5 text-[12px] text-slate-500">
               Privasi diary kamu tetap terlindungi sepenuhnya.
             </p>
           </div>

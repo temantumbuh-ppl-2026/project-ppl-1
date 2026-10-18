@@ -414,7 +414,7 @@ export function DiaryRightPage({
 
           <p
             style={{
-              fontSize: 10.5,
+              fontSize: 12,
               color: C.sub,
               fontFamily: fonts.sans,
               margin: 0,
@@ -457,7 +457,7 @@ export function DiaryRightPage({
           <span
             style={{
               color: C.sub,
-              fontSize: 10,
+              fontSize: 12,
               fontFamily: fonts.sans,
               flexShrink: 0,
             }}
@@ -473,7 +473,7 @@ export function DiaryRightPage({
                 background: C.white,
                 color: C.inkD,
                 padding: "4px 9px",
-                fontSize: 10,
+                fontSize: 12,
                 fontFamily: fonts.sans,
                 flexShrink: 0,
               }}
@@ -525,7 +525,7 @@ export function DiaryRightPage({
               border: "none",
               background: C.gold,
               color: C.white,
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: 700,
               cursor: "pointer",
               fontFamily: fonts.sans,
@@ -567,7 +567,7 @@ export function DiaryRightPage({
             <Lock size={11} color={C.sub} />
             <p
               style={{
-                fontSize: 11,
+                fontSize: 12,
                 color: C.sub,
                 fontStyle: "italic",
                 margin: 0,
@@ -612,7 +612,7 @@ export function DiaryRightPage({
                 style={{
                   margin: 0,
                   color: C.sub,
-                  fontSize: 11,
+                  fontSize: 12,
                   fontFamily: fonts.sans,
                 }}
               >
@@ -644,7 +644,7 @@ export function DiaryRightPage({
               style={{
                 margin: "0 0 6px 36px",
                 color: C.sub,
-                fontSize: 11,
+                fontSize: 12,
                 fontFamily: fonts.sans,
               }}
             >
@@ -676,7 +676,7 @@ export function DiaryRightPage({
               border: `1px solid ${C.amberB}`,
               background: C.amberL,
               color: C.amber,
-              fontSize: 11,
+              fontSize: 12,
               lineHeight: 1.45,
               fontFamily: fonts.sans,
             }}
@@ -940,7 +940,7 @@ function LockedInputNotice({ message }: { message: string }) {
       <p
         style={{
           margin: 0,
-          fontSize: 11,
+          fontSize: 12,
           lineHeight: 1.45,
           color: C.sub,
           fontFamily: fonts.sans,

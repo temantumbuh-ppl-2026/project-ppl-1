@@ -505,7 +505,7 @@ function PanelContent({
             border: "none",
             background: `linear-gradient(135deg, ${C.inkD}, ${C.inkM})`,
             color: C.white,
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 700,
             cursor: "pointer",
             display: "flex",
@@ -528,7 +528,7 @@ function PanelContent({
             border: `1px solid ${canOpenQuiz ? C.bd : C.bdL}`,
             background: canOpenQuiz ? C.inkS : "#F7F8F8",
             color: canOpenQuiz ? C.ink : C.sub,
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 700,
             cursor: canOpenQuiz ? "pointer" : "not-allowed",
             display: "flex",
@@ -544,7 +544,7 @@ function PanelContent({
           {user.plan === "free" ? (
             <span
               style={{
-                fontSize: 8,
+                fontSize: 12,
                 fontWeight: 800,
                 color: isQuestionPoolExhausted
                   ? C.amber
@@ -597,7 +597,7 @@ function PanelContent({
             <p
               style={{
                 margin: 0,
-                fontSize: 9,
+                fontSize: 12,
                 lineHeight: 1.45,
                 color: C.amber,
                 fontWeight: 600,
@@ -629,7 +629,7 @@ function PanelContent({
             <p
               style={{
                 margin: 0,
-                fontSize: 9,
+                fontSize: 12,
                 lineHeight: 1.45,
                 color: C.redD,
                 fontWeight: 600,
@@ -654,7 +654,7 @@ function PanelContent({
               border: `1px solid ${C.goldL}`,
               background: C.goldS,
               color: C.amber,
-              fontSize: 10,
+              fontSize: 12,
               fontWeight: 800,
               cursor: "pointer",
               display: "inline-flex",
@@ -726,7 +726,7 @@ function PanelContent({
                 <p
                   style={{
                     margin: "0 0 6px",
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: 800,
                     color: C.inkD,
                   }}
@@ -736,7 +736,7 @@ function PanelContent({
                 <p
                   style={{
                     margin: 0,
-                    fontSize: 10,
+                    fontSize: 12,
                     color: C.sub,
                     lineHeight: 1.55,
                     fontStyle: "italic",

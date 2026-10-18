@@ -375,7 +375,7 @@ export function MoodCheckin({
                   </div>
 
                   <span
-                    className="text-center text-[10px] font-semibold leading-tight sm:text-[11px]"
+                    className="text-center text-[12px] font-semibold leading-tight sm:text-[12px]"
                     style={{
                       color:
                         moodScore === id ? color : "var(--brand-text-muted)",

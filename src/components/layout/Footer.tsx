@@ -81,7 +81,7 @@ function LandingFooter() {
 export function Footer() {
   const pathname = usePathname();
 
-  if (pathname === "/") {
+  if (["/", "/about", "/features", "/pricing"].includes(pathname)) {
     return <LandingFooter />;
   }
 

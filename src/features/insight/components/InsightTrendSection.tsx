@@ -85,7 +85,7 @@ function HelperTooltip({ text }: { text: string }) {
 
       {open && (
         <div
-          className="absolute left-1/2 top-full z-20 mt-2 w-[200px] -translate-x-1/2 rounded-xl px-3 py-2 text-[11px] font-medium leading-4 shadow-lg"
+          className="absolute left-1/2 top-full z-20 mt-2 w-[200px] -translate-x-1/2 rounded-xl px-3 py-2 text-[12px] font-medium leading-4 shadow-lg"
           style={{
             background: "rgba(25,39,44,0.95)",
             color: "#FFFFFF",
@@ -325,7 +325,7 @@ export function InsightTrendSection({
           style={{ borderColor: "rgba(25,39,44,0.06)" }}
         >
           <p
-            className="mb-3 text-[11px] font-bold uppercase tracking-[0.1em]"
+            className="mb-3 text-[12px] font-bold uppercase tracking-[0.1em]"
             style={{ color: "var(--tt-dashboard-text-2)" }}
           >
             Keterangan Skor Mood
@@ -334,7 +334,7 @@ export function InsightTrendSection({
             <div className="flex items-center gap-1.5">
               <MoodFaceIcon score={1} size={18} />
               <span
-                className="text-[11px] font-medium sm:text-[12px]"
+                className="text-[12px] font-medium sm:text-[12px]"
                 style={{ color: "var(--tt-dashboard-text-2)" }}
               >
                 1 = Sangat Sedih
@@ -343,7 +343,7 @@ export function InsightTrendSection({
             <div className="flex items-center gap-1.5">
               <MoodFaceIcon score={2} size={18} />
               <span
-                className="text-[11px] font-medium sm:text-[12px]"
+                className="text-[12px] font-medium sm:text-[12px]"
                 style={{ color: "var(--tt-dashboard-text-2)" }}
               >
                 2 = Sedih
@@ -352,7 +352,7 @@ export function InsightTrendSection({
             <div className="flex items-center gap-1.5">
               <MoodFaceIcon score={3} size={18} />
               <span
-                className="text-[11px] font-medium sm:text-[12px]"
+                className="text-[12px] font-medium sm:text-[12px]"
                 style={{ color: "var(--tt-dashboard-text-2)" }}
               >
                 3 = Biasa Aja
@@ -361,7 +361,7 @@ export function InsightTrendSection({
             <div className="flex items-center gap-1.5">
               <MoodFaceIcon score={4} size={18} />
               <span
-                className="text-[11px] font-medium sm:text-[12px]"
+                className="text-[12px] font-medium sm:text-[12px]"
                 style={{ color: "var(--tt-dashboard-text-2)" }}
               >
                 4 = Senang
@@ -370,7 +370,7 @@ export function InsightTrendSection({
             <div className="flex items-center gap-1.5">
               <MoodFaceIcon score={5} size={18} />
               <span
-                className="text-[11px] font-medium sm:text-[12px]"
+                className="text-[12px] font-medium sm:text-[12px]"
                 style={{ color: "var(--tt-dashboard-text-2)" }}
               >
                 5 = Sangat Senang
@@ -440,7 +440,7 @@ export function InsightTrendSection({
                     tickMargin={12}
                     tick={{
                       fill: "var(--tt-dashboard-text-3)",
-                      fontSize: 11,
+                      fontSize: 12,
                       fontFamily:
                         "var(--font-plus-jakarta), system-ui, sans-serif",
                     }}
@@ -455,7 +455,7 @@ export function InsightTrendSection({
                     width={32}
                     tick={{
                       fill: "var(--tt-dashboard-text-3)",
-                      fontSize: 11,
+                      fontSize: 12,
                       fontFamily:
                         "var(--font-plus-jakarta), system-ui, sans-serif",
                     }}
@@ -505,7 +505,7 @@ export function InsightTrendSection({
                   style={{ background: "var(--tt-dashboard-brand-deep)" }}
                 />
                 <span
-                  className="text-[11px] font-medium sm:text-xs"
+                  className="text-[12px] font-medium sm:text-xs"
                   style={{ color: "var(--tt-dashboard-text-2)" }}
                 >
                   Mood harian
@@ -521,7 +521,7 @@ export function InsightTrendSection({
                   }}
                 />
                 <span
-                  className="text-[11px] font-medium sm:text-xs"
+                  className="text-[12px] font-medium sm:text-xs"
                   style={{ color: "var(--tt-dashboard-text-2)" }}
                 >
                   Batas cukup stabil

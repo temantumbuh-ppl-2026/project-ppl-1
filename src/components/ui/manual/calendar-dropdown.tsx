@@ -145,9 +145,9 @@ export function CalendarDropdown({ date, monthLabel, onChange }: Props) {
               table: "w-full border-collapse space-y-1",
               head_row: "flex",
               head_cell:
-                "text-[#8AADAD] rounded-md w-8 font-semibold text-[10px]",
+                "text-[#8AADAD] rounded-md w-8 font-semibold text-[12px]",
               row: "flex w-full mt-1",
-              cell: "h-8 w-8 text-center text-[11px] p-0 relative [&:has([aria-selected])]:bg-[#E2F5F3] first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+              cell: "h-8 w-8 text-center text-[12px] p-0 relative [&:has([aria-selected])]:bg-[#E2F5F3] first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
               day: "h-8 w-8 p-0 font-medium rounded-md text-[#0D4646] hover:bg-[#EEF9F8]",
               day_selected:
                 "bg-[#1A9688] text-white hover:bg-[#1A9688] hover:text-white focus:bg-[#1A9688] focus:text-white",
@@ -156,11 +156,11 @@ export function CalendarDropdown({ date, monthLabel, onChange }: Props) {
               day_disabled: "text-[#8AADAD] opacity-40",
               day_hidden: "invisible",
               dropdown:
-                "h-8 rounded-md border border-[#E2F0F0] bg-white px-2 text-[11px] font-semibold text-[#0D4646]",
+                "h-8 rounded-md border border-[#E2F0F0] bg-white px-2 text-[12px] font-semibold text-[#0D4646]",
               dropdown_month:
-                "h-8 rounded-md border border-[#E2F0F0] bg-white px-2 text-[11px] font-semibold text-[#0D4646]",
+                "h-8 rounded-md border border-[#E2F0F0] bg-white px-2 text-[12px] font-semibold text-[#0D4646]",
               dropdown_year:
-                "h-8 rounded-md border border-[#E2F0F0] bg-white px-2 text-[11px] font-semibold text-[#0D4646]",
+                "h-8 rounded-md border border-[#E2F0F0] bg-white px-2 text-[12px] font-semibold text-[#0D4646]",
             }}
           />
         </div>

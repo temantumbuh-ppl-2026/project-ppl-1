@@ -106,7 +106,7 @@ export function MoodDayCard({ d }: { d: MoodDay }) {
         }}
       >
         <p
-          className="text-[10px] font-semibold"
+          className="text-[12px] font-semibold"
           style={{ color: "var(--tt-dashboard-text-2)" }}
         >
           {d.day}
@@ -145,21 +145,21 @@ export function MoodDayCard({ d }: { d: MoodDay }) {
         </div>
 
         <p
-          className="text-[11px] font-semibold"
+          className="text-[12px] font-semibold"
           style={{ color: "var(--tt-dashboard-text)" }}
         >
           {d.date}
         </p>
 
         <p
-          className="mt-1.5 text-[10px] font-extrabold md:text-sm"
+          className="mt-1.5 text-[12px] font-extrabold md:text-sm"
           style={{ color: hasMood ? color : "var(--tt-dashboard-text)" }}
         >
           {hasMood ? `${d.score}/5` : "–"}
         </p>
 
         <p
-          className="mt-1 min-h-[20px] text-[9px] leading-4"
+          className="mt-1 min-h-[20px] text-[12px] leading-4"
           style={{ color: "var(--tt-dashboard-text-2)" }}
         >
           {getMoodLabel(d.score)}
@@ -168,7 +168,7 @@ export function MoodDayCard({ d }: { d: MoodDay }) {
         <div className="mt-auto pt-1.5">
           {d.today ? (
             <div
-              className="inline-flex rounded-full px-2 py-0.5 text-[8px] font-bold"
+              className="inline-flex rounded-full px-2 py-0.5 text-[12px] font-bold"
               style={{
                 background: "var(--tt-dashboard-warning-soft)",
                 color: "var(--tt-dashboard-warning)",
@@ -205,11 +205,11 @@ export function MoodDayCard({ d }: { d: MoodDay }) {
                 }}
               />
 
-              <p className="text-[11px] font-bold" style={{ color }}>
+              <p className="text-[12px] font-bold" style={{ color }}>
                 {getMoodLabel(d.score)}
               </p>
 
-              <p className="mt-1 break-words text-[11px] leading-relaxed">
+              <p className="mt-1 break-words text-[12px] leading-relaxed">
                 {note}
               </p>
             </div>,

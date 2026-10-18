@@ -249,7 +249,7 @@ export function BraveChoiceModal({
                   </p>
                   <p
                     style={{
-                      fontSize: 10,
+                      fontSize: 12,
                       color: "rgba(255,255,255,0.65)",
                       margin: 0,
                     }}
@@ -431,7 +431,7 @@ function QuizBody({
       >
         <p
           style={{
-            fontSize: 9,
+            fontSize: 12,
             fontWeight: 700,
             color: "#1a9688",
             textTransform: "uppercase",
@@ -689,7 +689,7 @@ function QuotaBadge({
     >
       <span
         style={{
-          fontSize: 10,
+          fontSize: 12,
           color: "rgba(255,255,255,0.90)",
           fontWeight: 600,
           lineHeight: 1,
@@ -718,7 +718,7 @@ function UnlimitedBadge() {
       <Crown size={11} color="#FCD34D" />
       <span
         style={{
-          fontSize: 10,
+          fontSize: 12,
           color: "#FCD34D",
           fontWeight: 600,
           lineHeight: 1,
@@ -1085,7 +1085,7 @@ function OptionCard({
       >
         <span
           style={{
-            fontSize: 10,
+            fontSize: 12,
             fontWeight: 800,
             color: labelColor,
             fontFamily: fonts.sans,
@@ -1107,7 +1107,7 @@ function OptionCard({
             }}
             exit={{ opacity: 0, height: 0 }}
             style={{
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: 800,
               color: option.isBrave ? "#1a9688" : "#ef4444",
               textTransform: "uppercase",
@@ -1175,7 +1175,7 @@ function ExplanationCard({
       <div>
         <p
           style={{
-            fontSize: 10,
+            fontSize: 12,
             fontWeight: 700,
             color: isBrave ? teal : red,
             margin: "0 0 5px",
@@ -1218,7 +1218,7 @@ function UpgradeNudge({ onUpgrade }: { onUpgrade: () => void }) {
       <Crown size={14} color={C.gold} style={{ flexShrink: 0 }} />
       <p
         style={{
-          fontSize: 11,
+          fontSize: 12,
           color: C.gold,
           fontWeight: 600,
           margin: 0,
@@ -1236,7 +1236,7 @@ function UpgradeNudge({ onUpgrade }: { onUpgrade: () => void }) {
           border: `1px solid rgba(214, 161, 27, 0.35)`,
           background: "rgba(253, 240, 204, 0.90)",
           color: C.amber,
-          fontSize: 10,
+          fontSize: 12,
           fontWeight: 800,
           cursor: "pointer",
           fontFamily: fonts.sans,

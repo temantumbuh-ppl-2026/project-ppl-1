@@ -122,7 +122,7 @@ const C = {
   th: {
     textAlign: "left" as const,
     padding: "11px 16px",
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: 700,
     color: "var(--tt-dashboard-text-3)",
     textTransform: "uppercase" as const,
@@ -154,7 +154,7 @@ const mInput: React.CSSProperties = {
   lineHeight: 1.5,
 };
 const mLabel: React.CSSProperties = {
-  fontSize: 11,
+  fontSize: 12,
   fontWeight: 700,
   color: "#4a7a74",
   display: "block",
@@ -180,7 +180,7 @@ function Badge({
   return (
     <span
       style={{
-        fontSize: 11,
+        fontSize: 12,
         fontWeight: 700,
         padding: "3px 10px",
         borderRadius: 100,
@@ -833,7 +833,7 @@ function UserForm({
           }}
         />
         {isEdit && (
-          <p style={{ fontSize: 11, color: C.text3, marginTop: 4 }}>
+          <p style={{ fontSize: 12, color: C.text3, marginTop: 4 }}>
             Email tidak bisa diubah karena terikat dengan akun Google Login.
           </p>
         )}
@@ -868,7 +868,7 @@ function UserForm({
               <p style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
                 Akun Premium
               </p>
-              <p style={{ fontSize: 11, color: C.text3, marginTop: 1 }}>
+              <p style={{ fontSize: 12, color: C.text3, marginTop: 1 }}>
                 {form.isPremium
                   ? "User punya akses fitur premium"
                   : "User akan jadi Basic"}
@@ -902,7 +902,7 @@ function UserForm({
               <p style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
                 Status Akun
               </p>
-              <p style={{ fontSize: 11, color: C.text3, marginTop: 1 }}>
+              <p style={{ fontSize: 12, color: C.text3, marginTop: 1 }}>
                 {form.status === "Aktif"
                   ? "User bisa login & pakai aplikasi"
                   : "Akun dinonaktifkan"}
@@ -1094,7 +1094,7 @@ function UserDetailBody({
           >
             <p
               style={{
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: 700,
                 color: C.text3,
                 width: 96,
@@ -1123,7 +1123,7 @@ function UserDetailBody({
         >
           <p
             style={{
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: 700,
               color: "#7c3aed",
               textTransform: "uppercase",
@@ -1253,7 +1253,7 @@ function LinkParentForm({
           required
           style={mInput}
         />
-        <p style={{ fontSize: 11, color: C.text3, marginTop: 4 }}>
+        <p style={{ fontSize: 12, color: C.text3, marginTop: 4 }}>
           Laporan mingguan otomatis dikirim ke email ini.
         </p>
       </div>
@@ -1515,7 +1515,7 @@ function UserCard({ u, menuItems }: { u: User; menuItems: MenuItem[] }) {
               alignItems: "center",
               gap: 5,
               marginTop: 2,
-              fontSize: 11,
+              fontSize: 12,
               color: C.text3,
               minWidth: 0,
             }}
@@ -1547,7 +1547,7 @@ function UserCard({ u, menuItems }: { u: User; menuItems: MenuItem[] }) {
         {u.parentEmail && (
           <span
             style={{
-              fontSize: 11,
+              fontSize: 12,
               fontWeight: 700,
               padding: "3px 10px",
               borderRadius: 100,
@@ -1572,7 +1572,7 @@ function UserCard({ u, menuItems }: { u: User; menuItems: MenuItem[] }) {
       >
         <p
           style={{
-            fontSize: 9,
+            fontSize: 12,
             fontWeight: 700,
             color: C.text3,
             textTransform: "uppercase",
@@ -1583,7 +1583,7 @@ function UserCard({ u, menuItems }: { u: User; menuItems: MenuItem[] }) {
         </p>
         <p
           style={{
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: 600,
             color: C.text2,
             display: "flex",
@@ -2081,7 +2081,7 @@ export function UsersPage({
                           {u.parentEmail && (
                             <p
                               style={{
-                                fontSize: 10,
+                                fontSize: 12,
                                 color: "#7c3aed",
                                 marginTop: 1,
                                 fontWeight: 600,

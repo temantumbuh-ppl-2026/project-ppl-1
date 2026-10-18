@@ -141,7 +141,7 @@ function MobileSidebar({
         <div className="mb-4 flex items-center justify-between px-1">
           <div>
             <p
-              className="text-[11px] font-extrabold uppercase tracking-[0.14em]"
+              className="text-[12px] font-extrabold uppercase tracking-[0.14em]"
               style={{ color: "var(--tt-dashboard-text-2)" }}
             >
               TEMANTUMBUH
@@ -433,7 +433,7 @@ export function AppSidebarShell({ user, children }: Props) {
 
             <div className="min-w-0 flex-1">
               <p
-                className="text-[11px] font-extrabold uppercase tracking-[0.14em]"
+                className="text-[12px] font-extrabold uppercase tracking-[0.14em]"
                 style={{ color: "var(--tt-dashboard-text-2)" }}
               >
                 TEMANTUMBUH
@@ -512,7 +512,7 @@ function MobileProfileDropdown({
         aria-label="Menu profil"
       >
         <div
-          className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg text-[10px] font-black text-white"
+          className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg text-[12px] font-black text-white"
           style={{ background: "var(--tt-dashboard-brand)" }}
         >
           {userImageSrc ? (

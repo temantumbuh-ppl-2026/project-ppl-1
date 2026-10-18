@@ -1,5 +1,6 @@
 import { AgeSegment, Prisma } from "@/app/generated/prisma/client";
 import prisma from "@/lib/prisma";
+import { FREE_QUIZ_LIMIT_PER_DAY } from "@/lib/subscription/plans";
 
 type BraveChoiceOptionLabel = "A" | "B";
 
@@ -64,7 +65,6 @@ type UserQuizContext = {
 };
 
 const DEFAULT_TIMEZONE = "Asia/Jakarta";
-const FREE_QUIZ_LIMIT_PER_DAY = 5;
 
 export class BraveChoiceServiceError extends Error {
   status: number;

@@ -5,7 +5,9 @@
 // ============================================================
 
 import "./landing-redesign.css";
+import "./landing-motion.css";
 
+import { LandingMotion } from "@/components/landing/home/landing-motion";
 import { HomeCtaSection } from "@/components/landing/home/sections/cta-section";
 import { HomeFeaturesSection } from "@/components/landing/home/sections/features-section";
 import { HomeHeroSection } from "@/components/landing/home/sections/hero-section";
@@ -17,6 +19,7 @@ import { HomeTestimonialsSection } from "@/components/landing/home/sections/test
 export default function LandingPage() {
   return (
     <main className="tt-landing">
+      <LandingMotion />
       <HomeHeroSection />
       <HomeMarqueeSection />
       <HomeFeaturesSection />

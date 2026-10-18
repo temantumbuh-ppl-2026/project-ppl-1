@@ -31,7 +31,7 @@ export function HomeDashboardHeroCard({
         minHeight: 220,
       }}
     >
-      <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.11em] text-white/80">
+      <p className="mb-3 text-[12px] font-bold uppercase tracking-[0.11em] text-white/80">
         Mood Streak
       </p>
 
@@ -65,7 +65,7 @@ export function HomeDashboardHeroCard({
           className="rounded-xl bg-white/10 px-3 py-2.5 text-center transition-colors duration-200"
         >
           <p className="text-[16px] font-black text-white">{longestStreak}</p>
-          <p className="text-[9px] text-white/75 mt-0.5">Terpanjang</p>
+          <p className="text-[12px] text-white/75 mt-0.5">Terpanjang</p>
         </motion.div>
 
         <motion.div
@@ -73,7 +73,7 @@ export function HomeDashboardHeroCard({
           className="rounded-xl bg-white/10 px-3 py-2.5 text-center transition-colors duration-200"
         >
           <p className="text-[16px] font-black text-white">{totalDiaries}</p>
-          <p className="text-[9px] text-white/75 mt-0.5">Total Diary</p>
+          <p className="text-[12px] text-white/75 mt-0.5">Total Diary</p>
         </motion.div>
       </div>
 
@@ -91,7 +91,7 @@ export function HomeDashboardHeroCard({
                   d.score !== null ? "#86EFAC" : "rgba(255,255,255,0.18)",
               }}
             />
-            <span className="text-[6px] text-white/50">{d.day[0]}</span>
+            <span className="text-[12px] text-white/50">{d.day[0]}</span>
           </motion.div>
         ))}
       </div>

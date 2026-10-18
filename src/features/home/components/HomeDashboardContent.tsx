@@ -331,7 +331,7 @@ export function HomeDashboardContent() {
             initial="hidden"
             animate="visible"
             custom={1}
-            className="mb-4 text-[11px] font-bold uppercase tracking-[0.13em]"
+            className="mb-4 text-[12px] font-bold uppercase tracking-[0.13em]"
             style={{ color: "var(--tt-dashboard-text-2)" }}
           >
             {dateStr.toUpperCase()}
@@ -484,7 +484,7 @@ function ProfileDropdown({
         style={{ background: "var(--tt-dashboard-chip-bg)" }}
       >
         <div
-          className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg text-[11px] font-black text-white"
+          className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg text-[12px] font-black text-white"
           style={{ background: "var(--tt-dashboard-brand)" }}
         >
           {userImageSrc ? (

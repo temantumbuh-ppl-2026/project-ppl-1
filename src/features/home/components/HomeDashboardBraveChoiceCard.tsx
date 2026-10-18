@@ -69,7 +69,7 @@ export function HomeDashboardBraveChoiceCard({
       >
         <div className="flex h-full flex-col">
           <p
-            className="mb-3 text-[11px] font-bold uppercase tracking-[0.11em]"
+            className="mb-3 text-[12px] font-bold uppercase tracking-[0.11em]"
             style={{ color: "var(--tt-dashboard-text-2)" }}
           >
             Brave Choice
@@ -134,7 +134,7 @@ export function HomeDashboardBraveChoiceCard({
                     stroke={4}
                   />
                   <span
-                    className="absolute text-[10px] font-black sm:text-[12px]"
+                    className="absolute text-[12px] font-black sm:text-[12px]"
                     style={{ color: "var(--tt-dashboard-text)" }}
                   >
                     {pct}%
@@ -149,7 +149,7 @@ export function HomeDashboardBraveChoiceCard({
                     {correct}/{total}
                   </p>
                   <p
-                    className="mt-0.5 text-[10px] font-semibold sm:text-[12px]"
+                    className="mt-0.5 text-[12px] font-semibold sm:text-[12px]"
                     style={{ color: "var(--tt-dashboard-text-2)" }}
                   >
                     pilihan benar

@@ -59,7 +59,7 @@ export function HomeDashboardBaselineCard({
           }}
         >
           <p
-            className="text-[9px] font-bold uppercase tracking-[0.1em]"
+            className="text-[12px] font-bold uppercase tracking-[0.1em]"
             style={{ color: "var(--tt-dashboard-text-2)" }}
           >
             Level
@@ -93,7 +93,7 @@ export function HomeDashboardBaselineCard({
         >
           <Link
             href="/baseline"
-            className="inline-flex cursor-pointer items-center gap-1 text-[11px] font-bold transition-colors hover:opacity-80"
+            className="inline-flex cursor-pointer items-center gap-1 text-[12px] font-bold transition-colors hover:opacity-80"
             style={{ color: "var(--tt-dashboard-brand)" }}
           >
             Kerjakan kembali
@@ -113,7 +113,7 @@ export function HomeDashboardBaselineCard({
           }}
         >
           <span
-            className="text-[8px] font-bold uppercase tracking-[0.08em]"
+            className="text-[12px] font-bold uppercase tracking-[0.08em]"
             style={{ color: "var(--tt-dashboard-text-2)" }}
           >
             Level
