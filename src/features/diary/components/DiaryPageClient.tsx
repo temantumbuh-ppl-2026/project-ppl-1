@@ -413,6 +413,8 @@ export function DiaryPageClient({
         isResetting={quiz.isResetting}
         isQuestionPoolExhausted={quiz.isQuestionPoolExhausted}
         isQuotaReached={quiz.isQuotaReached}
+        loadError={quiz.loadError}
+        onRetryLoad={() => void quiz.loadNextQuiz()}
         quizRemaining={
           quiz.quizRemaining === Infinity ? 999 : quiz.quizRemaining
         }
@@ -425,6 +427,7 @@ export function DiaryPageClient({
         onResetQuestions={quiz.handleResetQuestions}
         onUpgrade={() => router.push("/subscription")}
         onAnswerSubmit={quiz.handleAnswerSubmit}
+        origin="diary"
       />
     </div>
   );
