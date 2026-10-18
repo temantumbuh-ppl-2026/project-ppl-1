@@ -42,7 +42,7 @@ export function ChatBubble({
         {shouldShowAiMeta && (
           <p
             style={{
-              fontSize: 9,
+              fontSize: 12,
               fontWeight: 700,
               color: C.sub,
               margin: "0 0 3px",
@@ -87,7 +87,7 @@ export function ChatBubble({
         {showTimestamp ? (
           <p
             style={{
-              fontSize: 9,
+              fontSize: 12,
               color: C.sub,
               marginTop: 3,
               textAlign: isAi ? "left" : "right",

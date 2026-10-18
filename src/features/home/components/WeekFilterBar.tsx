@@ -72,7 +72,7 @@ export function WeekFilterBar({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className="inline-flex h-7 cursor-pointer items-center justify-center gap-1 rounded-lg px-2 text-[11px] font-bold transition hover:opacity-80 sm:gap-1.5 sm:px-3 sm:text-[12px]"
+            className="inline-flex h-7 cursor-pointer items-center justify-center gap-1 rounded-lg px-2 text-[12px] font-bold transition hover:opacity-80 sm:gap-1.5 sm:px-3 sm:text-[12px]"
             style={{
               background: "var(--tt-dashboard-chip-bg)",
               color: "var(--tt-dashboard-text)",

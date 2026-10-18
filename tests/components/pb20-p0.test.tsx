@@ -99,7 +99,7 @@ describe("FE-02 shared controls", () => {
 });
 
 describe("FE-01 mood appearance preserves existing data and expressions", () => {
-  it("retains all five labels and distinct face expressions with the clay-to-teal ramp", () => {
+  it("retains all five labels and distinct face expressions with the blue-to-amber ramp", () => {
     const paths = new Set<string | null>();
     const labels = [
       "Sangat Sedih",
@@ -108,7 +108,7 @@ describe("FE-01 mood appearance preserves existing data and expressions", () => 
       "Senang",
       "Sangat Senang",
     ];
-    const colours = ["#8A4A1F", "#7A5200", "#3D5A5A", "#2A7A74", "#1A5C36"];
+    const colours = ["#2B6CB0", "#7C5CBF", "#2A7A74", "#3B8318", "#A86500"];
     for (let score = 1; score <= 5; score++) {
       expect(getMoodLabel(score)).toBe(labels[score - 1]);
       expect(getMoodColor(score)).toBe(colours[score - 1]);

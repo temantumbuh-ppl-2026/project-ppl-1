@@ -8,15 +8,12 @@ import { ChevronDown, LogOut, User } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
 import SnapPayButton from "@/components/payment/SnapPayButton";
+import {
+  PRICE_PER_MONTH,
+  SUBSCRIPTION_DURATIONS,
+} from "@/lib/subscription/plans";
 
-const PRICE_PER_MONTH = 59000;
-
-const DURATION_OPTIONS = [
-  { months: 1, label: "1 Bulan" },
-  { months: 3, label: "3 Bulan" },
-  { months: 6, label: "6 Bulan" },
-  { months: 12, label: "12 Bulan" },
-];
+const DURATION_OPTIONS = SUBSCRIPTION_DURATIONS;
 
 const basicFeatures = ["Mood check-in", "Diary harian", "Riwayat dasar"];
 
@@ -198,7 +195,7 @@ export default function SubscriptionClient({
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="min-w-0">
               <p
-                className="text-[10px] font-extrabold uppercase tracking-[0.16em]"
+                className="text-[12px] font-extrabold uppercase tracking-[0.16em]"
                 style={{ color: "var(--tt-dashboard-text-3)" }}
               >
                 Subscription
@@ -244,7 +241,7 @@ export default function SubscriptionClient({
             </div>
 
             <div
-              className="inline-flex h-fit items-center rounded-full px-3 py-1.5 text-[11px] font-bold"
+              className="inline-flex h-fit items-center rounded-full px-3 py-1.5 text-[12px] font-bold"
               style={{
                 background: isPremium
                   ? "var(--tt-dashboard-success-soft)"
@@ -304,7 +301,7 @@ export default function SubscriptionClient({
                 {/* Duration selector */}
                 <div>
                   <p
-                    className="mb-2 text-[11px] font-bold uppercase tracking-wider"
+                    className="mb-2 text-[12px] font-bold uppercase tracking-wider"
                     style={{ color: "var(--tt-dashboard-text-3)" }}
                   >
                     {isPremium ? "Perpanjang Durasi" : "Pilih Durasi"}
@@ -463,7 +460,7 @@ function PlanCard({
         <div className="flex items-start justify-between gap-3">
           <div>
             <p
-              className="text-[11px] font-extrabold uppercase tracking-[0.14em]"
+              className="text-[12px] font-extrabold uppercase tracking-[0.14em]"
               style={{
                 color: featured
                   ? "var(--tt-dashboard-brand)"
@@ -483,7 +480,7 @@ function PlanCard({
 
           {active ? (
             <span
-              className="rounded-full px-2.5 py-1 text-[10px] font-bold"
+              className="rounded-full px-2.5 py-1 text-[12px] font-bold"
               style={{
                 background: featured
                   ? "rgba(26,150,136,0.12)"
@@ -536,7 +533,7 @@ function FeatureRow({
           color: "var(--tt-dashboard-brand)",
         }}
       >
-        <span className="text-[11px] font-bold">✓</span>
+        <span className="text-[12px] font-bold">✓</span>
       </div>
 
       <p
@@ -600,7 +597,7 @@ function SubscriptionProfileDropdown({
         style={{ background: "var(--tt-dashboard-chip-bg)" }}
       >
         <div
-          className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg text-[11px] font-black text-white"
+          className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg text-[12px] font-black text-white"
           style={{ background: "var(--tt-dashboard-brand)" }}
         >
           {userImage ? (

@@ -213,7 +213,7 @@ export function ProfileContent({
           <div className={rowBaseClass}>
             <div className={leftColClass}>
               <p className="text-sm font-bold text-slate-900">Nama Lengkap</p>
-              <p className="mt-1 text-[11px] leading-relaxed text-slate-500 sm:text-xs">
+              <p className="mt-1 text-[12px] leading-relaxed text-slate-500 sm:text-xs">
                 Nama yang akan ditampilkan pada profil kamu.
               </p>
             </div>
@@ -240,7 +240,7 @@ export function ProfileContent({
           <div className={rowBaseClass}>
             <div className={leftColClass}>
               <p className="text-sm font-bold text-slate-900">Email</p>
-              <p className="mt-1 text-[11px] leading-relaxed text-slate-500 sm:text-xs">
+              <p className="mt-1 text-[12px] leading-relaxed text-slate-500 sm:text-xs">
                 {isGoogleLinked
                   ? "Terhubung melalui Google"
                   : hasPassword
@@ -256,13 +256,13 @@ export function ProfileContent({
                 </span>
 
                 {isGoogleLinked ? (
-                  <span className="shrink-0 rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600">
+                  <span className="shrink-0 rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[12px] font-bold text-red-600">
                     Google
                   </span>
                 ) : null}
 
                 {hasPassword ? (
-                  <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                  <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[12px] font-bold text-emerald-700">
                     Password
                   </span>
                 ) : null}
@@ -273,7 +273,7 @@ export function ProfileContent({
           <div className={rowBaseClass}>
             <div className={leftColClass}>
               <p className="text-sm font-bold text-slate-900">Tahun Lahir</p>
-              <p className="mt-1 text-[11px] leading-relaxed text-slate-500 sm:text-xs">
+              <p className="mt-1 text-[12px] leading-relaxed text-slate-500 sm:text-xs">
                 Pilih tahun lahir Anda.
               </p>
             </div>
@@ -314,7 +314,7 @@ export function ProfileContent({
                 <div className="flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900">
                   <span>{profile.birthYear || "Belum diatur"}</span>
                   {currentAge !== null ? (
-                    <span className="shrink-0 rounded-full bg-teal-50 px-2.5 py-1 text-[11px] font-semibold text-teal-600">
+                    <span className="shrink-0 rounded-full bg-teal-50 px-2.5 py-1 text-[12px] font-semibold text-teal-600">
                       {currentAge} Tahun
                     </span>
                   ) : null}
@@ -326,7 +326,7 @@ export function ProfileContent({
           <div className={rowBaseClass}>
             <div className={leftColClass}>
               <p className="text-sm font-bold text-slate-900">Jenis Kelamin</p>
-              <p className="mt-1 text-[11px] leading-relaxed text-slate-500 sm:text-xs">
+              <p className="mt-1 text-[12px] leading-relaxed text-slate-500 sm:text-xs">
                 Data ini tersimpan dari proses registrasi.
               </p>
             </div>
@@ -374,7 +374,7 @@ export function ProfileContent({
           <div className={rowBaseClass}>
             <div className={leftColClass}>
               <p className="text-sm font-bold text-slate-900">Keamanan Akun</p>
-              <p className="mt-1 text-[11px] leading-relaxed text-slate-500 sm:text-xs">
+              <p className="mt-1 text-[12px] leading-relaxed text-slate-500 sm:text-xs">
                 {passwordActionDescription}
               </p>
             </div>
@@ -447,7 +447,7 @@ export function ProfileContent({
               <p className="text-sm font-extrabold text-slate-900 sm:text-[15px]">
                 Akun Aktif
               </p>
-              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[12px] font-bold text-emerald-800">
                 Aktif
               </span>
             </div>

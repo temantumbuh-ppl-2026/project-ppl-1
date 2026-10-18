@@ -48,7 +48,7 @@ export function HomeDashboardMoodHistory({
               Riwayat Mood
             </h2>
             <p
-              className="truncate text-[10px]"
+              className="truncate text-[12px]"
               style={{ color: "var(--tt-dashboard-text-2)" }}
             >
               {currentWeek?.label ?? "Belum ada data"}

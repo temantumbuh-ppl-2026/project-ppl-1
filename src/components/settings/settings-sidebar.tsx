@@ -74,7 +74,7 @@ export function SettingsSidebar({ profile }: SettingsSidebarProps) {
               {profile?.email || "memuat@email.com"}
             </p>
 
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-600">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-[12px] font-bold text-slate-600">
               <div className="h-1.5 w-1.5 rounded-full bg-slate-400" />
               {planLabel}
             </div>

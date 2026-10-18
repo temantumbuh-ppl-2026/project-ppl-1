@@ -146,7 +146,7 @@ export function InsightPageHeader({
                   type="button"
                   onClick={handleInsightClick}
                   disabled={disabled}
-                  className={`inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[11px] font-semibold transition-all sm:px-4 sm:text-[12px] ${disabled ? "cursor-not-allowed opacity-70" : "hover:translate-y-[-1px]"}`}
+                  className={`inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[12px] font-semibold transition-all sm:px-4 sm:text-[12px] ${disabled ? "cursor-not-allowed opacity-70" : "hover:translate-y-[-1px]"}`}
                   style={{
                     background: disabled
                       ? "#E8F2F0"
@@ -185,7 +185,7 @@ export function InsightPageHeader({
                   style={{ background: "var(--tt-dashboard-chip-bg)" }}
                 >
                   <div
-                    className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg text-[10px] font-black text-white"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg text-[12px] font-black text-white"
                     style={{ background: "var(--tt-dashboard-brand)" }}
                   >
                     {userImage ? (

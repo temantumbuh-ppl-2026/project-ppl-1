@@ -1,0 +1,672 @@
+/* Pricing page revamp. Di-scope ke .tt-landing; variabel dan komponen dasar ada di landing-redesign.css. */
+.tt-landing {
+  &.pricing-page {
+    --font-fraunces: var(--font-fraunces-display), "Fraunces", Georgia, serif;
+    /* Desain memakai Fraunces 700; font variabel perlu bobot eksplisit. */
+    & h1,
+    & h2,
+    & h3,
+    & .plan-price strong {
+      font-weight: 700;
+    }
+  }
+  .pricing-hero {
+    position: relative;
+    padding: 84px 0 115px;
+    background:
+      radial-gradient(
+        circle at 7% 13%,
+        rgba(16, 168, 154, 0.13),
+        transparent 22%
+      ),
+      radial-gradient(
+        circle at 94% 23%,
+        rgba(221, 236, 255, 0.8),
+        transparent 25%
+      ),
+      var(--paper);
+  }
+  .pricing-hero::before {
+    content: "";
+    position: absolute;
+    top: 150px;
+    left: -80px;
+    width: 160px;
+    height: 160px;
+    border: 38px solid var(--mint);
+    border-radius: 50%;
+    opacity: 0.7;
+  }
+  .pricing-heading {
+    position: relative;
+    max-width: 780px;
+    margin: 0 auto 52px;
+    text-align: center;
+    animation: tt-pricing-rise 0.65s ease both;
+  }
+  .pricing-heading .eyebrow {
+    justify-content: center;
+  }
+  .pricing-heading h1 {
+    margin: 17px 0 18px;
+    font-size: clamp(50px, 5.5vw, 76px);
+    line-height: 0.98;
+  }
+  .pricing-heading h1 em {
+    position: relative;
+    font-size: 1.08em;
+  }
+  .pricing-heading h1 em::after {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    right: 0;
+    bottom: 2px;
+    left: 3px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--yellow);
+    transform: rotate(-2deg);
+  }
+  .pricing-heading > p {
+    margin: 0;
+    color: #61717f;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .pricing-squiggle {
+    width: 150px;
+    margin-top: 17px;
+    fill: none;
+    stroke: var(--teal);
+    stroke-width: 3.5;
+    stroke-linecap: round;
+  }
+  .pricing-grid {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    max-width: 980px;
+    margin: auto;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: stretch;
+  }
+  .pricing-card {
+    position: relative;
+    display: flex;
+    min-height: 730px;
+    padding: 39px 40px 34px;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid #d2e0dd;
+    border-radius: 8px 30px 8px 30px;
+    background: white;
+    box-shadow: 0 18px 45px rgba(19, 38, 62, 0.1);
+    animation: tt-pricing-rise 0.65s 0.08s ease both;
+  }
+  .single-card {
+    border: 2px solid var(--teal);
+    background: var(--mint-light);
+    box-shadow:
+      12px 14px 0 var(--mint),
+      0 18px 45px rgba(19, 38, 62, 0.11);
+    animation-delay: 0.15s;
+  }
+  .pricing-card::after {
+    content: "";
+    position: absolute;
+    right: -55px;
+    bottom: -62px;
+    width: 150px;
+    height: 150px;
+    border: 32px solid rgba(16, 168, 154, 0.08);
+    border-radius: 50%;
+  }
+  .plan-badge {
+    display: inline-flex;
+    width: max-content;
+    min-height: 28px;
+    padding: 0 11px;
+    align-items: center;
+    gap: 7px;
+    border-radius: 20px;
+    color: var(--teal-dark);
+    background: var(--mint);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .plan-badge > span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--teal);
+  }
+  .single-card .plan-badge {
+    color: white;
+    background: var(--teal-dark);
+  }
+  .pricing-card h2 {
+    margin: 24px 0 2px;
+    font-family: var(--font-fraunces), "Fraunces", serif;
+    font-size: 30px;
+    letter-spacing: -0.04em;
+  }
+  .plan-price {
+    display: flex;
+    min-height: 69px;
+    align-items: end;
+    gap: 9px;
+  }
+  .plan-price strong {
+    font-family: var(--font-fraunces), "Fraunces", serif;
+    font-size: 53px;
+    line-height: 1;
+    letter-spacing: -0.055em;
+  }
+  .plan-price span {
+    margin-bottom: 7px;
+    color: #637381;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .plan-period {
+    display: block;
+    margin-top: 7px;
+    color: var(--teal-dark);
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .plan-description {
+    min-height: 65px;
+    margin: 17px 0 0;
+    color: #61717f;
+    font-size: 12px;
+    line-height: 1.65;
+  }
+  .plan-divider {
+    height: 1px;
+    margin: 20px 0 21px;
+    background: #d7e4e1;
+  }
+  .plan-list-label {
+    color: var(--teal-dark);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .plan-features {
+    display: grid;
+    gap: 0;
+    margin: 13px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .plan-features li {
+    display: flex;
+    min-height: 42px;
+    align-items: center;
+    gap: 11px;
+    border-bottom: 1px solid #e2eae8;
+    color: #485b69;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .plan-features li > span {
+    display: grid;
+    flex: 0 0 21px;
+    height: 21px;
+    place-items: center;
+    border: 1px solid #8bd1c8;
+    border-radius: 50%;
+    color: var(--teal-dark);
+    background: white;
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .single-only {
+    display: grid;
+    gap: 8px;
+    margin-top: 17px;
+  }
+  .single-only p {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 9px 11px;
+    border-radius: 10px;
+    color: #647481;
+    background: #f3f7f6;
+    font-size: 12px;
+  }
+  .single-only .icon {
+    color: var(--teal);
+  }
+  .single-only p > span {
+    display: flex;
+    min-width: 0;
+    justify-content: space-between;
+    flex: 1;
+    gap: 10px;
+  }
+  .single-only strong {
+    color: var(--navy);
+  }
+  .plan-action {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 28px;
+  }
+  .pricing-button {
+    width: 100%;
+    min-height: 52px;
+    border-radius: 12px;
+  }
+  .pricing-button:disabled {
+    opacity: 0.9;
+    cursor: not-allowed;
+  }
+  .pricing-button-outline {
+    color: var(--teal-dark);
+    background: white;
+    box-shadow: none;
+  }
+  .pricing-button-outline:hover {
+    color: white;
+  }
+  .plan-action small {
+    color: #75838e;
+    font-size: 12px;
+    line-height: 1.45;
+    text-align: center;
+  }
+  .plan-star {
+    position: absolute;
+    top: 28px;
+    right: 30px;
+    width: 48px;
+    fill: var(--yellow);
+    stroke: var(--navy);
+    stroke-width: 2;
+    transform: rotate(8deg);
+  }
+
+  .pricing-faq {
+    background: white;
+  }
+  .faq-layout {
+    display: grid;
+    grid-template-columns: 0.7fr 1.3fr;
+    gap: 100px;
+    align-items: start;
+  }
+  .faq-heading {
+    position: sticky;
+    top: 100px;
+  }
+  .faq-heading h2 {
+    margin: 9px 0 18px;
+    font-size: clamp(46px, 5vw, 68px);
+    line-height: 1;
+  }
+  .faq-heading > p {
+    max-width: 330px;
+    margin: 0;
+    color: #687885;
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  .faq-list {
+    border-top: 1px solid var(--line);
+  }
+  .faq-list details {
+    border-bottom: 1px solid var(--line);
+  }
+  .faq-list summary {
+    display: flex;
+    min-height: 84px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 25px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 800;
+    list-style: none;
+  }
+  .faq-list summary::-webkit-details-marker {
+    display: none;
+  }
+  .faq-list summary i {
+    position: relative;
+    display: grid;
+    flex: 0 0 34px;
+    height: 34px;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--mint-light);
+  }
+  .faq-list summary i::before,
+  .faq-list summary i::after {
+    content: "";
+    position: absolute;
+    width: 12px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--teal-dark);
+    transition: transform 0.2s ease;
+  }
+  .faq-list summary i::after {
+    transform: rotate(90deg);
+  }
+  .faq-list details[open] summary {
+    color: var(--teal-dark);
+  }
+  .faq-list details[open] summary i {
+    background: var(--mint);
+  }
+  .faq-list details[open] summary i::after {
+    transform: rotate(0);
+  }
+  .faq-answer {
+    padding: 0 60px 27px 0;
+  }
+  .faq-answer p {
+    margin: 10px 0 0;
+    color: #647481;
+    font-size: 12px;
+    line-height: 1.75;
+  }
+  .review-badge {
+    display: inline-flex;
+    padding: 5px 9px;
+    border-radius: 20px;
+    color: #765900;
+    background: #fff2bc;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .pricing-closing h2 {
+    font-size: clamp(50px, 5.8vw, 78px);
+  }
+
+  /* Elemen tambahan untuk konten existing dan kondisi pengguna. */
+  .plan-features li > span svg,
+  .single-only .icon {
+    display: block;
+  }
+  .plan-note {
+    margin: 12px 0 0;
+    color: #6a7987;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .plan-note strong {
+    color: var(--navy);
+  }
+  .plan-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    width: max-content;
+    margin-top: 10px;
+    padding: 6px 11px;
+    border-radius: 20px;
+    color: var(--teal-dark);
+    background: var(--mint);
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .plan-status.is-pending {
+    color: #765900;
+    background: #fff2bc;
+  }
+  .plan-action small a {
+    color: var(--teal-dark);
+    font-weight: 800;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .pricing-button[aria-disabled="true"] {
+    opacity: 0.75;
+    cursor: default;
+    pointer-events: none;
+  }
+  .pricing-button-outline[aria-disabled="true"] {
+    color: #5f7480;
+    border-color: #cfdedb;
+    background: #f3f7f6;
+  }
+  /* Slot atas/bawah tombol dibuat sama tinggi agar CTA kedua kartu sejajar di desktop. */
+  .plan-slot {
+    display: flex;
+    min-height: 30px;
+    align-items: center;
+  }
+  .plan-slot-note {
+    min-height: 46px;
+    align-items: flex-start;
+  }
+  .plan-slot .plan-status {
+    margin-top: 0;
+  }
+  .plan-slot small {
+    text-align: left;
+  }
+  /* Accordion FAQ: tombol + panel dengan tinggi beranimasi. */
+  .faq-item {
+    border-bottom: 1px solid var(--line);
+  }
+  .faq-toggle {
+    display: flex;
+    width: 100%;
+    min-height: 84px;
+    padding: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 25px;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 800;
+    text-align: left;
+  }
+  .faq-toggle:focus-visible {
+    outline: 2px solid var(--teal);
+    outline-offset: 4px;
+    border-radius: 6px;
+  }
+  .faq-icon {
+    position: relative;
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--mint-light);
+    transition:
+      background-color 0.3s ease,
+      rotate 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .faq-icon::before,
+  .faq-icon::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 12px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--teal-dark);
+    transform: translate(-50%, -50%);
+  }
+  .faq-icon::after {
+    transform: translate(-50%, -50%) rotate(90deg);
+  }
+  .faq-item.open .faq-toggle {
+    color: var(--teal-dark);
+  }
+  .faq-item.open .faq-icon {
+    background: var(--mint);
+    rotate: 135deg;
+  }
+  .faq-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      grid-template-rows 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.35s ease,
+      visibility 0s linear 0.45s;
+  }
+  .faq-item.open .faq-panel {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    visibility: visible;
+    transition:
+      grid-template-rows 0.45s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.4s ease 0.05s,
+      visibility 0s;
+  }
+  .faq-panel-inner {
+    min-height: 0;
+    overflow: hidden;
+  }
+  .faq-answer p {
+    max-width: 640px;
+    margin: 0;
+  }
+
+  @media (max-width: 980px) {
+    .pricing-card {
+      padding-inline: 30px;
+    }
+    .faq-layout {
+      gap: 55px;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .pricing-hero {
+      padding: 56px 0 82px;
+    }
+    .pricing-heading {
+      margin-bottom: 38px;
+      text-align: left;
+    }
+    .pricing-heading .eyebrow {
+      justify-content: flex-start;
+    }
+    .pricing-heading h1 {
+      font-size: clamp(44px, 13vw, 60px);
+    }
+    .pricing-heading > p {
+      font-size: 12px;
+    }
+    .pricing-squiggle {
+      margin-left: 20px;
+    }
+    .pricing-grid {
+      grid-template-columns: 1fr;
+      gap: 25px;
+    }
+    .pricing-card {
+      min-height: auto;
+      padding: 31px 24px 27px;
+      border-radius: 7px 24px 7px 24px;
+    }
+    .single-card {
+      box-shadow:
+        7px 8px 0 var(--mint),
+        0 18px 45px rgba(19, 38, 62, 0.1);
+    }
+    .plan-price strong {
+      font-size: 48px;
+    }
+    .plan-description {
+      min-height: 0;
+    }
+    .plan-action {
+      margin-top: 18px;
+    }
+    .single-only p > span {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .plan-star {
+      top: 25px;
+      right: 20px;
+      width: 40px;
+    }
+    .faq-layout {
+      grid-template-columns: 1fr;
+      gap: 45px;
+    }
+    .faq-heading {
+      position: static;
+    }
+    .faq-heading h2 {
+      font-size: 45px;
+    }
+    .faq-list summary {
+      min-height: 78px;
+      font-size: 12px;
+    }
+    .faq-answer {
+      padding-right: 5px;
+    }
+    .pricing-closing h2 {
+      font-size: 47px;
+    }
+  }
+
+  @media (max-width: 720px) {
+    .plan-slot,
+    .plan-slot-note {
+      min-height: 0;
+    }
+    .plan-slot:empty {
+      display: none;
+    }
+  }
+
+  @media (max-width: 390px) {
+    .plan-price {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .plan-price span {
+      margin: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pricing-heading,
+    .pricing-card {
+      animation: none;
+    }
+  }
+}
+
+@keyframes tt-pricing-rise {
+  from {
+    opacity: 0;
+    translate: 0 18px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}

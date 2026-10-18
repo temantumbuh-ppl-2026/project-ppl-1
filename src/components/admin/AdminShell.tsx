@@ -253,7 +253,7 @@ function Sidebar({
           {(!collapsed || isMobile) && (
             <p
               style={{
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: 800,
                 letterSpacing: "0.12em",
                 color: "var(--tt-dashboard-text-3)",
@@ -416,7 +416,7 @@ function Topbar({
           {!isMobile && (
             <p
               style={{
-                fontSize: 11,
+                fontSize: 12,
                 color: "var(--tt-dashboard-text-3)",
                 marginTop: 2,
               }}
@@ -450,7 +450,7 @@ function Topbar({
             </p>
             <p
               style={{
-                fontSize: 11,
+                fontSize: 12,
                 color: "var(--tt-dashboard-text-3)",
                 whiteSpace: "nowrap",
               }}

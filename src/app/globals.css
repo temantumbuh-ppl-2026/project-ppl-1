@@ -318,6 +318,11 @@
     min-height: 100%;
   }
 
+  /* Teks <small> turun 80% dari induknya; jaga tetap terbaca (min. 12px). */
+  small {
+    font-size: max(80%, 12px);
+  }
+
   h1,
   h2,
   h3,

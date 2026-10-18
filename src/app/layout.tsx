@@ -23,6 +23,15 @@ const fraunces = Fraunces({
   display: "swap",
 });
 
+// Varian dengan sumbu optical size, dipakai halaman About agar judul besar sesuai desain.
+const frauncesDisplay = Fraunces({
+  variable: "--font-fraunces-display",
+  subsets: ["latin"],
+  axes: ["opsz"],
+  display: "swap",
+  preload: false,
+});
+
 const caveat = Caveat({
   variable: "--font-caveat",
   subsets: ["latin"],
@@ -48,7 +57,7 @@ export default function RootLayout({
   return (
     <html
       lang="id"
-      className={`${plusJakartaSans.variable} ${fraunces.variable} ${caveat.variable}`}
+      className={`${plusJakartaSans.variable} ${fraunces.variable} ${frauncesDisplay.variable} ${caveat.variable}`}
       suppressHydrationWarning
     >
       <body className="font-sans antialiased" suppressHydrationWarning>

@@ -7,6 +7,7 @@ import {
   useState,
   type CSSProperties,
   type ReactNode,
+  useLayoutEffect,
 } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -236,12 +237,6 @@ function NavLink({
   onClick?: () => void;
 }) {
   const style: CSSProperties = { color: isActive ? C.teal : C.textSecondary };
-  const underline: CSSProperties = {
-    background: C.teal,
-    transform: `scaleX(${isActive ? 1 : 0})`,
-    opacity: isActive ? 1 : 0,
-  };
-
   const content = (
     <>
       <span
@@ -250,10 +245,6 @@ function NavLink({
       >
         {label}
       </span>
-      <span
-        className="absolute -bottom-0.5 left-0 right-0 h-0.5 origin-center rounded-full transition-all duration-200 group-hover:scale-x-100 group-hover:opacity-100"
-        style={underline}
-      />
     </>
   );
 
@@ -262,6 +253,8 @@ function NavLink({
       <button
         onClick={onClick}
         className="group relative flex cursor-pointer flex-col items-center pb-0.5 outline-none"
+        data-nav-item=""
+        data-active={isActive}
         type="button"
       >
         {content}
@@ -273,6 +266,8 @@ function NavLink({
     <Link
       href={href ?? "#"}
       className="group relative flex cursor-pointer flex-col items-center pb-0.5"
+      data-nav-item=""
+      data-active={isActive}
     >
       {content}
     </Link>
@@ -313,17 +308,11 @@ function HomeDropdown({
           onClick={handleHomeClick}
           className="group relative flex cursor-pointer items-center gap-0.5 pb-0.5 text-sm font-medium outline-none transition-colors duration-150 hover:text-[#1A9688]"
           style={{ color: isActive ? C.teal : C.textSecondary }}
+          data-nav-item=""
+          data-active={isActive}
           type="button"
         >
           Home
-          <span
-            className="absolute -bottom-0.5 left-0 right-0 h-0.5 origin-center rounded-full transition-all duration-200"
-            style={{
-              background: C.teal,
-              transform: `scaleX(${isActive ? 1 : 0})`,
-              opacity: isActive ? 1 : 0,
-            }}
-          />
         </button>
       </div>
     );
@@ -336,7 +325,11 @@ function HomeDropdown({
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      <div className="group relative flex cursor-pointer items-center gap-0.5 pb-0.5">
+      <div
+        className="group relative flex cursor-pointer items-center gap-0.5 pb-0.5"
+        data-nav-item=""
+        data-active={isActive}
+      >
         <button
           onClick={handleHomeClick}
           className="text-sm font-medium outline-none transition-colors duration-150 group-hover:text-[#1A9688]"
@@ -361,15 +354,6 @@ function HomeDropdown({
             }`}
           />
         </button>
-
-        <span
-          className="absolute -bottom-0.5 left-0 right-0 h-0.5 origin-center rounded-full transition-all duration-200 group-hover:scale-x-100 group-hover:opacity-100"
-          style={{
-            background: C.teal,
-            transform: `scaleX(${isActive || open ? 1 : 0})`,
-            opacity: isActive || open ? 1 : 0,
-          }}
-        />
       </div>
 
       <AnimatePresence>
@@ -406,7 +390,7 @@ function HomeDropdown({
                       {item.label}
                     </p>
                     <p
-                      className="truncate text-[11px]"
+                      className="truncate text-[12px]"
                       style={{ color: C.textMuted }}
                     >
                       {item.desc}
@@ -478,7 +462,7 @@ function ProfileDropdown({ session }: { session: Session }) {
             {session.name}
           </p>
           <p
-            className="text-[11px] font-medium"
+            className="text-[12px] font-medium"
             style={getPlanBadgeStyle(session)}
           >
             {getPlanLabel(session)}
@@ -528,7 +512,7 @@ function ProfileDropdown({ session }: { session: Session }) {
                   {session.email || "Pengguna TemanTumbuh"}
                 </p>
                 <p
-                  className="mt-1 text-[11px] font-semibold"
+                  className="mt-1 text-[12px] font-semibold"
                   style={getPlanBadgeStyle(session)}
                 >
                   {getPlanLabel(session)}
@@ -643,7 +627,7 @@ function MobileMenu({
         >
           <div className="flex flex-col gap-1 px-5 py-4">
             <p
-              className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest"
+              className="mb-1 px-3 text-[12px] font-semibold uppercase tracking-widest"
               style={{ color: C.textMuted }}
             >
               Halaman
@@ -812,7 +796,7 @@ function MobileMenu({
                       {session.name}
                     </p>
                     <p
-                      className="text-[11px]"
+                      className="text-[12px]"
                       style={
                         session.plan === "premium" && session.role !== "admin"
                           ? {
@@ -931,15 +915,54 @@ export function Navbar() {
   const [session, setSession] = useState<Session>(guestSession);
   const [loading, setLoading] = useState(true);
   const [scrolled, setScrolled] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+  const [indicator, setIndicator] = useState<{
+    left: number;
+    top: number;
+    width: number;
+  } | null>(null);
 
   const isLoggedIn = session.role !== "guest";
   const isUserHomepage = isLoggedIn;
   const homeIsActive = pathname === "/" || pathname === "/home";
-  const isLandingPage = pathname === "/";
+  const isLandingPage = ["/", "/about", "/features", "/pricing"].includes(
+    pathname,
+  );
 
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  // Garis bawah menu aktif satu elemen bersama yang meluncur ke item aktif.
+  const updateIndicator = useCallback(() => {
+    const nav = navRef.current;
+    const active = nav?.querySelector<HTMLElement>(
+      '[data-nav-item][data-active="true"]',
+    );
+
+    if (!nav || !active) {
+      setIndicator(null);
+      return;
+    }
+
+    const navBox = nav.getBoundingClientRect();
+    const box = active.getBoundingClientRect();
+    setIndicator({
+      left: box.left - navBox.left,
+      top: box.bottom - navBox.top,
+      width: box.width,
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    updateIndicator();
+  }, [pathname, isUserHomepage, loading, updateIndicator]);
+
+  useEffect(() => {
+    window.addEventListener("resize", updateIndicator);
+    void document.fonts?.ready.then(updateIndicator);
+    return () => window.removeEventListener("resize", updateIndicator);
+  }, [updateIndicator]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -950,8 +973,10 @@ export function Navbar() {
   useEffect(() => {
     let mounted = true;
 
+    // `loading` hanya true saat pemuatan pertama (nilai awal state). Sinkronisasi
+    // ulang tiap pindah halaman berjalan diam-diam agar tombol Masuk/Daftar
+    // tidak berubah menjadi placeholder dan menimbulkan kedipan.
     const sync = async () => {
-      setLoading(true);
       try {
         const { data } = await authClient.getSession();
 
@@ -1031,7 +1056,10 @@ export function Navbar() {
           </span>
         </Link>
 
-        <nav className="hidden flex-1 items-center justify-center gap-7 md:flex">
+        <nav
+          ref={navRef}
+          className="relative hidden flex-1 items-center justify-center gap-7 md:flex"
+        >
           <HomeDropdown
             isActive={homeIsActive}
             isUserHomepage={isUserHomepage}
@@ -1051,6 +1079,18 @@ export function Navbar() {
             isActive={pathname.startsWith("/pricing")}
             href="/pricing"
           />
+          {indicator && (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute h-0.5 rounded-full transition-[left,width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+              style={{
+                background: C.teal,
+                left: indicator.left,
+                top: indicator.top,
+                width: indicator.width,
+              }}
+            />
+          )}
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">

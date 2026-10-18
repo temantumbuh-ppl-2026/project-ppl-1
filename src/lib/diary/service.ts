@@ -30,6 +30,7 @@ import type {
 } from "@/lib/diary/types";
 import { encrypt, decrypt, EncryptionError } from "@/lib/encryption";
 import prisma from "@/lib/prisma";
+import { FREE_DIARY_LIMIT_PER_MONTH } from "@/lib/subscription/plans";
 
 type ListDiaryEntriesInput = {
   userId: string;
@@ -65,7 +66,6 @@ type DiaryMessageRecord = {
 };
 
 const DEFAULT_TIMEZONE = "Asia/Jakarta";
-const FREE_DIARY_LIMIT_PER_MONTH = 15;
 const MAX_PROMPT_HISTORY_MESSAGES = 32;
 const PREVIEW_MAX_LENGTH = 96;
 const PERSIST_TRANSACTION_MAX_WAIT_MS = 10_000;

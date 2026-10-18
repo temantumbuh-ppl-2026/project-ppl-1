@@ -149,7 +149,7 @@ export function EntryCard({ entry, isActive, onClick }: Props) {
             <Lock size={10} color={C.sub} />
             <span
               style={{
-                fontSize: 10,
+                fontSize: 12,
                 color: C.sub,
                 fontWeight: 600,
                 lineHeight: 1.1,
@@ -163,7 +163,7 @@ export function EntryCard({ entry, isActive, onClick }: Props) {
 
       <p
         style={{
-          fontSize: 11,
+          fontSize: 12,
           color: C.muted,
           fontStyle: "italic",
           lineHeight: 1.45,

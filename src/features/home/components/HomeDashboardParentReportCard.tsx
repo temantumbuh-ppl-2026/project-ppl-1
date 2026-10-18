@@ -122,7 +122,7 @@ export function HomeDashboardParentReportCard({
       <div className="flex h-full flex-col">
         <div className="mb-2.5 flex items-center justify-between gap-2">
           <p
-            className="text-[9px] font-bold uppercase tracking-[0.11em]"
+            className="text-[12px] font-bold uppercase tracking-[0.11em]"
             style={{ color: "var(--tt-dashboard-text-2)" }}
           >
             Laporan Orang Tua
@@ -131,7 +131,7 @@ export function HomeDashboardParentReportCard({
           {isVerified ? (
             <motion.span
               whileHover={{ scale: 1.04 }}
-              className="inline-flex items-center gap-1 text-[10px] font-bold"
+              className="inline-flex items-center gap-1 text-[12px] font-bold"
               style={{ color: "var(--tt-dashboard-brand)" }}
             >
               <CheckCircle2 size={12} /> Terverifikasi
@@ -139,7 +139,7 @@ export function HomeDashboardParentReportCard({
           ) : (
             <motion.span
               whileHover={{ scale: 1.04 }}
-              className="rounded-full px-2 py-1 text-[9px] font-bold"
+              className="rounded-full px-2 py-1 text-[12px] font-bold"
               style={{
                 background: "var(--tt-dashboard-chip-bg)",
                 color: "var(--tt-dashboard-chip-text)",
@@ -209,7 +209,7 @@ export function HomeDashboardParentReportCard({
                   {parentEmail ?? "Belum ada email"}
                 </p>
                 <p
-                  className="mt-1 text-[10px]"
+                  className="mt-1 text-[12px]"
                   style={{ color: "var(--tt-dashboard-text-2)" }}
                 >
                   {isVerified
@@ -224,7 +224,7 @@ export function HomeDashboardParentReportCard({
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
               {/* Period info: hidden on mobile unless detail is open */}
               <div
-                className={`text-[11px] sm:block sm:text-[12px] ${showDetail ? "block" : "hidden"}`}
+                className={`text-[12px] sm:block sm:text-[12px] ${showDetail ? "block" : "hidden"}`}
                 style={{ color: "var(--tt-dashboard-text)" }}
               >
                 <div className="font-medium opacity-75">Periode</div>
@@ -240,7 +240,7 @@ export function HomeDashboardParentReportCard({
                 whileTap={{ scale: 0.97 }}
                 onClick={() => void handleSendReport()}
                 disabled={isSending}
-                className="inline-flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-xl px-4 text-[11px] font-bold text-white transition-shadow duration-300 disabled:cursor-not-allowed disabled:opacity-70 sm:text-[12px]"
+                className="inline-flex h-9 shrink-0 cursor-pointer items-center gap-2 rounded-xl px-4 text-[12px] font-bold text-white transition-shadow duration-300 disabled:cursor-not-allowed disabled:opacity-70 sm:text-[12px]"
                 style={{
                   background: "var(--tt-dashboard-button-bg)",
                   boxShadow: "0 8px 18px rgba(26,150,136,0.14)",
@@ -258,7 +258,7 @@ export function HomeDashboardParentReportCard({
             <motion.div whileTap={{ scale: 0.97 }}>
               <Link
                 href="/profile/parent-report"
-                className="mt-4 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[11px] font-bold text-white transition-shadow duration-300 sm:text-[12px]"
+                className="mt-4 inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-[12px] font-bold text-white transition-shadow duration-300 sm:text-[12px]"
                 style={{
                   background: "var(--tt-dashboard-button-bg)",
                   boxShadow: "0 8px 18px rgba(26,150,136,0.14)",
