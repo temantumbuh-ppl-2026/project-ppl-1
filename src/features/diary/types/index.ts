@@ -67,6 +67,8 @@ export type QuizOption = {
 
 export type BraveChoiceQuiz = {
   id: string;
+  /** Kategori skenario dari bank soal (dipakai untuk kalimat pembuka feedback). */
+  category?: string;
   scenario: string;
   options: QuizOption[];
   explanationWrong: string;

@@ -168,7 +168,7 @@ export function HomeDashboardContent() {
   const longestStreak = computeLongestStreak(moodLogs, timezone);
   const currentStreak = sessionUser?.currentStreak ?? 0;
   const isPremium = sessionUser?.isPremium ?? false;
-  const braveChoice = braveChoiceStats ?? { pct: 0, correct: 0, total: 0 };
+  const braveChoice = braveChoiceStats ?? { total: 0 };
 
   const isLoading =
     sessionLoading ||
@@ -298,9 +298,7 @@ export function HomeDashboardContent() {
             </div>
             <div className="support-grid">
               <HomeDashboardBraveChoiceCard
-                correct={braveChoice.correct}
                 total={braveChoice.total}
-                pct={braveChoice.pct}
                 userId={sessionUser?.id}
                 plan={isPremium ? "premium" : "free"}
               />

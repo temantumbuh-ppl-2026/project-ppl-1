@@ -70,7 +70,11 @@ const LOGS = [
   moodLog("oldyear", 2025, 2, 12, 1),
 ];
 
-type FetchPlan = { moodStatus?: number; logs?: unknown[] };
+type FetchPlan = {
+  moodStatus?: number;
+  logs?: unknown[];
+  braveTotal?: number;
+};
 
 function stubFetch(plan: FetchPlan = {}) {
   const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
@@ -99,7 +103,9 @@ function stubFetch(plan: FetchPlan = {}) {
         lastReportStatus: null,
       });
     if (url.startsWith("/api/diary/brave-choice/stats"))
-      return json({ data: { pct: 0, correct: 0, total: 0 } });
+      return json({
+        data: { pct: 0, correct: 0, total: plan.braveTotal ?? 0 },
+      });
     return json({}, 404);
   });
   vi.stubGlobal("fetch", fetchMock);
@@ -295,15 +301,29 @@ describe("Dashboard redesign — kartu & CTA", () => {
     expect(screen.queryByText(/tulis diary/i)).toBe(null);
     expect(screen.getByText("TemanCerita")).toBeTruthy();
 
-    expect(screen.getByText("Belum ada aktivitas")).toBeTruthy();
-    fireEvent.click(
-      screen.getByRole("button", { name: /mulai brave choice/i }),
-    );
+    // Brave Choice: info aktivitas netral, tanpa persentase ketepatan.
+    expect(screen.getByText("Mulai dari satu situasi sederhana.")).toBeTruthy();
+    expect(screen.getByText("Sisa kesempatan hari ini: 3")).toBeTruthy();
+    expect(screen.queryByText(/tepat|pilihan benar/i)).toBe(null);
+    fireEvent.click(screen.getByRole("button", { name: "Jelajahi Pilihan" }));
     expect(loadQuiz).toHaveBeenCalledTimes(1);
 
     // Ringkasan aktivitas memakai streak sesi & total diary dari API.
     expect(screen.getByText("Streak check-in mood")).toBeTruthy();
     expect(screen.getByText("1 hari tercatat")).toBeTruthy();
+  });
+
+  it("kartu Brave Choice setelah aktivitas memakai jumlah latihan dari stats", async () => {
+    stubFetch({ braveTotal: 2 });
+    renderDashboard();
+    await waitForDashboard();
+
+    const activity = await screen.findByText(/latihan diselesaikan/);
+    expect(activity.textContent).toBe("2 latihan diselesaikan");
+    expect(
+      screen.getByRole("button", { name: "Coba Skenario Lain" }),
+    ).toBeTruthy();
+    expect(screen.queryByText(/%/)).toBe(null);
   });
 
   it("dropdown profil berisi profil, langganan, dan logout dengan konfirmasi", async () => {

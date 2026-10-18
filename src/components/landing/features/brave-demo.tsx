@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { braveChoiceOptions } from "./features-data";
 
-// Contoh lokal Brave Choice Quiz: pilih jawaban, lalu lihat penjelasannya.
+// Contoh lokal Brave Choice: pilih respons, lalu lihat penjelasannya.
 export function BraveDemo() {
   const [choice, setChoice] = useState<string | null>(null);
   const selected = braveChoiceOptions.find((option) => option.id === choice);
@@ -19,7 +19,7 @@ export function BraveDemo() {
         “Teman meminjam barangmu dan belum mengembalikannya, padahal kamu sedang
         membutuhkannya.”
       </p>
-      <span className="choice-label">Pilih keputusan paling bijak</span>
+      <span className="choice-label">Apa yang mungkin kamu lakukan?</span>
       {braveChoiceOptions.map((option) => (
         <button
           aria-pressed={choice === option.id}
@@ -40,8 +40,8 @@ export function BraveDemo() {
         ) : (
           <>
             <strong>Penjelasan</strong>
-            Pilih salah satu jawaban untuk melihat penjelasannya, seperti di
-            Brave Choice Quiz.
+            Pilih salah satu respons untuk melihat penjelasannya, seperti di
+            Brave Choice.
           </>
         )}
       </div>
