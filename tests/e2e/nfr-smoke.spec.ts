@@ -34,7 +34,7 @@ test.describe("NFR browser smoke", () => {
 
     await page.goto("/login");
     await expect(
-      page.getByRole("heading", { name: /selamat datang kembali/i }),
+      page.getByRole("heading", { name: /senang kamu kembali/i }),
     ).toBeVisible({ timeout: 15_000 });
 
     const start = Date.now();
@@ -44,7 +44,7 @@ test.describe("NFR browser smoke", () => {
 
     expect(response?.ok()).toBe(true);
     await expect(
-      page.getByRole("heading", { name: /selamat datang kembali/i }),
+      page.getByRole("heading", { name: /senang kamu kembali/i }),
     ).toBeVisible();
     const elapsedMs = Date.now() - start;
     expect(elapsedMs).toBeLessThan(5_000);

@@ -42,7 +42,7 @@ test.describe("E2E MVP smoke coverage", () => {
     await page.goto("/login");
 
     await expect(
-      page.getByRole("heading", { name: /selamat datang kembali/i }),
+      page.getByRole("heading", { name: /senang kamu kembali/i }),
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: /masuk dengan google/i }),
@@ -74,7 +74,7 @@ test.describe("E2E MVP smoke coverage", () => {
     await page.goto("/register");
 
     await expect(
-      page.getByRole("heading", { name: /buat akun/i }),
+      page.getByRole("heading", { name: /mulai ruang ceritamu/i }),
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: /daftar dengan google/i }),
@@ -127,7 +127,7 @@ test.describe("E2E MVP smoke coverage", () => {
 
       await expect(page).toHaveURL(/\/login/);
       await expect(
-        page.getByRole("heading", { name: /selamat datang kembali/i }),
+        page.getByRole("heading", { name: /senang kamu kembali/i }),
       ).toBeVisible({ timeout: 15_000 });
     });
   }
