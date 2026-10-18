@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Play } from "lucide-react";
+import { Compass, Loader2, Play } from "lucide-react";
 import { useQueryClient, useIsFetching } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { MotionCard, DonutRing } from "./home-dashboard-primitives";
+import { DonutRing } from "./home-dashboard-primitives";
 import { BraveChoiceModal } from "@/features/diary/components/BraveChoiceModal";
 import { useBraveChoice } from "@/features/diary/hooks/useBraveChoice";
 import type { UserProfile } from "@/features/diary/types";
@@ -61,126 +60,54 @@ export function HomeDashboardBraveChoiceCard({
 
   const showSkeleton = isRefreshing || (isFetchingStats > 0 && isRefreshing);
 
+  const hasPlayed = total > 0;
+
   return (
     <>
-      <MotionCard
-        custom={2}
-        className="tt-dashboard-card rounded-[1.15rem] p-4"
-      >
-        <div className="flex h-full flex-col">
-          <p
-            className="mb-3 text-[12px] font-bold uppercase tracking-[0.11em]"
-            style={{ color: "var(--tt-dashboard-text-2)" }}
-          >
-            Brave Choice
-          </p>
-
-          {showSkeleton ? (
-            <div className="flex flex-1 items-center gap-3">
-              <div className="flex flex-1 items-center gap-2 sm:gap-3">
-                <div
-                  className="h-[42px] w-[42px] shrink-0 rounded-full"
-                  style={{
-                    background:
-                      "linear-gradient(110deg, rgba(196,224,220,0.45) 8%, rgba(255,255,255,0.75) 18%, rgba(196,224,220,0.45) 33%)",
-                    backgroundSize: "200% 100%",
-                    animation: "tt-skeleton 1.35s linear infinite",
-                  }}
-                />
-                <div className="flex flex-col gap-1.5">
-                  <div
-                    className="h-5 w-16 rounded-md"
-                    style={{
-                      background:
-                        "linear-gradient(110deg, rgba(196,224,220,0.45) 8%, rgba(255,255,255,0.75) 18%, rgba(196,224,220,0.45) 33%)",
-                      backgroundSize: "200% 100%",
-                      animation: "tt-skeleton 1.35s linear infinite",
-                    }}
-                  />
-                  <div
-                    className="h-3 w-20 rounded-md"
-                    style={{
-                      background:
-                        "linear-gradient(110deg, rgba(196,224,220,0.45) 8%, rgba(255,255,255,0.75) 18%, rgba(196,224,220,0.45) 33%)",
-                      backgroundSize: "200% 100%",
-                      animation: "tt-skeleton 1.35s linear infinite",
-                    }}
-                  />
-                </div>
-              </div>
-              <div
-                className="h-9 w-9 shrink-0 rounded-full sm:h-11 sm:w-11"
-                style={{
-                  background:
-                    "linear-gradient(110deg, rgba(196,224,220,0.45) 8%, rgba(255,255,255,0.75) 18%, rgba(196,224,220,0.45) 33%)",
-                  backgroundSize: "200% 100%",
-                  animation: "tt-skeleton 1.35s linear infinite",
-                }}
-              />
-            </div>
-          ) : (
-            <div className="flex flex-1 items-center gap-3">
-              {/* Left: stats */}
-              <div className="flex flex-1 items-center gap-2 sm:gap-3">
-                <motion.div
-                  whileHover={{ scale: 1.06, rotate: 4 }}
-                  transition={{ duration: 0.22 }}
-                  className="relative flex shrink-0 items-center justify-center"
-                >
-                  <DonutRing
-                    pct={pct}
-                    color="var(--tt-dashboard-warning)"
-                    size={42}
-                    stroke={4}
-                  />
-                  <span
-                    className="absolute text-[12px] font-black sm:text-[12px]"
-                    style={{ color: "var(--tt-dashboard-text)" }}
-                  >
-                    {pct}%
-                  </span>
-                </motion.div>
-
-                <div className="flex flex-col justify-center">
-                  <p
-                    className="text-[18px] font-black leading-none sm:text-[22px]"
-                    style={{ color: "var(--tt-dashboard-text)" }}
-                  >
-                    {correct}/{total}
-                  </p>
-                  <p
-                    className="mt-0.5 text-[12px] font-semibold sm:text-[12px]"
-                    style={{ color: "var(--tt-dashboard-text-2)" }}
-                  >
-                    pilihan benar
-                  </p>
-                </div>
-              </div>
-
-              {/* Right: round play button */}
-              <motion.button
-                type="button"
-                onClick={handlePlay}
-                whileHover={{
-                  scale: 1.08,
-                  boxShadow: "0 12px 32px rgba(26,150,136,0.35)",
-                }}
-                whileTap={{ scale: 0.92 }}
-                className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full sm:h-11 sm:w-11"
-                style={{
-                  background:
-                    "var(--gradient-brand-btn, linear-gradient(135deg, #144949 0%, #1a9688 100%))",
-                  boxShadow: "0 6px 18px rgba(26,150,136,0.25)",
-                }}
-                aria-label="Mulai Brave Choice Quiz"
-                title="Mulai Brave Choice"
-              >
-                <Play size={16} color="white" fill="white" />
-              </motion.button>
-            </div>
-          )}
+      <article className="support-card" aria-labelledby="brave-choice-title">
+        <div className="support-icon peach" aria-hidden="true">
+          <Compass size={23} />
         </div>
-      </MotionCard>
+        <span className={`support-badge ${hasPlayed ? "success" : ""}`}>
+          {hasPlayed ? `${pct}% tepat` : "Belum ada aktivitas"}
+        </span>
+        <h3 id="brave-choice-title">Brave Choice</h3>
+        <p>Jelajahi pilihan dan konsekuensinya lewat situasi sehari-hari.</p>
+
+        {showSkeleton ? (
+          <div className="support-skeleton" aria-hidden="true" />
+        ) : hasPlayed ? (
+          <div className="brave-stats">
+            <div className="brave-ring" aria-hidden="true">
+              <DonutRing pct={pct} color="#A86500" size={48} stroke={5} />
+              <b>{pct}%</b>
+            </div>
+            <p>
+              <strong>
+                {correct}/{total}
+              </strong>
+              pilihan benar
+            </p>
+          </div>
+        ) : null}
+
+        <div className="support-actions">
+          <button
+            type="button"
+            className="support-action"
+            onClick={handlePlay}
+            disabled={quiz.isLoading}
+            aria-busy={quiz.isLoading}
+          >
+            {quiz.isLoading ? (
+              <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+            ) : (
+              <Play size={15} fill="currentColor" aria-hidden="true" />
+            )}
+            {hasPlayed ? "Main lagi" : "Mulai Brave Choice"}
+          </button>
+        </div>
+      </article>
 
       <BraveChoiceModal
         isOpen={quiz.showModal}

@@ -3,51 +3,52 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, LogOut, User, ChevronDown } from "lucide-react";
 import Image from "next/image";
+import { ChevronDown, CreditCard, LogOut, User } from "lucide-react";
+
+import "./home-dashboard-redesign.css";
 
 import { authClient } from "@/lib/auth-client";
 import type {
   BaselineResponse,
   MoodLog,
-  ParentStatusResponse,
   SessionUser,
   WeekData,
 } from "../types";
 
 import {
-  buildWeeksFromLogs,
+  buildWeekForDate,
   computeLongestStreak,
-  getInitialSelectedWeek,
+  getStartOfWeek,
   getTimezone,
 } from "../utils";
-import { getMoodColor } from "@/components/mood/mood-face-icons";
 import { PageLoader } from "@/components/ui/manual/page-loader";
 import { LogoutConfirmDialog } from "@/components/ui/manual/logout-confirm-dialog";
-import { fadeUp } from "./home-dashboard-motion";
-import { HomeDashboardTopSection } from "./HomeDashboardTopSection";
+import { HomeDashboardWelcome } from "./HomeDashboardWelcome";
+import { HomeDashboardActivity } from "./HomeDashboardActivity";
 import { HomeDashboardMoodHistory } from "./HomeDashboardMoodHistory";
+import { MOOD_HISTORY_MIN_DATE } from "./WeekFilterBar";
+import { HomeDashboardBraveChoiceCard } from "./HomeDashboardBraveChoiceCard";
+import { HomeDashboardInsightCard } from "./HomeDashboardInsightCard";
+import { HomeDashboardBaselineCard } from "./HomeDashboardBaselineCard";
 
 export function HomeDashboardContent() {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [timezone] = useState(() => getTimezone());
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const now = useMemo(() => new Date(), []);
+  const today = useMemo(() => new Date(), []);
 
   const dateStr = useMemo(
     () =>
-      now.toLocaleDateString("id-ID", {
+      today.toLocaleDateString("id-ID", {
         weekday: "long",
         day: "numeric",
         month: "long",
         year: "numeric",
       }),
-    [now],
+    [today],
   );
 
   const { data: sessionData, isLoading: sessionLoading } = useQuery({
@@ -83,9 +84,13 @@ export function HomeDashboardContent() {
     void syncStreak();
   }, [sessionUser?.id, timezone, queryClient]);
 
-  const { data: moodLogs = [], isLoading: moodLogsLoading } = useQuery<
-    MoodLog[]
-  >({
+  const {
+    data: moodLogs = [],
+    isLoading: moodLogsLoading,
+    isError: moodLogsError,
+    isFetching: moodLogsFetching,
+    refetch: refetchMoodLogs,
+  } = useQuery<MoodLog[]>({
     queryKey: ["mood-logs"],
     queryFn: async () => {
       const res = await fetch("/api/mood", { cache: "no-store" });
@@ -127,22 +132,6 @@ export function HomeDashboardContent() {
       staleTime: 300_000,
     });
 
-  const {
-    data: parentStatusData = null,
-    isLoading: parentLoading,
-    refetch: refetchParentStatus,
-  } = useQuery<ParentStatusResponse>({
-    queryKey: ["parent-status"],
-    queryFn: async () => {
-      const res = await fetch("/api/parent/status", { cache: "no-store" });
-      if (!res.ok) return null;
-      return (await res.json()) as ParentStatusResponse;
-    },
-    enabled: !!sessionUser?.id,
-    staleTime: 30_000,
-    refetchOnMount: true,
-  });
-
   const { data: braveChoiceStats = null, isLoading: braveChoiceLoading } =
     useQuery({
       queryKey: ["brave-choice-stats"],
@@ -158,43 +147,27 @@ export function HomeDashboardContent() {
       enabled: !!sessionUser?.id,
     });
 
-  const weeks = useMemo(
-    () => buildWeeksFromLogs(moodLogs, timezone, 24),
-    [moodLogs, timezone],
+  // Tanggal pilihan menentukan minggu yang ditampilkan, sehingga tanggal di
+  // bulan/tahun mana pun (lewat datepicker) langsung berpindah ke periodenya.
+  const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
+
+  const currentWeek: WeekData = useMemo(
+    () => buildWeekForDate(moodLogs, timezone, selectedDate, today),
+    [moodLogs, timezone, selectedDate, today],
   );
 
-  const initialWeek = useMemo(() => getInitialSelectedWeek(weeks), [weeks]);
-
-  const [selectedWeekId, setSelectedWeekId] = useState<string>(
-    initialWeek?.id ?? "",
-  );
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
-    initialWeek?.days?.[0]?.fullDate,
+  const streakWeek = useMemo(
+    () => buildWeekForDate(moodLogs, timezone, today, today).days,
+    [moodLogs, timezone, today],
   );
 
-  useEffect(() => {
-    if (!initialWeek || selectedWeekId) return;
-    setSelectedWeekId(initialWeek.id);
-    setSelectedDate(initialWeek.days?.[0]?.fullDate);
-  }, [initialWeek, selectedWeekId]);
-
-  const currentWeek: WeekData | undefined = useMemo(
-    () => weeks.find((w) => w.id === selectedWeekId),
-    [weeks, selectedWeekId],
-  );
-
-  const currentWeekIndex = useMemo(
-    () => weeks.findIndex((w) => w.id === selectedWeekId),
-    [weeks, selectedWeekId],
-  );
+  const isCurrentWeek = currentWeek.days.some((d) => d.today);
+  const disablePrev =
+    getStartOfWeek(selectedDate).getTime() <= MOOD_HISTORY_MIN_DATE.getTime();
 
   const longestStreak = computeLongestStreak(moodLogs, timezone);
   const currentStreak = sessionUser?.currentStreak ?? 0;
   const isPremium = sessionUser?.isPremium ?? false;
-  const parentEmail =
-    parentStatusData?.status === "verified"
-      ? parentStatusData.email
-      : (sessionUser?.parentEmail ?? null);
   const braveChoice = braveChoiceStats ?? { pct: 0, correct: 0, total: 0 };
 
   const isLoading =
@@ -202,46 +175,32 @@ export function HomeDashboardContent() {
     moodLogsLoading ||
     diariesLoading ||
     baselineLoading ||
-    parentLoading ||
     braveChoiceLoading;
 
-  const handleInsightClick = () => {
-    router.push(isPremium ? "/insight" : "/subscription");
+  const clampToRange = (date: Date) => {
+    if (date > today) return new Date(today);
+    if (date < MOOD_HISTORY_MIN_DATE) return new Date(MOOD_HISTORY_MIN_DATE);
+    return date;
   };
 
-  const handleInsightKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      handleInsightClick();
-    }
+  const shiftWeek = (direction: -1 | 1) => {
+    const next = new Date(selectedDate);
+    next.setDate(next.getDate() + direction * 7);
+    setSelectedDate(clampToRange(next));
   };
 
   const handlePrevWeek = () => {
-    if (currentWeekIndex <= 0) return;
-    const prev = weeks[currentWeekIndex - 1];
-    if (!prev) return;
-    setSelectedWeekId(prev.id);
-    setSelectedDate(prev.days?.[0]?.fullDate);
+    if (disablePrev) return;
+    shiftWeek(-1);
   };
 
   const handleNextWeek = () => {
-    if (currentWeekIndex < 0 || currentWeekIndex >= weeks.length - 1) return;
-    const next = weeks[currentWeekIndex + 1];
-    if (!next) return;
-    setSelectedWeekId(next.id);
-    setSelectedDate(next.days?.[0]?.fullDate);
+    if (isCurrentWeek) return;
+    shiftWeek(1);
   };
 
-  const handleCalendarDateChange = (date: Date | undefined) => {
-    setSelectedDate(date);
-    if (!date) return;
-    const targetTime = date.getTime();
-    const matchedWeek = weeks.find((week) => {
-      const first = week.days[0]?.fullDate?.getTime();
-      const last = week.days[6]?.fullDate?.getTime();
-      return !!first && !!last && targetTime >= first && targetTime <= last;
-    });
-    if (matchedWeek) setSelectedWeekId(matchedWeek.id);
+  const handlePickDate = (date: Date) => {
+    setSelectedDate(clampToRange(date));
   };
 
   const handleLogout = async () => {
@@ -260,8 +219,6 @@ export function HomeDashboardContent() {
       setIsLoggingOut(false);
     }
   };
-
-  const streakWeek = weeks[weeks.length - 1]?.days ?? [];
 
   const userImageSrc =
     typeof sessionUser?.image === "string" && sessionUser.image.trim() !== ""
@@ -282,153 +239,75 @@ export function HomeDashboardContent() {
   }
 
   return (
-    <div className="flex h-full flex-col bg-[var(--tt-dashboard-page-bg)]">
-      {/* ── Scrollable Body (header scrolls with content) ── */}
-      <div className="tt-dashboard-scroll-y flex-1 overflow-y-auto">
-        {/* Header */}
-        <motion.header
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          custom={0}
-          className="flex items-center justify-between px-6 py-4"
-        >
-          {/* Left: greeting + title */}
-          <div>
-            <p
-              className="mb-0.5 text-[16x] font-semibold"
-              style={{ color: "var(--tt-dashboard-text-2)" }}
-            >
-              Selamat datang kembali,{" "}
-              <span style={{ color: "var(--tt-dashboard-brand)" }}>
-                {sessionUser?.name ?? "Teman"}!
-              </span>
-            </p>
-            <h1
-              className="text-[24px] font-black leading-tight md:text-[28px]"
-              style={{ color: "var(--tt-dashboard-text)" }}
-            >
-              Dashboard
-            </h1>
+    <div className="tt-dash">
+      <div className="dash-scroll tt-dashboard-scroll-y">
+        {/* Topbar desktop; di mobile profil & menu ada di bar shell existing. */}
+        <header className="dash-topbar">
+          <div className="dash-page-title">
+            <span>TemanTumbuh</span>
+            <strong>Dashboard</strong>
           </div>
+          <ProfileDropdown
+            userName={sessionUser?.name ?? "Pengguna"}
+            userEmail={sessionUser?.email ?? ""}
+            userImageSrc={userImageSrc}
+            userInitials={userInitials}
+            isLoggingOut={isLoggingOut}
+            onLogout={() => setShowLogoutConfirm(true)}
+          />
+        </header>
 
-          {/* Right: avatar + dropdown — DESKTOP ONLY (mobile uses sidebar shell) */}
-          <div className="relative hidden items-center gap-2 lg:flex">
-            {/* Profile dropdown trigger */}
-            <ProfileDropdown
-              userName={sessionUser?.name ?? "Pengguna"}
-              userImageSrc={userImageSrc}
-              userInitials={userInitials}
-              isLoggingOut={isLoggingOut}
-              onLogout={() => setShowLogoutConfirm(true)}
-            />
-          </div>
-        </motion.header>
+        <div className="dash-content">
+          <HomeDashboardWelcome
+            userName={sessionUser?.name ?? "Teman"}
+            dateLabel={dateStr}
+          />
 
-        <div className="px-6 py-5">
-          <motion.p
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            custom={1}
-            className="mb-4 text-[12px] font-bold uppercase tracking-[0.13em]"
-            style={{ color: "var(--tt-dashboard-text-2)" }}
-          >
-            {dateStr.toUpperCase()}
-          </motion.p>
-
-          <HomeDashboardTopSection
+          <HomeDashboardActivity
             currentStreak={currentStreak}
             longestStreak={longestStreak}
             totalDiaries={totalDiaries}
             streakWeek={streakWeek}
-            getMoodColor={getMoodColor}
-            braveChoice={braveChoice}
-            parentEmail={parentEmail}
-            parentStatus={parentStatusData?.status ?? null}
-            lastReportSentAt={parentStatusData?.lastSentAt ?? null}
-            lastReportType={parentStatusData?.lastReportType ?? null}
-            lastReportStatus={parentStatusData?.lastReportStatus ?? null}
-            currentWeek={currentWeek}
-            year={now.getFullYear()}
-            timezone={timezone}
-            isPremium={isPremium}
-            baseline={baseline}
-            userId={sessionUser?.id}
-            onInsightClick={handleInsightClick}
-            onInsightKeyDown={handleInsightKeyDown}
-            onReportSent={async () => {
-              await refetchParentStatus();
-            }}
           />
-
-          <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            custom={6}
-            className="mt-3"
-            whileHover={{
-              boxShadow: "0 14px 32px rgba(26,150,136,0.16)",
-            }}
-            whileTap={{ scale: 0.985 }}
-            style={{ borderRadius: "1.15rem" }}
-          >
-            <Link
-              href="/diary"
-              className="relative flex items-center gap-4 overflow-hidden rounded-[1.15rem] px-5 py-4"
-              style={{
-                background: "rgba(26, 150, 136, 0.09)",
-                border: "1px solid rgba(26, 150, 136, 0.22)",
-                backdropFilter: "blur(12px)",
-                WebkitBackdropFilter: "blur(12px)",
-              }}
-            >
-              {/* decorative glow circle */}
-              <div
-                className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full"
-                style={{ background: "rgba(26, 150, 136, 0.10)" }}
-              />
-
-              {/* text body */}
-              <div className="relative flex-1">
-                <h3
-                  className="text-[15px] font-extrabold"
-                  style={{ color: "var(--tt-dashboard-brand-deep)" }}
-                >
-                  Tulis Diary
-                </h3>
-                <p
-                  className="mt-0.5 text-[12px]"
-                  style={{ color: "var(--tt-dashboard-text-2)" }}
-                >
-                  Lanjutkan refleksi harianmu bersama TemanCerita!
-                </p>
-              </div>
-
-              {/* arrow CTA */}
-              <motion.div
-                whileHover={{ x: 2 }}
-                transition={{ duration: 0.18 }}
-                className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-                style={{ background: "var(--tt-dashboard-brand)" }}
-              >
-                <ArrowRight size={14} color="white" />
-              </motion.div>
-            </Link>
-          </motion.div>
 
           <HomeDashboardMoodHistory
+            week={currentWeek}
+            today={today}
             selectedDate={selectedDate}
-            onDateChange={handleCalendarDateChange}
+            onSelectDay={setSelectedDate}
+            onPickDate={handlePickDate}
             onPrev={handlePrevWeek}
             onNext={handleNextWeek}
-            disablePrev={currentWeekIndex <= 0}
-            disableNext={
-              currentWeekIndex < 0 || currentWeekIndex >= weeks.length - 1
-            }
-            currentWeek={currentWeek}
+            onToday={() => setSelectedDate(new Date(today))}
+            disablePrev={disablePrev}
+            disableNext={isCurrentWeek}
+            isFetching={moodLogsFetching}
+            isError={moodLogsError}
+            onRetry={() => void refetchMoodLogs()}
           />
+
+          <section
+            className="supporting-features"
+            aria-labelledby="support-title"
+          >
+            <div className="dash-section-header">
+              <div>
+                <span className="dash-kicker">Fitur pendukung</span>
+                <h2 id="support-title">Jelajahi saat kamu siap</h2>
+              </div>
+            </div>
+            <div className="support-grid">
+              <HomeDashboardBraveChoiceCard
+                correct={braveChoice.correct}
+                total={braveChoice.total}
+                pct={braveChoice.pct}
+                userId={sessionUser?.id}
+                plan={isPremium ? "premium" : "free"}
+              />
+              <HomeDashboardInsightCard isPremium={isPremium} />
+              <HomeDashboardBaselineCard baseline={baseline} />
+            </div>
+          </section>
         </div>
       </div>
 
@@ -446,12 +325,14 @@ export function HomeDashboardContent() {
 
 function ProfileDropdown({
   userName,
+  userEmail,
   userImageSrc,
   userInitials,
   isLoggingOut,
   onLogout,
 }: {
   userName: string;
+  userEmail: string;
   userImageSrc: string | null;
   userInitials: string;
   isLoggingOut: boolean;
@@ -469,98 +350,87 @@ function ProfileDropdown({
         setOpen(false);
       }
     }
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
+    };
   }, []);
 
-  return (
-    <div ref={dropdownRef} className="relative">
-      <motion.button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.97 }}
-        className="flex items-center gap-2.5 rounded-xl px-3 py-2 transition-colors duration-200"
-        style={{ background: "var(--tt-dashboard-chip-bg)" }}
-      >
-        <div
-          className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg text-[12px] font-black text-white"
-          style={{ background: "var(--tt-dashboard-brand)" }}
-        >
-          {userImageSrc ? (
-            <Image
-              src={userImageSrc}
-              alt={userName}
-              width={32}
-              height={32}
-              className="h-full w-full object-cover"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            userInitials
-          )}
-        </div>
-        <span
-          className="text-[13px] font-bold"
-          style={{ color: "var(--tt-dashboard-text)" }}
-        >
-          {userName}
-        </span>
-        <ChevronDown
-          size={14}
-          style={{
-            color: "var(--tt-dashboard-text-2)",
-            transform: open ? "rotate(180deg)" : "rotate(0deg)",
-            transition: "transform 0.2s",
-          }}
+  const avatar = (
+    <span className="profile-avatar" aria-hidden="true">
+      {userImageSrc ? (
+        <Image
+          src={userImageSrc}
+          alt=""
+          width={36}
+          height={36}
+          referrerPolicy="no-referrer"
         />
-      </motion.button>
+      ) : (
+        userInitials
+      )}
+    </span>
+  );
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -4, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.96 }}
-            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl border shadow-lg"
-            style={{
-              background: "rgba(255,255,255,0.98)",
-              borderColor: "var(--tt-dashboard-card-border)",
-              backdropFilter: "blur(12px)",
+  return (
+    <div ref={dropdownRef} className="profile-menu">
+      <button
+        type="button"
+        className="profile-trigger"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={`Menu profil ${userName}`}
+        onClick={() => setOpen((prev) => !prev)}
+      >
+        {avatar}
+        <strong>{userName}</strong>
+        <ChevronDown size={15} aria-hidden="true" />
+      </button>
+
+      {open ? (
+        <div className="profile-dropdown" role="menu">
+          <div className="profile-dropdown-head">
+            {avatar}
+            <p>
+              <strong>{userName}</strong>
+              {userEmail ? <small>{userEmail}</small> : null}
+            </p>
+          </div>
+          <Link
+            href="/profile"
+            role="menuitem"
+            className="profile-dropdown-item"
+            onClick={() => setOpen(false)}
+          >
+            <User size={15} aria-hidden="true" /> Lihat Profil
+          </Link>
+          <Link
+            href="/subscription"
+            role="menuitem"
+            className="profile-dropdown-item"
+            onClick={() => setOpen(false)}
+          >
+            <CreditCard size={15} aria-hidden="true" /> Kelola langganan
+          </Link>
+          <button
+            type="button"
+            role="menuitem"
+            className="profile-dropdown-item danger"
+            disabled={isLoggingOut}
+            onClick={() => {
+              setOpen(false);
+              onLogout();
             }}
           >
-            <Link
-              href="/profile"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[rgba(26,150,136,0.06)]"
-              style={{ color: "var(--tt-dashboard-text)" }}
-            >
-              <User size={15} style={{ color: "var(--tt-dashboard-brand)" }} />
-              Lihat Profil
-            </Link>
-
-            <div
-              className="mx-3 h-px"
-              style={{ background: "var(--tt-dashboard-card-border)" }}
-            />
-
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(false);
-                onLogout();
-              }}
-              disabled={isLoggingOut}
-              className="flex w-full items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[rgba(239,68,68,0.06)] disabled:cursor-not-allowed disabled:opacity-60"
-              style={{ color: "#DC2626" }}
-            >
-              <LogOut size={15} />
-              Keluar
-            </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <LogOut size={15} aria-hidden="true" /> Keluar
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
