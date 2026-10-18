@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Compass, Lightbulb, Loader2, MessagesSquare } from "lucide-react";
+import { ArrowRight, Compass, Loader2 } from "lucide-react";
 import { useQueryClient, useIsFetching } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { BraveChoiceModal } from "@/features/diary/components/BraveChoiceModal";
@@ -75,13 +75,6 @@ export function HomeDashboardBraveChoiceCard({
           <div className="support-skeleton" aria-hidden="true" />
         ) : (
           <div className="brave-activity" aria-live="polite">
-            <span className="brave-activity-icon" aria-hidden="true">
-              {hasActivity ? (
-                <MessagesSquare size={20} />
-              ) : (
-                <Lightbulb size={20} />
-              )}
-            </span>
             <p>
               {hasActivity ? (
                 <>
@@ -110,10 +103,9 @@ export function HomeDashboardBraveChoiceCard({
           >
             {quiz.isLoading ? (
               <Loader2 size={16} className="animate-spin" aria-hidden="true" />
-            ) : (
-              <Compass size={16} aria-hidden="true" />
-            )}
+            ) : null}
             {hasActivity ? "Coba Skenario Lain" : "Jelajahi Pilihan"}
+            <ArrowRight size={16} aria-hidden="true" />
           </button>
         </div>
       </article>
