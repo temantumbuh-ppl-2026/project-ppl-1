@@ -1,27 +1,29 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
   ChevronLeft,
   ChevronRight,
+  Compass,
   Crown,
   Flame,
   Info,
-  Compass,
   PanelLeftClose,
+  X,
 } from "lucide-react";
 
-import { colors as C } from "../constants/tokens";
 import type { DiaryEntry, UserProfile, PlanConfig } from "../types";
 import { EntryCard } from "./EntryCard";
 import { CalendarDropdown } from "@/components/ui/manual/calendar-dropdown";
 
 type Props = {
-  mode: "desktop" | "mobile";
-  isOpen: boolean;
-  onClose: () => void;
-  onOpen: () => void;
+  /** Drawer riwayat terbuka (tablet/mobile). */
+  isDrawerOpen: boolean;
+  onCloseDrawer: () => void;
+  onToggleCollapse: () => void;
+  onBack: () => void;
   user: UserProfile;
   entries: DiaryEntry[];
   selectedEntry: DiaryEntry | null;
@@ -51,10 +53,6 @@ type MoodLog = {
 type DiaryEntryWithMood = DiaryEntry & {
   mood?: MoodScore;
 };
-
-export const MOBILE_STRIP_WIDTH = 46;
-
-const ENTRY_GAP = 8;
 
 function getTimezone(): string {
   try {
@@ -116,15 +114,15 @@ function resolveEntryDate(entry: DiaryEntry): Date | null {
 }
 
 export function DiaryLeftPage({
-  mode,
-  isOpen,
-  onClose,
+  isDrawerOpen,
+  onCloseDrawer,
+  onToggleCollapse,
+  onBack,
   user,
   entries,
   selectedEntry,
   activeMonth,
   selectedDate,
-  planCfg,
   quizRemaining,
   canDoQuiz,
   isQuestionPoolExhausted,
@@ -135,215 +133,9 @@ export function DiaryLeftPage({
   onNextMonth,
   onSelectDate,
 }: Props) {
-  if (mode === "mobile") {
-    return (
-      <>
-        {/* Backdrop */}
-        {isOpen && (
-          <div
-            style={{
-              position: "fixed",
-              inset: 0,
-              background: "rgba(0,0,0,0.2)",
-              zIndex: 119,
-            }}
-            onClick={onClose}
-          />
-        )}
-        <aside
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            bottom: 0,
-            width: isOpen ? "100%" : 0,
-            maxWidth: isOpen ? 360 : 0,
-            background: C.paperL,
-            boxShadow: isOpen ? "20px 0 60px rgba(12, 24, 32, 0.16)" : "none",
-            transition:
-              "width 260ms cubic-bezier(0.22,1,0.36,1), max-width 260ms cubic-bezier(0.22,1,0.36,1)",
-            zIndex: 120,
-            display: "flex",
-            flexDirection: "column",
-            minHeight: 0,
-            height: "100dvh",
-            overflow: "hidden",
-          }}
-        >
-          {isOpen && (
-            <div
-              style={{
-                width: "100%",
-                height: "100%",
-                overflow: "hidden",
-                display: "flex",
-                flexDirection: "column",
-              }}
-            >
-              {/* Back button header */}
-              <div
-                style={{
-                  flexShrink: 0,
-                  padding: "10px 12px 8px",
-                  borderBottom: `1px solid ${C.bdL}`,
-                  background: C.paper,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 8,
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => (window.location.href = "/home")}
-                  style={{
-                    height: 36,
-                    padding: "0 12px",
-                    borderRadius: 999,
-                    border: "none",
-                    background: "transparent",
-                    color: C.inkD,
-                    fontSize: 12,
-                    fontWeight: 800,
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    cursor: "pointer",
-                  }}
-                >
-                  <ChevronLeft size={16} />
-                  <span>Kembali</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={onClose}
-                  style={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: 10,
-                    border: "none",
-                    background: "transparent",
-                    color: C.inkD,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                  }}
-                  aria-label="Tutup riwayat diary"
-                  title="Tutup riwayat diary"
-                >
-                  <PanelLeftClose size={16} />
-                </button>
-              </div>
-
-              <div style={{ flex: 1, minHeight: 0, overflow: "hidden" }}>
-                <PanelContent
-                  user={user}
-                  entries={entries}
-                  selectedEntry={selectedEntry}
-                  activeMonth={activeMonth}
-                  selectedDate={selectedDate}
-                  planCfg={planCfg}
-                  quizRemaining={quizRemaining}
-                  canDoQuiz={canDoQuiz}
-                  isQuestionPoolExhausted={isQuestionPoolExhausted}
-                  onSelectEntry={onSelectEntry}
-                  onGoToToday={onGoToToday}
-                  onOpenQuiz={onOpenQuiz}
-                  onPrevMonth={onPrevMonth}
-                  onNextMonth={onNextMonth}
-                  onSelectDate={onSelectDate}
-                  onClose={onClose}
-                  mobileMode
-                />
-              </div>
-            </div>
-          )}
-        </aside>
-      </>
-    );
-  }
-
-  if (!isOpen) {
-    return null;
-  }
-
-  return (
-    <aside
-      style={{
-        width: "100%",
-        height: "100%",
-        background: C.paperL,
-        display: "flex",
-        flexDirection: "column",
-        minHeight: 0,
-        overflow: "hidden",
-      }}
-    >
-      <PanelContent
-        user={user}
-        entries={entries}
-        selectedEntry={selectedEntry}
-        activeMonth={activeMonth}
-        selectedDate={selectedDate}
-        planCfg={planCfg}
-        quizRemaining={quizRemaining}
-        canDoQuiz={canDoQuiz}
-        isQuestionPoolExhausted={isQuestionPoolExhausted}
-        onSelectEntry={onSelectEntry}
-        onGoToToday={onGoToToday}
-        onOpenQuiz={onOpenQuiz}
-        onPrevMonth={onPrevMonth}
-        onNextMonth={onNextMonth}
-        onSelectDate={onSelectDate}
-        onClose={onClose}
-        desktopCloseIcon
-      />
-    </aside>
-  );
-}
-
-type PanelContentProps = {
-  user: UserProfile;
-  entries: DiaryEntry[];
-  selectedEntry: DiaryEntry | null;
-  activeMonth: string;
-  selectedDate?: Date;
-  planCfg: PlanConfig;
-  quizRemaining: number;
-  canDoQuiz: boolean;
-  isQuestionPoolExhausted: boolean;
-  onSelectEntry: (entry: DiaryEntry) => void;
-  onGoToToday: () => void;
-  onOpenQuiz: () => void;
-  onPrevMonth: () => void;
-  onNextMonth: () => void;
-  onSelectDate: (date: Date | undefined) => void;
-  onClose: () => void;
-  desktopCloseIcon?: boolean;
-  mobileMode?: boolean;
-};
-
-function PanelContent({
-  user,
-  entries,
-  selectedEntry,
-  activeMonth,
-  selectedDate,
-  quizRemaining,
-  canDoQuiz,
-  isQuestionPoolExhausted,
-  onSelectEntry,
-  onGoToToday,
-  onOpenQuiz,
-  onPrevMonth,
-  onNextMonth,
-  onSelectDate,
-  mobileMode = false,
-}: PanelContentProps) {
   const timezone = React.useMemo(() => getTimezone(), []);
   const canOpenQuiz = canDoQuiz || isQuestionPoolExhausted;
+  const isFree = user.plan === "free";
 
   const { data: moodLogs = [] } = useQuery<MoodLog[]>({
     queryKey: ["mood-logs"],
@@ -389,426 +181,173 @@ function PanelContent({
     });
   }, [entries, moodLogs, timezone]);
 
-  const selectedEntryWithMood = React.useMemo<DiaryEntryWithMood | null>(() => {
-    if (!selectedEntry) return null;
-    return (
-      entriesWithMood.find((entry) => entry.id === selectedEntry.id) ?? null
-    );
-  }, [entriesWithMood, selectedEntry]);
-
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        minHeight: 0,
-        height: "100%",
-        overflow: "hidden",
-        background: C.paperL,
-      }}
+    <aside
+      id="diary-history"
+      className={`dy-sidebar ${isDrawerOpen ? "is-open" : ""}`}
+      aria-label="Riwayat diary"
     >
-      <div
-        style={{
-          padding: "10px 10px 8px",
-          borderBottom: `1px solid ${C.bdL}`,
-          background: C.paper,
-          position: "sticky",
-          top: 0,
-          zIndex: mobileMode ? 5 : 2,
-          overflow: "visible",
-          flexShrink: 0,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginBottom: 8,
-          }}
+      <div className="dy-sidebar-top">
+        <button type="button" className="dy-back" onClick={onBack}>
+          <ChevronLeft size={16} aria-hidden="true" />
+          Kembali
+        </button>
+        <button
+          type="button"
+          className="dy-icon-btn dy-collapse-btn"
+          onClick={onToggleCollapse}
+          aria-label="Ciutkan riwayat diary"
+          title="Ciutkan riwayat diary"
         >
-          <div style={{ minWidth: 0 }}>
-            <p
-              style={{
-                margin: 0,
-                fontSize: 12,
-                fontWeight: 800,
-                color: C.inkD,
-                lineHeight: 1.2,
-              }}
-            >
-              Riwayat Diary
-            </p>
-          </div>
+          <PanelLeftClose size={18} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className="dy-icon-btn dy-drawer-close"
+          onClick={onCloseDrawer}
+          aria-label="Tutup riwayat diary"
+          title="Tutup riwayat diary"
+        >
+          <X size={18} aria-hidden="true" />
+        </button>
+      </div>
 
-          <div style={{ flex: 1 }} />
-        </div>
+      <div className="dy-sidebar-content">
+        <h2 className="dy-sidebar-heading">Riwayat Diary</h2>
 
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr auto auto",
-            gap: 6,
-            alignItems: "center",
-            position: "relative",
-            zIndex: mobileMode ? 6 : 2,
-            overflow: "visible",
-          }}
+          className="dy-date-compact"
+          role="group"
+          aria-label="Navigasi tanggal diary"
         >
-          <div
-            style={{
-              position: "relative",
-              zIndex: mobileMode ? 7 : 2,
-              overflow: "visible",
-              minWidth: 0,
-            }}
-          >
+          <div className="dy-date-picker">
             <CalendarDropdown
               date={selectedDate}
               monthLabel={activeMonth}
-              onChange={(d) => onSelectDate(d)}
+              onChange={(date) => {
+                onSelectDate(date);
+                if (date) onCloseDrawer();
+              }}
             />
           </div>
-
-          <MonthNavButton
-            direction="prev"
+          <button
+            type="button"
+            className="dy-square-btn"
             onClick={onPrevMonth}
-            ariaLabel="Bulan sebelumnya"
-          />
-          <MonthNavButton
-            direction="next"
+            aria-label="Bulan sebelumnya"
+            title="Bulan sebelumnya"
+          >
+            <ChevronLeft size={16} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="dy-today-btn"
+            onClick={() => {
+              onGoToToday();
+              onCloseDrawer();
+            }}
+          >
+            Hari Ini
+          </button>
+          <button
+            type="button"
+            className="dy-square-btn"
             onClick={onNextMonth}
-            ariaLabel="Bulan berikutnya"
-          />
+            aria-label="Bulan berikutnya"
+            title="Bulan berikutnya"
+          >
+            <ChevronRight size={16} aria-hidden="true" />
+          </button>
         </div>
-      </div>
-
-      <div
-        style={{
-          padding: "8px 10px",
-          borderBottom: `1px solid ${C.bdL}`,
-          background: C.paper,
-          display: "flex",
-          flexDirection: "column",
-          gap: 7,
-          flexShrink: 0,
-        }}
-      >
-        <button
-          type="button"
-          onClick={onGoToToday}
-          style={{
-            width: "100%",
-            height: 36,
-            borderRadius: 11,
-            border: "none",
-            background: `linear-gradient(135deg, ${C.inkD}, ${C.inkM})`,
-            color: C.white,
-            fontSize: 12,
-            fontWeight: 700,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            boxShadow: "0 8px 18px rgba(26,150,136,0.14)",
-          }}
-        >
-          Pergi ke Hari Ini
-        </button>
 
         <button
           type="button"
-          onClick={canOpenQuiz ? onOpenQuiz : undefined}
-          style={{
-            width: "100%",
-            minHeight: 36,
-            borderRadius: 11,
-            border: `1px solid ${canOpenQuiz ? C.bd : C.bdL}`,
-            background: canOpenQuiz ? C.inkS : "#F7F8F8",
-            color: canOpenQuiz ? C.ink : C.sub,
-            fontSize: 12,
-            fontWeight: 700,
-            cursor: canOpenQuiz ? "pointer" : "not-allowed",
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "0 11px",
-            opacity: canOpenQuiz ? 1 : 0.7,
-          }}
+          className="dy-brave"
+          aria-disabled={!canOpenQuiz}
+          onClick={
+            canOpenQuiz
+              ? () => {
+                  onOpenQuiz();
+                  onCloseDrawer();
+                }
+              : undefined
+          }
         >
-          <Compass size={14} color={canOpenQuiz ? C.ink : C.sub} />
+          <Compass size={18} aria-hidden="true" />
           <span>Brave Choice</span>
-          <div style={{ flex: 1 }} />
-          {user.plan === "free" ? (
+          {isFree ? (
             <span
-              style={{
-                fontSize: 12,
-                fontWeight: 800,
-                color:
-                  isQuestionPoolExhausted || !canOpenQuiz ? C.amber : C.ink,
-                padding: "3px 7px",
-                borderRadius: 999,
-                background:
-                  isQuestionPoolExhausted || !canOpenQuiz ? C.goldS : C.inkT,
-                border: `1px solid ${
-                  isQuestionPoolExhausted || !canOpenQuiz ? C.goldL : C.bd
-                }`,
-                whiteSpace: "nowrap",
-              }}
+              className={`dy-brave-badge ${
+                isQuestionPoolExhausted || !canOpenQuiz ? "is-warn" : ""
+              }`}
             >
               {isQuestionPoolExhausted ? "Selesai" : `Sisa ${quizRemaining}`}
             </span>
           ) : (
-            <Crown size={13} color={C.gold} />
+            <Crown
+              size={16}
+              aria-label="Premium"
+              style={{ marginLeft: "auto" }}
+            />
           )}
         </button>
 
         {isQuestionPoolExhausted ? (
-          <div
-            style={{
-              padding: "7px 9px",
-              borderRadius: 10,
-              background: C.goldS,
-              border: `1px solid ${C.goldL}`,
-              display: "flex",
-              gap: 7,
-              alignItems: "flex-start",
-            }}
-          >
-            <Info
-              size={13}
-              color={C.amber}
-              style={{ flexShrink: 0, marginTop: 1 }}
-            />
-            <p
-              style={{
-                margin: 0,
-                fontSize: 12,
-                lineHeight: 1.45,
-                color: C.amber,
-                fontWeight: 600,
-              }}
-            >
+          <p className="dy-note">
+            <Info size={14} aria-hidden="true" />
+            <span>
               Semua situasi sudah kamu jelajahi. Buka Brave Choice untuk
               mengulang dari awal.
+            </span>
+          </p>
+        ) : null}
+
+        {!canDoQuiz && isFree ? (
+          <>
+            <p className="dy-note">
+              <Info size={14} aria-hidden="true" />
+              <span>
+                Kesempatan Brave Choice hari ini sudah habis. Lanjut besok, atau
+                buka akses tanpa batas dengan Premium.
+              </span>
             </p>
-          </div>
+            <Link href="/subscription" className="dy-premium-btn">
+              <Crown size={14} aria-hidden="true" />
+              Upgrade Premium
+            </Link>
+          </>
         ) : null}
 
-        {!canDoQuiz && user.plan === "free" ? (
-          <div
-            style={{
-              padding: "7px 9px",
-              borderRadius: 10,
-              background: C.goldS,
-              border: `1px solid ${C.goldL}`,
-              display: "flex",
-              gap: 7,
-              alignItems: "flex-start",
-            }}
-          >
-            <Info
-              size={13}
-              color={C.amber}
-              style={{ flexShrink: 0, marginTop: 1 }}
-            />
-            <p
-              style={{
-                margin: 0,
-                fontSize: 12,
-                lineHeight: 1.45,
-                color: C.amber,
-                fontWeight: 600,
-              }}
-            >
-              Kesempatan Brave Choice hari ini sudah habis. Lanjut besok, atau
-              buka akses tanpa batas dengan Premium.
-            </p>
-          </div>
-        ) : null}
-
-        {!canDoQuiz && user.plan === "free" ? (
-          <button
-            type="button"
-            onClick={() => {
-              window.location.href = "/subscription";
-            }}
-            style={{
-              width: "100%",
-              height: 34,
-              borderRadius: 10,
-              border: `1px solid ${C.goldL}`,
-              background: C.goldS,
-              color: C.amber,
-              fontSize: 12,
-              fontWeight: 800,
-              cursor: "pointer",
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-            }}
-          >
-            <Crown size={12} color={C.gold} />
-            Upgrade Premium
-          </button>
-        ) : null}
-      </div>
-
-      <div
-        style={{
-          flex: 1,
-          minHeight: 0,
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-          background: C.paperL,
-        }}
-      >
-        <div
-          style={{
-            flex: 1,
-            minHeight: 0,
-            overflow: "hidden",
-            display: "flex",
-            flexDirection: "column",
-            background: C.paperL,
-          }}
-        >
-          <div
-            style={{
-              flex: 1,
-              minHeight: 0,
-              overflowY: "auto",
-              overflowX: "hidden",
-              padding: "6px 10px 10px",
-              display: "flex",
-              flexDirection: "column",
-              gap: ENTRY_GAP,
-              background: C.paperL,
-              overscrollBehavior: "contain",
-              WebkitOverflowScrolling: "touch",
-            }}
-          >
-            {entriesWithMood.length > 0 ? (
-              entriesWithMood.map((entry) => (
-                <div key={entry.id} style={{ flexShrink: 0 }}>
-                  <EntryCard
-                    entry={entry}
-                    isActive={selectedEntryWithMood?.id === entry.id}
-                    onClick={() => onSelectEntry(entry)}
-                  />
-                </div>
-              ))
-            ) : (
-              <div
-                style={{
-                  border: `1px solid ${C.bdL}`,
-                  background: C.white,
-                  borderRadius: 12,
-                  padding: "14px 12px",
+        <span className="dy-list-label">Riwayat entri</span>
+        <div className="dy-entry-list">
+          {entriesWithMood.length > 0 ? (
+            entriesWithMood.map((entry) => (
+              <EntryCard
+                key={entry.id}
+                entry={entry}
+                isActive={selectedEntry?.id === entry.id}
+                onClick={() => {
+                  onSelectEntry(entry);
+                  onCloseDrawer();
                 }}
-              >
-                <p
-                  style={{
-                    margin: "0 0 6px",
-                    fontSize: 12,
-                    fontWeight: 800,
-                    color: C.inkD,
-                  }}
-                >
-                  Belum ada entri diary
-                </p>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 12,
-                    color: C.sub,
-                    lineHeight: 1.55,
-                    fontStyle: "italic",
-                  }}
-                >
-                  Coba pilih tanggal lain atau kembali ke hari ini.
-                </p>
-              </div>
-            )}
-          </div>
+              />
+            ))
+          ) : (
+            <div className="dy-empty-list">
+              <strong>Belum ada entri diary</strong>
+              <span>Coba pilih tanggal lain atau kembali ke hari ini.</span>
+            </div>
+          )}
         </div>
       </div>
 
-      <div
-        style={{
-          padding: "10px 12px",
-          borderTop: `1px solid ${C.bdL}`,
-          background: C.paper,
-          display: "flex",
-          justifyContent: "space-between",
-          gap: 8,
-          alignItems: "center",
-          flexWrap: "wrap",
-          flexShrink: 0,
-          zIndex: 5,
-        }}
-      >
-        <div
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 5,
-            color: C.muted,
-            fontSize: 12,
-            fontWeight: 700,
-          }}
-        >
-          <Flame size={20} color={C.orange} />
-          <span>
-            Streak{" "}
-            <strong style={{ color: C.ink }}>{user.streakDays} hari</strong>
-          </span>
-        </div>
+      <div className="dy-streak">
+        <Flame size={20} aria-hidden="true" />
+        <span>
+          <strong>Streak {user.streakDays} hari</strong>
+          Pelan-pelan tetap berarti.
+        </span>
       </div>
-    </div>
-  );
-}
-
-function MonthNavButton({
-  direction,
-  onClick,
-  ariaLabel,
-}: {
-  direction: "prev" | "next";
-  onClick: () => void;
-  ariaLabel: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={ariaLabel}
-      title={ariaLabel}
-      style={{
-        width: 30,
-        height: 30,
-        borderRadius: 10,
-        border: `1px solid ${C.bdL}`,
-        background: C.white,
-        color: C.ink,
-        cursor: "pointer",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        boxShadow: "0 2px 8px rgba(13,70,70,0.05)",
-        position: "relative",
-        zIndex: 2,
-        flexShrink: 0,
-      }}
-    >
-      {direction === "prev" ? (
-        <ChevronLeft size={14} color={C.ink} />
-      ) : (
-        <ChevronRight size={14} color={C.ink} />
-      )}
-    </button>
+    </aside>
   );
 }

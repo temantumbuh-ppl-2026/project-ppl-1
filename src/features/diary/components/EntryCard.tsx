@@ -3,7 +3,7 @@
 // ============================================================
 
 import { Lock } from "lucide-react";
-import { colors as C, fonts } from "../constants/tokens";
+import { getMoodLabel } from "@/components/mood/mood-face-icons";
 import type { DiaryEntry } from "../types";
 import { MoodFace } from "./MoodFace";
 
@@ -78,104 +78,34 @@ export function EntryCard({ entry, isActive, onClick }: Props) {
   const isPast = !entry.isToday;
   const safeEntry = entry as DiaryEntryWithMoodFallback;
   const displayMood = resolveMood(safeEntry);
+  const preview = entry.preview?.trim() ?? "";
 
   return (
-    <div
+    <button
+      type="button"
       onClick={onClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onClick();
-        }
-      }}
-      style={{
-        padding: "10px 12px",
-        borderRadius: 10,
-        cursor: "pointer",
-        border: isActive ? `1.5px solid ${C.ink}` : `1px solid ${C.bdL}`,
-        background: isActive ? C.inkS : C.white,
-        transition: "all 0.14s",
-        userSelect: "none",
-        outline: "none",
-      }}
+      aria-current={isActive ? "true" : undefined}
+      className={`dy-entry ${isActive ? "is-active" : ""}`}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between", // ⬅️ KEY
-          gap: 8,
-          marginBottom: 6,
-        }}
-      >
-        {/* LEFT SIDE */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            minWidth: 0,
-          }}
-        >
-          <MoodFace score={displayMood} size={20} />
+      <span className="dy-entry-face" aria-hidden="true">
+        <MoodFace score={displayMood} size={26} />
+      </span>
 
-          <p
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: isActive ? C.ink : C.muted,
-              fontFamily: fonts.serif,
-              margin: 0,
-              lineHeight: 1.2,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {entry.dateLabel}
-          </p>
-        </div>
-
-        {/* RIGHT SIDE */}
-        {isPast && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-              flexShrink: 0,
-            }}
-          >
-            <Lock size={10} color={C.sub} />
-            <span
-              style={{
-                fontSize: 12,
-                color: C.sub,
-                fontWeight: 600,
-                lineHeight: 1.1,
-              }}
-            >
-              Hanya baca
-            </span>
-          </div>
-        )}
-      </div>
-
-      <p
-        style={{
-          fontSize: 12,
-          color: C.muted,
-          fontStyle: "italic",
-          lineHeight: 1.45,
-          overflow: "hidden",
-          display: "-webkit-box",
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical",
-          margin: 0,
-        }}
-      >
-        &ldquo;{entry.preview}&rdquo;
-      </p>
-    </div>
+      <span className="dy-entry-body">
+        <span className="dy-entry-date">{entry.dateLabel}</span>
+        <span className="dy-entry-lock">
+          {getMoodLabel(displayMood)}
+          {isPast ? (
+            <>
+              <span aria-hidden="true">·</span>
+              <Lock size={12} aria-hidden="true" /> Hanya baca
+            </>
+          ) : null}
+        </span>
+        <span className={`dy-entry-preview ${preview ? "" : "is-empty"}`}>
+          {preview ? `“${preview}”` : "Belum ada cerita"}
+        </span>
+      </span>
+    </button>
   );
 }
