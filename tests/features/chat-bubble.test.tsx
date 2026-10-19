@@ -13,10 +13,7 @@ describe("ChatBubble follow-up presentation", () => {
     render(<ChatBubble message={{ role: "ai", text, time: "10.00" }} />);
     const content = screen.getByText(text.trimEnd());
     expect(content.textContent).toBe(text);
-    expect(content.parentElement!.style.background).toBe(
-      "var(--tt-primary-100)",
-    );
-    expect(content.parentElement!.style.borderLeftWidth).not.toBe("3px");
+    expect(content.className).toContain("is-follow-up");
   });
 
   it("keeps an ordinary AI reply on the normal surface", () => {
@@ -25,9 +22,9 @@ describe("ChatBubble follow-up presentation", () => {
         message={{ role: "ai", text: "Aku mendengarkan.", time: "10.00" }}
       />,
     );
-    const bubble = screen.getByText("Aku mendengarkan.").parentElement!;
-    expect(bubble.style.background).toBe("var(--tt-surface)");
-    expect(bubble.style.borderLeftWidth).not.toBe("3px");
+    const bubble = screen.getByText("Aku mendengarkan.");
+    expect(bubble.className).toContain("dy-bubble");
+    expect(bubble.className).not.toContain("is-follow-up");
   });
 
   it("does not treat a user's question as an AI follow-up", () => {
@@ -36,8 +33,26 @@ describe("ChatBubble follow-up presentation", () => {
         message={{ role: "user", text: "Boleh cerita?", time: "10.00" }}
       />,
     );
-    const bubble = screen.getByText("Boleh cerita?").parentElement!;
-    expect(bubble.style.background).not.toBe("var(--tt-primary-100)");
-    expect(bubble.style.borderLeftWidth).not.toBe("3px");
+    const bubble = screen.getByText("Boleh cerita?");
+    expect(bubble.className).not.toContain("is-follow-up");
+    expect(bubble.closest(".dy-msg")?.className).toContain("is-user");
+  });
+
+  it("shows the assistant name and timestamp only when requested", () => {
+    const { rerender } = render(
+      <ChatBubble message={{ role: "ai", text: "Halo.", time: "10.05" }} />,
+    );
+    expect(screen.getByText("TemanCerita")).toBeTruthy();
+    expect(screen.getByText("10.05")).toBeTruthy();
+
+    rerender(
+      <ChatBubble
+        message={{ role: "ai", text: "Halo.", time: "10.05" }}
+        showAiMeta={false}
+        showTimestamp={false}
+      />,
+    );
+    expect(screen.queryByText("TemanCerita")).toBeNull();
+    expect(screen.queryByText("10.05")).toBeNull();
   });
 });
