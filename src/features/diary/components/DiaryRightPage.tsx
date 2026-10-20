@@ -27,6 +27,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 
 import { getMoodLabel } from "@/components/mood/mood-face-icons";
+import { ConversationState, RiskLevel } from "@/app/generated/prisma/enums";
 import { DIARY_TOPIC_LABELS } from "../constants/topics";
 import type {
   DiaryConversation,
@@ -239,6 +240,16 @@ export function DiaryRightPage({
   );
   const lastMessageText =
     displayMessages[displayMessages.length - 1]?.text ?? "";
+  const actionOptions = conversation?.actionOptions ?? [];
+  const showActionOptions =
+    !isAiTyping &&
+    !isMessagesLoading &&
+    messages.at(-1)?.role === "ai" &&
+    conversation?.conversationState === ConversationState.ACTION &&
+    conversation?.riskLevel === RiskLevel.NONE &&
+    actionOptions.length >= 2;
+  const canDiscussOption =
+    !isReadOnly && canWriteDiary && !requiresReload && !isAiTyping;
 
   // Hero hanya muncul ketika entri hari ini memang belum berisi pesan apa pun.
   const showHero = showStarters && messages.length === 0 && !isGreetingPending;
@@ -361,6 +372,13 @@ export function DiaryRightPage({
     const el = e.target;
     el.style.height = "0px";
     el.style.height = `${Math.min(el.scrollHeight, TEXTAREA_MAX_HEIGHT)}px`;
+  };
+
+  const handleActionOption = (option: string) => {
+    const draft = `Aku ingin membahas pilihan ini: ${option}`;
+    const currentDraft = inputValue.trim();
+    onInputChange(currentDraft ? `${currentDraft}\n\n${draft}` : draft);
+    textareaRef.current?.focus();
   };
 
   const starterButtons = (
@@ -527,6 +545,53 @@ export function DiaryRightPage({
               showTimestamp={msg.showTimestamp}
             />
           ))}
+
+          {showActionOptions ? (
+            <section
+              className="dy-action-choices"
+              aria-label="Pilihan tindakan"
+            >
+              <div className="dy-action-choices-heading">
+                <strong>Kalau kamu ingin mencoba sesuatu</strong>
+                <p>
+                  {canDiscussOption
+                    ? "Pilih satu untuk dibahas, atau lanjut menulis dengan caramu sendiri."
+                    : "Pilihan yang sempat muncul dalam percakapan ini."}
+                </p>
+              </div>
+              <ol className="dy-action-choices-list">
+                {actionOptions.map((option, index) => (
+                  <li key={`${index}-${option}`}>
+                    {canDiscussOption ? (
+                      <button
+                        type="button"
+                        className="dy-action-choice"
+                        onClick={() => handleActionOption(option)}
+                      >
+                        <span
+                          className="dy-action-choice-number"
+                          aria-hidden="true"
+                        >
+                          {index + 1}
+                        </span>
+                        <span>{option}</span>
+                      </button>
+                    ) : (
+                      <div className="dy-action-choice is-readonly">
+                        <span
+                          className="dy-action-choice-number"
+                          aria-hidden="true"
+                        >
+                          {index + 1}
+                        </span>
+                        <span>{option}</span>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ) : null}
 
           {showCompactStarters ? (
             <div className="dy-starter-block">

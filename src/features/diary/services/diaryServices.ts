@@ -657,6 +657,12 @@ function isDiaryConversation(value: unknown): value is DiaryConversation {
     ) &&
     (record.proactiveSuggestion === null ||
       typeof record.proactiveSuggestion === "string") &&
+    (record.actionOptions === undefined ||
+      (Array.isArray(record.actionOptions) &&
+        record.actionOptions.length <= 3 &&
+        record.actionOptions.every(
+          (option) => typeof option === "string" && option.trim().length > 0,
+        ))) &&
     typeof record.safetyFlag === "boolean" &&
     Object.values(RiskLevel).includes(record.riskLevel as RiskLevel)
   );
