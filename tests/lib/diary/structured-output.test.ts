@@ -4,13 +4,16 @@ import {
   DiaryStructuredOutputError,
   parseDiaryStructuredOutput,
 } from "@/lib/diary/structured-output";
+import { applyDiaryResponseGuardrails } from "@/lib/diary/response-guardrails";
 
 const validOutput = {
   reply:
     "  Kedengarannya berat. Bagian mana yang paling ingin kamu ceritakan?  ",
   topics: ["KELUARGA", "AKADEMIK_SEKOLAH"],
   conversationState: "EXPLORATION",
+  conversationSummary: null,
   proactiveSuggestion: null,
+  actionOptions: [],
   safety: {
     flag: false,
     riskLevel: "NONE",
@@ -75,5 +78,76 @@ describe("diary structured output validation", () => {
     expect(() => parseDiaryStructuredOutput("{pesan pribadi")).toThrow(
       "AI menghasilkan format balasan yang tidak valid.",
     );
+  });
+
+  it("membersihkan output AI ketika sanitize aktif (markdown fence, extra properties, casing topik, dan safety)", () => {
+    const rawAiOutput =
+      "```json\n" +
+      JSON.stringify({
+        reply: "Aku mendengarkanmu.",
+        topics: ["perasaan", "akademik_sekolah", "KELUARGA", "KELUARGA"],
+        conversationState: "exploration",
+        conversationSummary: "  Aku punya tugas sekolah yang membuatku cemas. ",
+        proactiveSuggestion: "",
+        actionOptions: [],
+        safety: {
+          flag: false,
+          riskLevel: "NONE",
+          category: null,
+          summary: "Tidak ada indikasi bahaya",
+        },
+        thought: "Pengguna bercerita tentang sekolah",
+      }) +
+      "\n```";
+
+    const parsed = parseDiaryStructuredOutput(rawAiOutput, { sanitize: true });
+
+    expect(parsed.reply).toBe("Aku mendengarkanmu.");
+    expect(parsed.topics).toEqual(["AKADEMIK_SEKOLAH", "KELUARGA"]);
+    expect(parsed.conversationState).toBe("EXPLORATION");
+    expect(parsed.conversationSummary).toBe(
+      "Aku punya tugas sekolah yang membuatku cemas.",
+    );
+    expect(parsed.proactiveSuggestion).toBeNull();
+    expect(parsed.safety).toEqual({
+      flag: false,
+      riskLevel: "NONE",
+      category: null,
+      summary: null,
+    });
+  });
+
+  it("menolak tingkat risiko yang tidak dikenal walau sanitize aktif", () => {
+    expect(() =>
+      parseDiaryStructuredOutput(
+        JSON.stringify({
+          ...validOutput,
+          safety: {
+            flag: false,
+            riskLevel: "UNKNOWN",
+            category: null,
+            summary: null,
+          },
+        }),
+        { sanitize: true },
+      ),
+    ).toThrow(DiaryStructuredOutputError);
+  });
+
+  it("mengarahkan permintaan kode kembali ke cerita dan menghapus em dash", () => {
+    const parsed = parseDiaryStructuredOutput(JSON.stringify(validOutput));
+    const redirected = applyDiaryResponseGuardrails(
+      { ...parsed, reply: "Ini kodenya: ```ts\\nconst x = 1;```" },
+      "Tolong buatkan kode untuk tugas sekolah.",
+    );
+    expect(redirected.reply).toContain("nemenin kamu cerita");
+    expect(redirected.reply).not.toContain("const x");
+
+    expect(
+      applyDiaryResponseGuardrails(
+        { ...parsed, reply: "Aku paham\u2014mau cerita lebih jauh?" },
+        "Aku stres karena tugas sekolah.",
+      ).reply,
+    ).toBe("Aku paham, mau cerita lebih jauh?");
   });
 });

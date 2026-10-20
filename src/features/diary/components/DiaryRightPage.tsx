@@ -27,6 +27,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 
 import { getMoodLabel } from "@/components/mood/mood-face-icons";
+import { ConversationState, RiskLevel } from "@/app/generated/prisma/enums";
 import { DIARY_TOPIC_LABELS } from "../constants/topics";
 import type {
   DiaryConversation,
@@ -239,6 +240,16 @@ export function DiaryRightPage({
   );
   const lastMessageText =
     displayMessages[displayMessages.length - 1]?.text ?? "";
+  const actionOptions = conversation?.actionOptions ?? [];
+  const showActionOptions =
+    !isAiTyping &&
+    !isMessagesLoading &&
+    messages.at(-1)?.role === "ai" &&
+    conversation?.conversationState === ConversationState.ACTION &&
+    conversation?.riskLevel === RiskLevel.NONE &&
+    actionOptions.length >= 2;
+  const canDiscussOption =
+    !isReadOnly && canWriteDiary && !requiresReload && !isAiTyping;
 
   // Hero hanya muncul ketika entri hari ini memang belum berisi pesan apa pun.
   const showHero = showStarters && messages.length === 0 && !isGreetingPending;
@@ -361,6 +372,14 @@ export function DiaryRightPage({
     const el = e.target;
     el.style.height = "0px";
     el.style.height = `${Math.min(el.scrollHeight, TEXTAREA_MAX_HEIGHT)}px`;
+  };
+
+  const handleActionOption = (option: string) => {
+    const selectedOption = option.trim().replace(/[.!?]+$/, "");
+    const draft = `Aku ingin mencoba langkah ini: ${selectedOption}. Bantu aku memikirkan cara memulainya yang sederhana.`;
+    const currentDraft = inputValue.trim();
+    onInputChange(currentDraft ? `${currentDraft}\n\n${draft}` : draft);
+    textareaRef.current?.focus();
   };
 
   const starterButtons = (
@@ -528,6 +547,53 @@ export function DiaryRightPage({
             />
           ))}
 
+          {showActionOptions ? (
+            <section
+              className="dy-action-choices"
+              aria-label="Pilihan tindakan"
+            >
+              <div className="dy-action-choices-heading">
+                <strong>Kalau kamu ingin mencoba sesuatu</strong>
+                <p>
+                  {canDiscussOption
+                    ? "Pilih satu untuk dibahas, atau lanjut menulis dengan caramu sendiri."
+                    : "Pilihan yang sempat muncul dalam percakapan ini."}
+                </p>
+              </div>
+              <ol className="dy-action-choices-list">
+                {actionOptions.map((option, index) => (
+                  <li key={`${index}-${option}`}>
+                    {canDiscussOption ? (
+                      <button
+                        type="button"
+                        className="dy-action-choice"
+                        onClick={() => handleActionOption(option)}
+                      >
+                        <span
+                          className="dy-action-choice-number"
+                          aria-hidden="true"
+                        >
+                          {index + 1}
+                        </span>
+                        <span>{option}</span>
+                      </button>
+                    ) : (
+                      <div className="dy-action-choice is-readonly">
+                        <span
+                          className="dy-action-choice-number"
+                          aria-hidden="true"
+                        >
+                          {index + 1}
+                        </span>
+                        <span>{option}</span>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ol>
+            </section>
+          ) : null}
+
           {showCompactStarters ? (
             <div className="dy-starter-block">
               <p>
@@ -657,111 +723,10 @@ function splitAiMessageIntoBubbles(rawText: string): string[] {
     return [];
   }
 
-  const paragraphBlocks = normalized
+  return normalized
     .split(/\n{2,}/)
     .map((block) => block.trim())
     .filter(Boolean);
-
-  if (paragraphBlocks.length > 1) {
-    return paragraphBlocks.flatMap((block) => splitLongBlockIntoBubbles(block));
-  }
-
-  const lineBlocks = normalized
-    .split("\n")
-    .map((block) => block.trim())
-    .filter(Boolean);
-
-  if (lineBlocks.length > 1) {
-    return lineBlocks.flatMap((block) => splitLongBlockIntoBubbles(block));
-  }
-
-  return splitLongBlockIntoBubbles(normalized);
-}
-
-function splitLongBlockIntoBubbles(block: string): string[] {
-  const MAX_BUBBLE_CHARS = 210;
-  const IDEAL_BUBBLE_CHARS = 150;
-  const MAX_SENTENCES_PER_BUBBLE = 2;
-
-  if (block.length <= MAX_BUBBLE_CHARS) {
-    return [block];
-  }
-
-  const sentences = splitIntoSentences(block);
-
-  if (sentences.length <= 1) {
-    return chunkTextByLength(block, IDEAL_BUBBLE_CHARS);
-  }
-
-  const bundled: string[] = [];
-  let currentBubble = "";
-  let sentenceCount = 0;
-
-  for (const sentence of sentences) {
-    const nextBubble = currentBubble
-      ? `${currentBubble} ${sentence}`
-      : sentence;
-
-    const shouldWrap =
-      nextBubble.length > MAX_BUBBLE_CHARS ||
-      sentenceCount >= MAX_SENTENCES_PER_BUBBLE;
-
-    if (shouldWrap && currentBubble) {
-      bundled.push(currentBubble.trim());
-      currentBubble = sentence;
-      sentenceCount = 1;
-    } else {
-      currentBubble = nextBubble;
-      sentenceCount += 1;
-    }
-  }
-
-  if (currentBubble.trim()) {
-    bundled.push(currentBubble.trim());
-  }
-
-  return bundled.flatMap((item) =>
-    item.length > MAX_BUBBLE_CHARS
-      ? chunkTextByLength(item, IDEAL_BUBBLE_CHARS)
-      : [item],
-  );
-}
-
-function splitIntoSentences(text: string): string[] {
-  return (
-    text
-      .match(/[^.!?]+[.!?]+|[^.!?]+$/g)
-      ?.map((sentence) => sentence.trim())
-      .filter(Boolean) ?? [text]
-  );
-}
-
-function chunkTextByLength(text: string, maxLength: number): string[] {
-  const words = text.split(/\s+/).filter(Boolean);
-
-  if (words.length === 0) {
-    return [];
-  }
-
-  const chunks: string[] = [];
-  let currentChunk = "";
-
-  for (const word of words) {
-    const nextChunk = currentChunk ? `${currentChunk} ${word}` : word;
-
-    if (nextChunk.length > maxLength && currentChunk) {
-      chunks.push(currentChunk.trim());
-      currentChunk = word;
-    } else {
-      currentChunk = nextChunk;
-    }
-  }
-
-  if (currentChunk.trim()) {
-    chunks.push(currentChunk.trim());
-  }
-
-  return chunks;
 }
 
 function LockedInputNotice({ message }: { message: string }) {

@@ -37,8 +37,8 @@ type GenerateDiaryReplyStreamInput = {
 
 const DEFAULT_BASE_URL = "https://api.koboillm.com/v1";
 const DEFAULT_MODEL = "openai/gpt-5-mini";
-const DEFAULT_MAX_TOKENS = 600;
-const RETRY_MAX_TOKENS = 1400;
+const DEFAULT_MAX_TOKENS = 2500;
+const RETRY_MAX_TOKENS = 5000;
 
 /** One model completion supplies both the user-facing reply and its metadata. */
 export async function generateDiaryStructuredReply({
@@ -47,17 +47,19 @@ export async function generateDiaryStructuredReply({
   const { client, model } = createDiaryOpenAIClient();
   const completion = (await client.chat.completions.create({
     model,
-    temperature: 0.7,
     max_tokens: RETRY_MAX_TOKENS,
     messages,
     response_format: { type: "json_object" },
-  })) as unknown as ChatCompletionLike;
+    ...({ cache: { "no-cache": true } } as Record<string, unknown>),
+  } as unknown as OpenAI.ChatCompletionCreateParamsNonStreaming)) as unknown as ChatCompletionLike;
 
   if (completion.choices?.some((choice) => choice.finish_reason === "length")) {
     throw new DiaryStructuredOutputError();
   }
 
-  return parseDiaryStructuredOutput(extractAssistantText(completion));
+  return parseDiaryStructuredOutput(extractAssistantText(completion), {
+    sanitize: true,
+  });
 }
 
 export async function generateDiaryAssistantReply({
@@ -107,7 +109,6 @@ export async function* generateDiaryAssistantReplyStream({
 
   const stream = await client.chat.completions.create({
     model,
-    temperature: 0.9,
     max_tokens: RETRY_MAX_TOKENS,
     presence_penalty: 0.4,
     frequency_penalty: 0.2,
@@ -173,7 +174,6 @@ async function callChatCompletions({
 }): Promise<ChatCompletionLike> {
   const completion = await client.chat.completions.create({
     model,
-    temperature: 0.9,
     max_tokens: maxTokens,
     presence_penalty: 0.4,
     frequency_penalty: 0.2,

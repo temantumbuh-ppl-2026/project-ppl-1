@@ -10,6 +10,13 @@ import {
   generateDiaryAssistantReply,
   generateDiaryStructuredReply,
 } from "@/lib/diary/litellm";
+import { resolveConversationState } from "@/lib/diary/conversation-state";
+import { resolveConversationSummary } from "@/lib/diary/conversation-summary";
+import {
+  parseStoredActionOptions,
+  resolveActionOptions,
+} from "@/lib/diary/action-options";
+import { applyDiaryResponseGuardrails } from "@/lib/diary/response-guardrails";
 import {
   buildDiaryMoodGreetingPromptMessages,
   buildDiaryPromptMessages,
@@ -220,7 +227,7 @@ export async function getDiaryConversationMetadata({
     select: {
       topics: true,
       conversationState: true,
-      proactiveSuggestion: true,
+      actionOptions: true,
       safetyFlag: true,
       riskLevel: true,
     },
@@ -230,12 +237,20 @@ export async function getDiaryConversationMetadata({
     return null;
   }
 
+  const storedOptions = parseStoredActionOptions(
+    metadata.actionOptions ? decrypt(metadata.actionOptions) : null,
+  );
+  const actionOptions =
+    metadata.conversationState === ConversationState.ACTION &&
+    metadata.riskLevel === RiskLevel.NONE
+      ? storedOptions
+      : [];
+
   return {
     topics: metadata.topics,
     conversationState: metadata.conversationState,
-    proactiveSuggestion: metadata.proactiveSuggestion
-      ? decrypt(metadata.proactiveSuggestion)
-      : null,
+    proactiveSuggestion: actionOptions[0] ?? null,
+    actionOptions,
     safetyFlag: metadata.safetyFlag,
     riskLevel: metadata.riskLevel,
   };
@@ -249,6 +264,8 @@ export type PreparedDiaryChatSession = {
     date: Date;
     topics: DiaryTopic[];
     conversationState: ConversationState;
+    conversationSummary: string | null;
+    actionOptions?: string[];
     riskLevel: RiskLevel;
   } | null;
   todayKey: string;
@@ -322,6 +339,8 @@ export async function prepareDiaryChatSession(
           select: {
             topics: true,
             conversationState: true,
+            conversationSummary: true,
+            actionOptions: true,
             riskLevel: true,
           },
         })
@@ -332,6 +351,15 @@ export async function prepareDiaryChatSession(
         topics: currentMetadata?.topics ?? [],
         conversationState:
           currentMetadata?.conversationState ?? ConversationState.EXPLORATION,
+        conversationSummary: currentMetadata?.conversationSummary
+          ? decrypt(currentMetadata.conversationSummary)
+          : null,
+        actionOptions:
+          currentMetadata?.conversationState === ConversationState.ACTION &&
+          currentMetadata.riskLevel === RiskLevel.NONE &&
+          currentMetadata.actionOptions
+            ? parseStoredActionOptions(decrypt(currentMetadata.actionOptions))
+            : [],
         riskLevel: currentMetadata?.riskLevel ?? RiskLevel.NONE,
       }
     : null;
@@ -408,6 +436,8 @@ export async function prepareDiaryChatSession(
     currentTopics: preparedDiary?.topics ?? [],
     currentState:
       preparedDiary?.conversationState ?? ConversationState.EXPLORATION,
+    currentSummary: preparedDiary?.conversationSummary ?? null,
+    currentActionOptions: preparedDiary?.actionOptions ?? [],
     isOpening: promptHistory.length === 0,
   });
 
@@ -456,8 +486,36 @@ export async function persistDiaryChatSession({
   // encryption key cannot leave even the user's message behind.
   const encryptedUserText = encrypt(session.trimmedText);
   const encryptedAssistantText = encrypt(normalizedAssistantText);
-  const encryptedSuggestion = assistantOutput?.proactiveSuggestion
-    ? encrypt(assistantOutput.proactiveSuggestion)
+  const nextSummary = assistantOutput
+    ? resolveConversationSummary({
+        proposed: assistantOutput.conversationSummary,
+        previous: session.diary?.conversationSummary ?? null,
+        userMessages: [
+          ...session.promptHistory
+            .filter((message) => message.senderType === Sender.USER)
+            .map((message) => message.content),
+          session.trimmedText,
+        ],
+      })
+    : null;
+  const encryptedSummary = nextSummary ? encrypt(nextSummary) : null;
+  const conversationState = assistantOutput
+    ? resolveConversationState({
+        previous:
+          session.diary?.conversationState ?? ConversationState.EXPLORATION,
+        proposed: assistantOutput.conversationState,
+        previousTopics: session.diary?.topics ?? [],
+        nextTopics: assistantOutput.topics,
+        userMessage: session.trimmedText,
+        hasSummary: Boolean(nextSummary),
+        hasPriorUserContext: session.promptHistory.some(
+          (message) => message.senderType === Sender.USER,
+        ),
+        riskLevel: higherRiskLevel(
+          session.diary?.riskLevel ?? RiskLevel.NONE,
+          assistantOutput.safety.riskLevel,
+        ),
+      })
     : null;
   let highRiskAlert: {
     category: SafetyCategory;
@@ -476,11 +534,28 @@ export async function persistDiaryChatSession({
         assistantOutput.safety.riskLevel,
       )
     : RiskLevel.NONE;
+  const actionOptions = assistantOutput
+    ? resolveActionOptions({
+        proposed: assistantOutput.actionOptions,
+        state: conversationState!,
+        riskLevel,
+        hasSummary: Boolean(nextSummary),
+      })
+    : [];
+  const proactiveSuggestion = actionOptions[0] ?? null;
+  const encryptedSuggestion = proactiveSuggestion
+    ? encrypt(proactiveSuggestion)
+    : null;
+  const encryptedActionOptions = actionOptions.length
+    ? encrypt(JSON.stringify(actionOptions))
+    : null;
   const metadataData = assistantOutput
     ? {
         topics: assistantOutput.topics,
-        conversationState: assistantOutput.conversationState,
+        conversationState: conversationState!,
+        conversationSummary: encryptedSummary,
         proactiveSuggestion: encryptedSuggestion,
+        actionOptions: encryptedActionOptions,
         safetyFlag: riskLevel !== RiskLevel.NONE,
         riskLevel,
       }
@@ -602,8 +677,9 @@ export async function persistDiaryChatSession({
       ? {
           conversation: {
             topics: assistantOutput.topics,
-            conversationState: assistantOutput.conversationState,
-            proactiveSuggestion: assistantOutput.proactiveSuggestion,
+            conversationState: conversationState!,
+            proactiveSuggestion,
+            actionOptions,
             safetyFlag: riskLevel !== RiskLevel.NONE,
             riskLevel,
           },
@@ -705,6 +781,7 @@ export async function generateDiaryGreetingFromMood({
     todayLabel: formatDateLabel(todayDate, timezone),
     currentTopics: diary.topics,
     currentState: diary.conversationState,
+    currentSummary: null,
     moodDescription: getMoodDescription(moodScore),
     note: notes,
   });
@@ -718,11 +795,8 @@ export async function generateDiaryGreetingFromMood({
       throw new DiaryStructuredOutputError();
     }
 
-    const output = parsed.data;
+    const output = applyDiaryResponseGuardrails(parsed.data, notes);
     const encryptedReply = encrypt(output.reply);
-    const encryptedSuggestion = output.proactiveSuggestion
-      ? encrypt(output.proactiveSuggestion)
-      : null;
 
     await prisma.$transaction(
       async (tx) => {
@@ -752,8 +826,19 @@ export async function generateDiaryGreetingFromMood({
           where: { id: diaryId },
           data: {
             topics: output.topics,
-            conversationState: output.conversationState,
-            proactiveSuggestion: encryptedSuggestion,
+            conversationState: resolveConversationState({
+              previous: diary.conversationState,
+              proposed: output.conversationState,
+              previousTopics: diary.topics,
+              nextTopics: output.topics,
+              userMessage: notes,
+              hasSummary: false,
+              riskLevel,
+              isMoodGreeting: true,
+            }),
+            conversationSummary: null,
+            proactiveSuggestion: null,
+            actionOptions: null,
             safetyFlag: riskLevel !== RiskLevel.NONE,
             riskLevel,
           },
@@ -904,9 +989,10 @@ export async function completePreparedDiaryStructuredChatSession(
   session: PreparedDiaryChatSession,
 ) {
   try {
-    const output = await generateDiaryStructuredReply({
+    const generated = await generateDiaryStructuredReply({
       messages: session.structuredPromptMessages,
     });
+    const output = applyDiaryResponseGuardrails(generated, session.trimmedText);
 
     return await persistDiaryChatSession({
       session,
@@ -914,7 +1000,16 @@ export async function completePreparedDiaryStructuredChatSession(
       assistantOutput: output,
     });
   } catch (error) {
-    console.error("Diary structured chat failed.");
+    console.error("Diary structured chat failed.", {
+      name: error instanceof Error ? error.name : "UnknownError",
+      status:
+        typeof error === "object" &&
+        error !== null &&
+        "status" in error &&
+        typeof error.status === "number"
+          ? error.status
+          : null,
+    });
     throw toDiaryServiceErrorForAiFailure(error);
   }
 }

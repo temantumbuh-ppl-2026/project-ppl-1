@@ -52,7 +52,7 @@ describe("lib/diary/litellm", () => {
       baseURL: "https://example.test",
     });
     expect(mockCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ max_tokens: 600 }),
+      expect.objectContaining({ max_tokens: 2500 }),
     );
   });
 
@@ -81,7 +81,7 @@ describe("lib/diary/litellm", () => {
     );
   });
 
-  it("retry dengan token lebih besar jika finish_reason length dan respons awal kosong", async () => {
+  it("retry jika finish_reason length dan respons awal kosong", async () => {
     process.env.API_KEY = "key";
     mockCreate
       .mockResolvedValueOnce({ choices: [{ finish_reason: "length" }] })
@@ -92,7 +92,7 @@ describe("lib/diary/litellm", () => {
     );
     expect(mockCreate).toHaveBeenNthCalledWith(
       2,
-      expect.objectContaining({ max_tokens: 1400 }),
+      expect.objectContaining({ max_tokens: 5000 }),
     );
   });
 
@@ -128,7 +128,7 @@ describe("lib/diary/litellm", () => {
 
     expect(chunks).toEqual(["Halo", ", Ruri"]);
     expect(mockCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ stream: true, max_tokens: 1400 }),
+      expect.objectContaining({ stream: true, max_tokens: 5000 }),
     );
 
     async function* emptyStream() {
@@ -152,7 +152,9 @@ describe("lib/diary/litellm", () => {
       reply: "Aku mendengarmu.",
       topics: ["KELUARGA", "PERTEMANAN"],
       conversationState: "CLARIFICATION",
+      conversationSummary: null,
       proactiveSuggestion: null,
+      actionOptions: [],
       safety: {
         flag: false,
         riskLevel: "NONE",
@@ -172,8 +174,9 @@ describe("lib/diary/litellm", () => {
     expect(mockCreate).toHaveBeenCalledTimes(1);
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
+        model: "openai/gpt-5-mini",
         response_format: { type: "json_object" },
-        max_tokens: 1400,
+        max_tokens: 5000,
       }),
     );
   });

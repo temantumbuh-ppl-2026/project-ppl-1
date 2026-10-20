@@ -26,6 +26,7 @@ export type DiaryConversationDto = {
   topics: DiaryTopic[];
   conversationState: ConversationState;
   proactiveSuggestion: string | null;
+  actionOptions?: string[];
   safetyFlag: boolean;
   riskLevel: RiskLevel;
 };

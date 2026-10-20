@@ -33,7 +33,9 @@ export const diaryStructuredOutputSchema = z
     reply: z.string().trim().min(1).max(4000),
     topics: z.array(z.enum(DiaryTopic)).max(9),
     conversationState: z.enum(ConversationState),
+    conversationSummary: z.string().trim().min(1).max(1000).nullable(),
     proactiveSuggestion: z.string().trim().min(1).max(500).nullable(),
+    actionOptions: z.array(z.string().trim().min(1).max(240)).max(3),
     safety: safetySchema,
   })
   .superRefine((output, context) => {
@@ -66,13 +68,187 @@ export class DiaryStructuredOutputError extends Error {
   }
 }
 
-export function parseDiaryStructuredOutput(raw: string): DiaryStructuredOutput {
+const VALID_TOPIC_SET = new Set<string>(Object.values(DiaryTopic));
+const VALID_STATE_SET = new Set<string>(Object.values(ConversationState));
+const VALID_RISK_SET = new Set<string>(Object.values(RiskLevel));
+const VALID_CATEGORY_SET = new Set<string>(Object.values(SafetyCategory));
+
+function cleanJsonString(raw: string): string {
+  let cleaned = raw.trim();
+  if (cleaned.startsWith("```")) {
+    cleaned = cleaned
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/\s*```$/, "")
+      .trim();
+  }
+  return cleaned;
+}
+
+function extractJsonObjectString(raw: string): string {
+  const cleaned = cleanJsonString(raw);
+  const firstBrace = cleaned.indexOf("{");
+  const lastBrace = cleaned.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    return cleaned.slice(firstBrace, lastBrace + 1);
+  }
+  return cleaned;
+}
+
+export function sanitizeAiOutputPayload(rawPayload: unknown): unknown {
+  if (
+    !rawPayload ||
+    typeof rawPayload !== "object" ||
+    Array.isArray(rawPayload)
+  ) {
+    return rawPayload;
+  }
+
+  const record = { ...(rawPayload as Record<string, unknown>) };
+
+  if (typeof record.reply === "string") {
+    record.reply = record.reply.trim();
+  }
+
+  if (Array.isArray(record.topics)) {
+    const validTopics: DiaryTopic[] = [];
+    const seen = new Set<string>();
+
+    for (const item of record.topics) {
+      if (typeof item === "string") {
+        const upper = item.trim().toUpperCase() as DiaryTopic;
+        if (VALID_TOPIC_SET.has(upper) && !seen.has(upper)) {
+          seen.add(upper);
+          validTopics.push(upper);
+        }
+      }
+    }
+
+    if (validTopics.length > 1 && validTopics.includes(DiaryTopic.LAINNYA)) {
+      record.topics = validTopics.filter((t) => t !== DiaryTopic.LAINNYA);
+    } else {
+      record.topics = validTopics;
+    }
+  } else {
+    record.topics = [];
+  }
+
+  if (typeof record.conversationState === "string") {
+    const upperState = record.conversationState.trim().toUpperCase();
+    if (VALID_STATE_SET.has(upperState)) {
+      record.conversationState = upperState;
+    } else {
+      record.conversationState = ConversationState.EXPLORATION;
+    }
+  } else {
+    record.conversationState = ConversationState.EXPLORATION;
+  }
+
+  if (typeof record.proactiveSuggestion === "string") {
+    const trimmed = record.proactiveSuggestion.trim();
+    record.proactiveSuggestion = trimmed.length > 0 ? trimmed : null;
+  } else if (record.proactiveSuggestion !== null) {
+    record.proactiveSuggestion = null;
+  }
+
+  if (typeof record.conversationSummary === "string") {
+    const trimmed = record.conversationSummary.trim();
+    record.conversationSummary = trimmed.length > 0 ? trimmed : null;
+  } else {
+    record.conversationSummary = null;
+  }
+
+  if (Array.isArray(record.actionOptions)) {
+    record.actionOptions = record.actionOptions
+      .filter((option): option is string => typeof option === "string")
+      .map((option) => option.trim())
+      .filter(Boolean)
+      .slice(0, 3);
+  } else {
+    record.actionOptions = [];
+  }
+
+  if (
+    record.safety &&
+    typeof record.safety === "object" &&
+    !Array.isArray(record.safety)
+  ) {
+    const safetyRecord = { ...(record.safety as Record<string, unknown>) };
+    const rawRisk =
+      typeof safetyRecord.riskLevel === "string"
+        ? safetyRecord.riskLevel.trim().toUpperCase()
+        : "";
+    // An unknown risk must fail validation instead of being stored as NONE.
+    if (!VALID_RISK_SET.has(rawRisk)) {
+      safetyRecord.riskLevel = rawRisk;
+      record.safety = safetyRecord;
+    } else {
+      const riskLevel = rawRisk as RiskLevel;
+
+      if (riskLevel === RiskLevel.NONE) {
+        safetyRecord.flag = false;
+        safetyRecord.riskLevel = RiskLevel.NONE;
+        safetyRecord.category = null;
+        safetyRecord.summary = null;
+      } else {
+        safetyRecord.flag = true;
+        safetyRecord.riskLevel = riskLevel;
+        const rawCategory =
+          typeof safetyRecord.category === "string"
+            ? safetyRecord.category.trim().toUpperCase()
+            : null;
+        safetyRecord.category =
+          rawCategory && VALID_CATEGORY_SET.has(rawCategory)
+            ? (rawCategory as SafetyCategory)
+            : SafetyCategory.OTHER;
+        const rawSummary =
+          typeof safetyRecord.summary === "string"
+            ? safetyRecord.summary.trim()
+            : "";
+        safetyRecord.summary =
+          rawSummary || "Perhatian keselamatan terdeteksi dalam pesan.";
+      }
+      record.safety = safetyRecord;
+    }
+  }
+
+  const allowedKeys = new Set([
+    "reply",
+    "topics",
+    "conversationState",
+    "conversationSummary",
+    "proactiveSuggestion",
+    "actionOptions",
+    "safety",
+  ]);
+  for (const key of Object.keys(record)) {
+    if (!allowedKeys.has(key)) {
+      delete record[key];
+    }
+  }
+
+  return record;
+}
+
+export type ParseDiaryStructuredOutputOptions = {
+  sanitize?: boolean;
+};
+
+export function parseDiaryStructuredOutput(
+  raw: string,
+  options?: ParseDiaryStructuredOutputOptions,
+): DiaryStructuredOutput {
   let payload: unknown;
 
+  const rawToParse = options?.sanitize ? extractJsonObjectString(raw) : raw;
+
   try {
-    payload = JSON.parse(raw);
+    payload = JSON.parse(rawToParse);
   } catch {
     throw new DiaryStructuredOutputError();
+  }
+
+  if (options?.sanitize) {
+    payload = sanitizeAiOutputPayload(payload);
   }
 
   const result = diaryStructuredOutputSchema.safeParse(payload);

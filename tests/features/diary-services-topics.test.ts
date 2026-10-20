@@ -14,7 +14,9 @@ const structuredOutput = {
   reply: "Aku dengar.",
   topics: ["PERTEMANAN", "AKADEMIK_SEKOLAH"],
   conversationState: "REFLECTION",
+  conversationSummary: null,
   proactiveSuggestion: null,
+  actionOptions: [],
   safety: { flag: false, riskLevel: "NONE", category: null, summary: null },
 } satisfies DiaryStructuredOutput;
 

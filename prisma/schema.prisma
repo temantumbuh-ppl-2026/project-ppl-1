@@ -248,8 +248,12 @@ model Diary {
   isActive            Boolean           @default(true)
   topics              DiaryTopic[]      @default([])
   conversationState   ConversationState @default(EXPLORATION)
+  // Internal context for this diary session, encrypted before storage.
+  conversationSummary String?           @db.Text
   // Encrypted by the diary service before storage.
   proactiveSuggestion String?           @db.Text
+  // Encrypted JSON array of optional action choices.
+  actionOptions       String?           @db.Text
   safetyFlag          Boolean           @default(false)
   riskLevel           RiskLevel         @default(NONE)
   createdAt           DateTime          @default(now())
