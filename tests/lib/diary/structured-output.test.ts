@@ -76,4 +76,36 @@ describe("diary structured output validation", () => {
       "AI menghasilkan format balasan yang tidak valid.",
     );
   });
+
+  it("membersihkan output AI ketika sanitize aktif (markdown fence, extra properties, casing topik, dan safety)", () => {
+    const rawAiOutput =
+      "```json\n" +
+      JSON.stringify({
+        reply: "Aku mendengarkanmu.",
+        topics: ["perasaan", "akademik_sekolah", "KELUARGA", "KELUARGA"],
+        conversationState: "exploration",
+        proactiveSuggestion: "",
+        safety: {
+          flag: false,
+          riskLevel: "NONE",
+          category: null,
+          summary: "Tidak ada indikasi bahaya",
+        },
+        thought: "Pengguna bercerita tentang sekolah",
+      }) +
+      "\n```";
+
+    const parsed = parseDiaryStructuredOutput(rawAiOutput, { sanitize: true });
+
+    expect(parsed.reply).toBe("Aku mendengarkanmu.");
+    expect(parsed.topics).toEqual(["AKADEMIK_SEKOLAH", "KELUARGA"]);
+    expect(parsed.conversationState).toBe("EXPLORATION");
+    expect(parsed.proactiveSuggestion).toBeNull();
+    expect(parsed.safety).toEqual({
+      flag: false,
+      riskLevel: "NONE",
+      category: null,
+      summary: null,
+    });
+  });
 });

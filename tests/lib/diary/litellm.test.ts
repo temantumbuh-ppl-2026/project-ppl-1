@@ -92,7 +92,7 @@ describe("lib/diary/litellm", () => {
     );
     expect(mockCreate).toHaveBeenNthCalledWith(
       2,
-      expect.objectContaining({ max_tokens: 1400 }),
+      expect.objectContaining({ max_tokens: 5000 }),
     );
   });
 
@@ -128,7 +128,7 @@ describe("lib/diary/litellm", () => {
 
     expect(chunks).toEqual(["Halo", ", Ruri"]);
     expect(mockCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ stream: true, max_tokens: 1400 }),
+      expect.objectContaining({ stream: true, max_tokens: 2500 }),
     );
 
     async function* emptyStream() {
@@ -173,7 +173,7 @@ describe("lib/diary/litellm", () => {
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         response_format: { type: "json_object" },
-        max_tokens: 1400,
+        max_tokens: 2500,
       }),
     );
   });
