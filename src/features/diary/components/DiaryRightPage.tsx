@@ -375,7 +375,8 @@ export function DiaryRightPage({
   };
 
   const handleActionOption = (option: string) => {
-    const draft = `Aku ingin membahas pilihan ini: ${option}`;
+    const selectedOption = option.trim().replace(/[.!?]+$/, "");
+    const draft = `Aku ingin mencoba langkah ini: ${selectedOption}. Bantu aku memikirkan cara memulainya yang sederhana.`;
     const currentDraft = inputValue.trim();
     onInputChange(currentDraft ? `${currentDraft}\n\n${draft}` : draft);
     textareaRef.current?.focus();
@@ -722,111 +723,10 @@ function splitAiMessageIntoBubbles(rawText: string): string[] {
     return [];
   }
 
-  const paragraphBlocks = normalized
+  return normalized
     .split(/\n{2,}/)
     .map((block) => block.trim())
     .filter(Boolean);
-
-  if (paragraphBlocks.length > 1) {
-    return paragraphBlocks.flatMap((block) => splitLongBlockIntoBubbles(block));
-  }
-
-  const lineBlocks = normalized
-    .split("\n")
-    .map((block) => block.trim())
-    .filter(Boolean);
-
-  if (lineBlocks.length > 1) {
-    return lineBlocks.flatMap((block) => splitLongBlockIntoBubbles(block));
-  }
-
-  return splitLongBlockIntoBubbles(normalized);
-}
-
-function splitLongBlockIntoBubbles(block: string): string[] {
-  const MAX_BUBBLE_CHARS = 210;
-  const IDEAL_BUBBLE_CHARS = 150;
-  const MAX_SENTENCES_PER_BUBBLE = 2;
-
-  if (block.length <= MAX_BUBBLE_CHARS) {
-    return [block];
-  }
-
-  const sentences = splitIntoSentences(block);
-
-  if (sentences.length <= 1) {
-    return chunkTextByLength(block, IDEAL_BUBBLE_CHARS);
-  }
-
-  const bundled: string[] = [];
-  let currentBubble = "";
-  let sentenceCount = 0;
-
-  for (const sentence of sentences) {
-    const nextBubble = currentBubble
-      ? `${currentBubble} ${sentence}`
-      : sentence;
-
-    const shouldWrap =
-      nextBubble.length > MAX_BUBBLE_CHARS ||
-      sentenceCount >= MAX_SENTENCES_PER_BUBBLE;
-
-    if (shouldWrap && currentBubble) {
-      bundled.push(currentBubble.trim());
-      currentBubble = sentence;
-      sentenceCount = 1;
-    } else {
-      currentBubble = nextBubble;
-      sentenceCount += 1;
-    }
-  }
-
-  if (currentBubble.trim()) {
-    bundled.push(currentBubble.trim());
-  }
-
-  return bundled.flatMap((item) =>
-    item.length > MAX_BUBBLE_CHARS
-      ? chunkTextByLength(item, IDEAL_BUBBLE_CHARS)
-      : [item],
-  );
-}
-
-function splitIntoSentences(text: string): string[] {
-  return (
-    text
-      .match(/[^.!?]+[.!?]+|[^.!?]+$/g)
-      ?.map((sentence) => sentence.trim())
-      .filter(Boolean) ?? [text]
-  );
-}
-
-function chunkTextByLength(text: string, maxLength: number): string[] {
-  const words = text.split(/\s+/).filter(Boolean);
-
-  if (words.length === 0) {
-    return [];
-  }
-
-  const chunks: string[] = [];
-  let currentChunk = "";
-
-  for (const word of words) {
-    const nextChunk = currentChunk ? `${currentChunk} ${word}` : word;
-
-    if (nextChunk.length > maxLength && currentChunk) {
-      chunks.push(currentChunk.trim());
-      currentChunk = word;
-    } else {
-      currentChunk = nextChunk;
-    }
-  }
-
-  if (currentChunk.trim()) {
-    chunks.push(currentChunk.trim());
-  }
-
-  return chunks;
 }
 
 function LockedInputNotice({ message }: { message: string }) {

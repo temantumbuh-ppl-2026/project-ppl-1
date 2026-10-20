@@ -440,6 +440,7 @@ describe("lib/diary/service", () => {
         topics: true,
         conversationState: true,
         conversationSummary: true,
+        actionOptions: true,
         riskLevel: true,
       },
     });
@@ -449,6 +450,43 @@ describe("lib/diary/service", () => {
     );
     expect(session.structuredPromptMessages[1]?.content).toContain(
       "Aku capek karena masalah keluarga.",
+    );
+  });
+
+  it("membawa pilihan tindakan tersimpan ke prompt saat pengguna menindaklanjuti", async () => {
+    const options = [
+      "Ajak keluarga memilih waktu makan bersama.",
+      "Mulai dengan bertanya kapan mereka senggang.",
+    ];
+    mockPrisma.user.findUnique.mockResolvedValue({
+      name: "Ruri",
+      isPremium: true,
+    });
+    mockPrisma.diary.findFirst.mockResolvedValue({
+      id: "diary-1",
+      date: todayDate,
+    });
+    mockPrisma.diary.findUnique.mockResolvedValue({
+      topics: [DiaryTopic.KELUARGA],
+      conversationState: ConversationState.ACTION,
+      conversationSummary: "encrypted:Kami ingin makan bersama lagi.",
+      actionOptions: `encrypted:${JSON.stringify(options)}`,
+      riskLevel: RiskLevel.NONE,
+    });
+    mockPrisma.diaryMessage.findMany.mockResolvedValue([]);
+
+    const session = await prepareDiaryChatSession(
+      {
+        userId: "user-1",
+        entryId: "today",
+        messageText: "Aku ingin mencoba pilihan pertama.",
+      },
+      { includeMetadata: true },
+    );
+
+    expect(session.diary?.actionOptions).toEqual(options);
+    expect(session.structuredPromptMessages[1]?.content).toContain(
+      JSON.stringify(options),
     );
   });
 

@@ -265,6 +265,7 @@ export type PreparedDiaryChatSession = {
     topics: DiaryTopic[];
     conversationState: ConversationState;
     conversationSummary: string | null;
+    actionOptions?: string[];
     riskLevel: RiskLevel;
   } | null;
   todayKey: string;
@@ -339,6 +340,7 @@ export async function prepareDiaryChatSession(
             topics: true,
             conversationState: true,
             conversationSummary: true,
+            actionOptions: true,
             riskLevel: true,
           },
         })
@@ -352,6 +354,12 @@ export async function prepareDiaryChatSession(
         conversationSummary: currentMetadata?.conversationSummary
           ? decrypt(currentMetadata.conversationSummary)
           : null,
+        actionOptions:
+          currentMetadata?.conversationState === ConversationState.ACTION &&
+          currentMetadata.riskLevel === RiskLevel.NONE &&
+          currentMetadata.actionOptions
+            ? parseStoredActionOptions(decrypt(currentMetadata.actionOptions))
+            : [],
         riskLevel: currentMetadata?.riskLevel ?? RiskLevel.NONE,
       }
     : null;
@@ -429,6 +437,7 @@ export async function prepareDiaryChatSession(
     currentState:
       preparedDiary?.conversationState ?? ConversationState.EXPLORATION,
     currentSummary: preparedDiary?.conversationSummary ?? null,
+    currentActionOptions: preparedDiary?.actionOptions ?? [],
     isOpening: promptHistory.length === 0,
   });
 
