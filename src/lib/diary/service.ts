@@ -13,6 +13,11 @@ import {
 import { resolveConversationState } from "@/lib/diary/conversation-state";
 import { resolveConversationSummary } from "@/lib/diary/conversation-summary";
 import {
+  parseStoredActionOptions,
+  resolveActionOptions,
+} from "@/lib/diary/action-options";
+import { applyDiaryResponseGuardrails } from "@/lib/diary/response-guardrails";
+import {
   buildDiaryMoodGreetingPromptMessages,
   buildDiaryPromptMessages,
   buildDiaryStructuredPromptMessages,
@@ -222,7 +227,7 @@ export async function getDiaryConversationMetadata({
     select: {
       topics: true,
       conversationState: true,
-      proactiveSuggestion: true,
+      actionOptions: true,
       safetyFlag: true,
       riskLevel: true,
     },
@@ -232,12 +237,20 @@ export async function getDiaryConversationMetadata({
     return null;
   }
 
+  const storedOptions = parseStoredActionOptions(
+    metadata.actionOptions ? decrypt(metadata.actionOptions) : null,
+  );
+  const actionOptions =
+    metadata.conversationState === ConversationState.ACTION &&
+    metadata.riskLevel === RiskLevel.NONE
+      ? storedOptions
+      : [];
+
   return {
     topics: metadata.topics,
     conversationState: metadata.conversationState,
-    proactiveSuggestion: metadata.proactiveSuggestion
-      ? decrypt(metadata.proactiveSuggestion)
-      : null,
+    proactiveSuggestion: actionOptions[0] ?? null,
+    actionOptions,
     safetyFlag: metadata.safetyFlag,
     riskLevel: metadata.riskLevel,
   };
@@ -486,14 +499,14 @@ export async function persistDiaryChatSession({
         nextTopics: assistantOutput.topics,
         userMessage: session.trimmedText,
         hasSummary: Boolean(nextSummary),
+        hasPriorUserContext: session.promptHistory.some(
+          (message) => message.senderType === Sender.USER,
+        ),
         riskLevel: higherRiskLevel(
           session.diary?.riskLevel ?? RiskLevel.NONE,
           assistantOutput.safety.riskLevel,
         ),
       })
-    : null;
-  const encryptedSuggestion = assistantOutput?.proactiveSuggestion
-    ? encrypt(assistantOutput.proactiveSuggestion)
     : null;
   let highRiskAlert: {
     category: SafetyCategory;
@@ -512,12 +525,28 @@ export async function persistDiaryChatSession({
         assistantOutput.safety.riskLevel,
       )
     : RiskLevel.NONE;
+  const actionOptions = assistantOutput
+    ? resolveActionOptions({
+        proposed: assistantOutput.actionOptions,
+        state: conversationState!,
+        riskLevel,
+        hasSummary: Boolean(nextSummary),
+      })
+    : [];
+  const proactiveSuggestion = actionOptions[0] ?? null;
+  const encryptedSuggestion = proactiveSuggestion
+    ? encrypt(proactiveSuggestion)
+    : null;
+  const encryptedActionOptions = actionOptions.length
+    ? encrypt(JSON.stringify(actionOptions))
+    : null;
   const metadataData = assistantOutput
     ? {
         topics: assistantOutput.topics,
         conversationState: conversationState!,
         conversationSummary: encryptedSummary,
         proactiveSuggestion: encryptedSuggestion,
+        actionOptions: encryptedActionOptions,
         safetyFlag: riskLevel !== RiskLevel.NONE,
         riskLevel,
       }
@@ -640,7 +669,8 @@ export async function persistDiaryChatSession({
           conversation: {
             topics: assistantOutput.topics,
             conversationState: conversationState!,
-            proactiveSuggestion: assistantOutput.proactiveSuggestion,
+            proactiveSuggestion,
+            actionOptions,
             safetyFlag: riskLevel !== RiskLevel.NONE,
             riskLevel,
           },
@@ -756,7 +786,7 @@ export async function generateDiaryGreetingFromMood({
       throw new DiaryStructuredOutputError();
     }
 
-    const output = parsed.data;
+    const output = applyDiaryResponseGuardrails(parsed.data, notes);
     const encryptedReply = encrypt(output.reply);
 
     await prisma.$transaction(
@@ -799,6 +829,7 @@ export async function generateDiaryGreetingFromMood({
             }),
             conversationSummary: null,
             proactiveSuggestion: null,
+            actionOptions: null,
             safetyFlag: riskLevel !== RiskLevel.NONE,
             riskLevel,
           },
@@ -949,9 +980,10 @@ export async function completePreparedDiaryStructuredChatSession(
   session: PreparedDiaryChatSession,
 ) {
   try {
-    const output = await generateDiaryStructuredReply({
+    const generated = await generateDiaryStructuredReply({
       messages: session.structuredPromptMessages,
     });
+    const output = applyDiaryResponseGuardrails(generated, session.trimmedText);
 
     return await persistDiaryChatSession({
       session,
@@ -959,7 +991,16 @@ export async function completePreparedDiaryStructuredChatSession(
       assistantOutput: output,
     });
   } catch (error) {
-    console.error("Diary structured chat failed.");
+    console.error("Diary structured chat failed.", {
+      name: error instanceof Error ? error.name : "UnknownError",
+      status:
+        typeof error === "object" &&
+        error !== null &&
+        "status" in error &&
+        typeof error.status === "number"
+          ? error.status
+          : null,
+    });
     throw toDiaryServiceErrorForAiFailure(error);
   }
 }

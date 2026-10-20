@@ -16,6 +16,7 @@ const structuredOutput = {
   conversationState: "REFLECTION",
   conversationSummary: null,
   proactiveSuggestion: null,
+  actionOptions: [],
   safety: { flag: false, riskLevel: "NONE", category: null, summary: null },
 } satisfies DiaryStructuredOutput;
 

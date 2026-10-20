@@ -35,6 +35,7 @@ export const diaryStructuredOutputSchema = z
     conversationState: z.enum(ConversationState),
     conversationSummary: z.string().trim().min(1).max(1000).nullable(),
     proactiveSuggestion: z.string().trim().min(1).max(500).nullable(),
+    actionOptions: z.array(z.string().trim().min(1).max(240)).max(3),
     safety: safetySchema,
   })
   .superRefine((output, context) => {
@@ -156,6 +157,16 @@ export function sanitizeAiOutputPayload(rawPayload: unknown): unknown {
     record.conversationSummary = null;
   }
 
+  if (Array.isArray(record.actionOptions)) {
+    record.actionOptions = record.actionOptions
+      .filter((option): option is string => typeof option === "string")
+      .map((option) => option.trim())
+      .filter(Boolean)
+      .slice(0, 3);
+  } else {
+    record.actionOptions = [];
+  }
+
   if (
     record.safety &&
     typeof record.safety === "object" &&
@@ -165,35 +176,39 @@ export function sanitizeAiOutputPayload(rawPayload: unknown): unknown {
     const rawRisk =
       typeof safetyRecord.riskLevel === "string"
         ? safetyRecord.riskLevel.trim().toUpperCase()
-        : RiskLevel.NONE;
-    const riskLevel = VALID_RISK_SET.has(rawRisk)
-      ? (rawRisk as RiskLevel)
-      : RiskLevel.NONE;
-
-    if (riskLevel === RiskLevel.NONE) {
-      safetyRecord.flag = false;
-      safetyRecord.riskLevel = RiskLevel.NONE;
-      safetyRecord.category = null;
-      safetyRecord.summary = null;
+        : "";
+    // An unknown risk must fail validation instead of being stored as NONE.
+    if (!VALID_RISK_SET.has(rawRisk)) {
+      safetyRecord.riskLevel = rawRisk;
+      record.safety = safetyRecord;
     } else {
-      safetyRecord.flag = true;
-      safetyRecord.riskLevel = riskLevel;
-      const rawCategory =
-        typeof safetyRecord.category === "string"
-          ? safetyRecord.category.trim().toUpperCase()
-          : null;
-      safetyRecord.category =
-        rawCategory && VALID_CATEGORY_SET.has(rawCategory)
-          ? (rawCategory as SafetyCategory)
-          : SafetyCategory.OTHER;
-      const rawSummary =
-        typeof safetyRecord.summary === "string"
-          ? safetyRecord.summary.trim()
-          : "";
-      safetyRecord.summary =
-        rawSummary || "Perhatian keselamatan terdeteksi dalam pesan.";
+      const riskLevel = rawRisk as RiskLevel;
+
+      if (riskLevel === RiskLevel.NONE) {
+        safetyRecord.flag = false;
+        safetyRecord.riskLevel = RiskLevel.NONE;
+        safetyRecord.category = null;
+        safetyRecord.summary = null;
+      } else {
+        safetyRecord.flag = true;
+        safetyRecord.riskLevel = riskLevel;
+        const rawCategory =
+          typeof safetyRecord.category === "string"
+            ? safetyRecord.category.trim().toUpperCase()
+            : null;
+        safetyRecord.category =
+          rawCategory && VALID_CATEGORY_SET.has(rawCategory)
+            ? (rawCategory as SafetyCategory)
+            : SafetyCategory.OTHER;
+        const rawSummary =
+          typeof safetyRecord.summary === "string"
+            ? safetyRecord.summary.trim()
+            : "";
+        safetyRecord.summary =
+          rawSummary || "Perhatian keselamatan terdeteksi dalam pesan.";
+      }
+      record.safety = safetyRecord;
     }
-    record.safety = safetyRecord;
   }
 
   const allowedKeys = new Set([
@@ -202,6 +217,7 @@ export function sanitizeAiOutputPayload(rawPayload: unknown): unknown {
     "conversationState",
     "conversationSummary",
     "proactiveSuggestion",
+    "actionOptions",
     "safety",
   ]);
   for (const key of Object.keys(record)) {

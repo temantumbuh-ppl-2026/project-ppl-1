@@ -60,12 +60,14 @@ export async function POST(request: Request) {
           );
           controller.enqueue(toSseChunk("done", result));
         } catch (error) {
-          console.error("Diary chat stream error:");
-
           const serviceError =
             error instanceof DiaryServiceError
               ? error
               : toDiaryServiceErrorForAiFailure(error);
+          console.error("Diary chat stream error:", {
+            code: serviceError.code,
+            status: serviceError.status,
+          });
 
           controller.enqueue(
             toSseChunk("error", {

@@ -11,12 +11,13 @@ type ResolveConversationStateInput = {
   nextTopics: DiaryTopic[];
   userMessage: string;
   hasSummary: boolean;
+  hasPriorUserContext?: boolean;
   riskLevel: RiskLevel;
   isMoodGreeting?: boolean;
 };
 
 const ACTION_REQUEST =
-  /(?:mau|ingin|butuh|boleh|bagaimana|gimana|apa|bantu|cari|coba).{0,50}(?:saran|solusi|langkah|pilihan|jalan keluar|lakukan)/i;
+  /(?:mau|ingin|butuh|boleh|bagaimana|gimana|apa|bantu|cari|coba|kasih|beri|berikan).{0,50}(?:saran|solusi|langkah|pilihan|jalan keluar|lakukan)/i;
 const ACTION_REFUSAL =
   /(?:tidak|nggak|gak|enggak|belum|jangan)\s+(?:mau|ingin|butuh|perlu|siap)?\s*(?:saran|solusi|langkah|pilihan|bahas)/i;
 const LISTENING_ONLY = /(?:cuma|hanya)\s+(?:ingin|mau|butuh)\s+didengar/i;
@@ -32,6 +33,7 @@ export function resolveConversationState({
   nextTopics,
   userMessage,
   hasSummary,
+  hasPriorUserContext = false,
   riskLevel,
   isMoodGreeting = false,
 }: ResolveConversationStateInput): ConversationState {
@@ -54,24 +56,28 @@ export function resolveConversationState({
     return ConversationState.EXPLORATION;
   }
 
+  const explicitlyRequestsAction =
+    ACTION_REQUEST.test(userMessage) &&
+    !ACTION_REFUSAL.test(userMessage) &&
+    !LISTENING_ONLY.test(userMessage);
+  const continuingAction =
+    previous === ConversationState.ACTION &&
+    proposed === ConversationState.ACTION &&
+    !ACTION_REFUSAL.test(userMessage) &&
+    !LISTENING_ONLY.test(userMessage);
+  const contextReady =
+    hasSummary &&
+    (hasPriorUserContext || previous !== ConversationState.EXPLORATION);
+
+  if (
+    contextReady &&
+    riskLevel === RiskLevel.NONE &&
+    (explicitlyRequestsAction || continuingAction)
+  ) {
+    return ConversationState.ACTION;
+  }
+
   if (proposed === ConversationState.ACTION) {
-    const wantsAction =
-      (previous === ConversationState.ACTION ||
-        ACTION_REQUEST.test(userMessage)) &&
-      !ACTION_REFUSAL.test(userMessage) &&
-      !LISTENING_ONLY.test(userMessage);
-
-    if (
-      hasSummary &&
-      wantsAction &&
-      riskLevel !== RiskLevel.HIGH &&
-      (previous === ConversationState.CLARIFICATION ||
-        previous === ConversationState.REFLECTION ||
-        previous === ConversationState.ACTION)
-    ) {
-      return ConversationState.ACTION;
-    }
-
     return previous === ConversationState.ACTION
       ? ConversationState.REFLECTION
       : previous;
@@ -91,6 +97,18 @@ export function resolveConversationState({
 
   if (proposed === ConversationState.CLOSING) {
     return previous;
+  }
+
+  if (proposed === ConversationState.EXPLORATION) {
+    if (previous === ConversationState.EXPLORATION) {
+      return contextReady
+        ? ConversationState.CLARIFICATION
+        : ConversationState.EXPLORATION;
+    }
+
+    return previous === ConversationState.ACTION
+      ? ConversationState.REFLECTION
+      : previous;
   }
 
   return proposed;

@@ -37,8 +37,8 @@ type GenerateDiaryReplyStreamInput = {
 
 const DEFAULT_BASE_URL = "https://api.koboillm.com/v1";
 const DEFAULT_MODEL = "openai/gpt-5-mini";
-const DEFAULT_MAX_TOKENS = 600;
-const RETRY_MAX_TOKENS = 2500;
+const DEFAULT_MAX_TOKENS = 2500;
+const RETRY_MAX_TOKENS = 5000;
 
 /** One model completion supplies both the user-facing reply and its metadata. */
 export async function generateDiaryStructuredReply({

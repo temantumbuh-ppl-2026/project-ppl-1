@@ -54,6 +54,12 @@ describe("diary conversation state", () => {
     expect(
       resolveConversationState({
         ...ready,
+        userMessage: "Kasih aku saran langkah yang kecil dulu.",
+      }),
+    ).toBe(ConversationState.ACTION);
+    expect(
+      resolveConversationState({
+        ...ready,
         userMessage: "Aku tidak mau saran, cuma ingin didengar.",
       }),
     ).toBe(ConversationState.REFLECTION);
@@ -61,7 +67,61 @@ describe("diary conversation state", () => {
       resolveConversationState({
         ...ready,
         userMessage: "Aku ingin saran langkah berikutnya.",
+        riskLevel: RiskLevel.ATTENTION,
+      }),
+    ).toBe(ConversationState.REFLECTION);
+    expect(
+      resolveConversationState({
+        ...ready,
+        userMessage: "Aku ingin saran langkah berikutnya.",
         riskLevel: RiskLevel.HIGH,
+      }),
+    ).toBe(ConversationState.REFLECTION);
+  });
+
+  it("keluar dari eksplorasi yang berulang ketika konteks sebelumnya sudah ada", () => {
+    expect(
+      resolveConversationState({
+        ...base,
+        proposed: ConversationState.EXPLORATION,
+        hasSummary: true,
+        hasPriorUserContext: true,
+      }),
+    ).toBe(ConversationState.CLARIFICATION);
+
+    expect(
+      resolveConversationState({
+        ...base,
+        proposed: ConversationState.EXPLORATION,
+        userMessage: "Boleh bantu aku cari pilihan langkah kecil?",
+        hasSummary: true,
+        hasPriorUserContext: true,
+      }),
+    ).toBe(ConversationState.ACTION);
+
+    expect(
+      resolveConversationState({
+        ...base,
+        proposed: ConversationState.ACTION,
+        userMessage: "Boleh bantu aku cari pilihan langkah kecil?",
+        hasSummary: true,
+      }),
+    ).toBe(ConversationState.EXPLORATION);
+
+    expect(
+      resolveConversationState({
+        ...base,
+        previous: ConversationState.REFLECTION,
+        proposed: ConversationState.EXPLORATION,
+        hasSummary: true,
+      }),
+    ).toBe(ConversationState.REFLECTION);
+    expect(
+      resolveConversationState({
+        ...base,
+        previous: ConversationState.ACTION,
+        proposed: ConversationState.EXPLORATION,
+        hasSummary: true,
       }),
     ).toBe(ConversationState.REFLECTION);
   });
