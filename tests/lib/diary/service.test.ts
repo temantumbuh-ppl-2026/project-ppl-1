@@ -90,6 +90,7 @@ const structuredOutput: DiaryStructuredOutput = {
   reply: "Aku mendengarmu. Apa yang paling berat sekarang?",
   topics: [DiaryTopic.KELUARGA, DiaryTopic.AKADEMIK_SEKOLAH],
   conversationState: ConversationState.CLARIFICATION,
+  conversationSummary: null,
   proactiveSuggestion: "Coba ceritakan satu kejadian yang paling mengganggu.",
   safety: {
     flag: false,
@@ -413,6 +414,7 @@ describe("lib/diary/service", () => {
     mockPrisma.diary.findUnique.mockResolvedValue({
       topics: [DiaryTopic.KELUARGA],
       conversationState: ConversationState.REFLECTION,
+      conversationSummary: "encrypted:Aku capek karena masalah keluarga.",
       riskLevel: RiskLevel.ATTENTION,
     });
     mockPrisma.diaryMessage.findMany.mockResolvedValue([]);
@@ -428,11 +430,19 @@ describe("lib/diary/service", () => {
 
     expect(mockPrisma.diary.findUnique).toHaveBeenCalledWith({
       where: { id: "diary-1" },
-      select: { topics: true, conversationState: true, riskLevel: true },
+      select: {
+        topics: true,
+        conversationState: true,
+        conversationSummary: true,
+        riskLevel: true,
+      },
     });
     expect(session.diary?.topics).toEqual([DiaryTopic.KELUARGA]);
     expect(session.structuredPromptMessages[1]?.content).toContain(
       "State sebelum pesan ini: REFLECTION",
+    );
+    expect(session.structuredPromptMessages[1]?.content).toContain(
+      "Aku capek karena masalah keluarga.",
     );
   });
 
@@ -590,6 +600,7 @@ describe("lib/diary/service", () => {
           date: todayDate,
           topics: [DiaryTopic.KELUARGA],
           conversationState: ConversationState.EXPLORATION,
+          conversationSummary: null,
           riskLevel: RiskLevel.HIGH,
         },
       }),
@@ -601,7 +612,8 @@ describe("lib/diary/service", () => {
       where: { id: "diary-1" },
       data: {
         topics: [DiaryTopic.PERTEMANAN],
-        conversationState: ConversationState.CLARIFICATION,
+        conversationState: ConversationState.EXPLORATION,
+        conversationSummary: null,
         proactiveSuggestion: null,
         safetyFlag: true,
         riskLevel: RiskLevel.HIGH,
@@ -609,6 +621,58 @@ describe("lib/diary/service", () => {
       select: { id: true, date: true },
     });
     expect(mockTx.safetyAlert.create).not.toHaveBeenCalled();
+  });
+
+  it("menyimpan rangkuman internal terenkripsi bersama state dan pesan", async () => {
+    mockTx.diary.update.mockResolvedValue({ id: "diary-1", date: todayDate });
+    mockTx.diaryMessage.create
+      .mockResolvedValueOnce({
+        id: "user-message",
+        senderType: Sender.USER,
+        createdAt: today,
+      })
+      .mockResolvedValueOnce({
+        id: "ai-message",
+        senderType: Sender.AI,
+        createdAt: today,
+      });
+    mockTx.diary.count.mockResolvedValue(1);
+
+    const summary = "Aku bertengkar dengan ibu setelah pulang sekolah.";
+    const result = await persistDiaryChatSession({
+      session: createSession({
+        trimmedText: "Aku bertengkar dengan ibu setelah pulang sekolah.",
+        diary: {
+          id: "diary-1",
+          date: todayDate,
+          topics: [DiaryTopic.KELUARGA],
+          conversationState: ConversationState.CLARIFICATION,
+          conversationSummary: null,
+          riskLevel: RiskLevel.NONE,
+        },
+      }),
+      assistantText: structuredOutput.reply,
+      assistantOutput: {
+        ...structuredOutput,
+        topics: [DiaryTopic.KELUARGA],
+        conversationState: ConversationState.REFLECTION,
+        conversationSummary: summary,
+        proactiveSuggestion: null,
+      },
+    });
+
+    expect(mockTx.diary.update).toHaveBeenCalledWith({
+      where: { id: "diary-1" },
+      data: expect.objectContaining({
+        conversationState: ConversationState.REFLECTION,
+        conversationSummary: `encrypted:${summary}`,
+      }),
+      select: { id: true, date: true },
+    });
+    expect(result.conversation?.conversationState).toBe(
+      ConversationState.REFLECTION,
+    );
+    expect(result.conversation).not.toHaveProperty("conversationSummary");
   });
 
   it("ensureDiaryShellFromMood memakai diary existing atau membuat shell baru", async () => {
@@ -659,7 +723,10 @@ describe("lib/diary/service", () => {
       conversationState: ConversationState.EXPLORATION,
     });
     mockTx.diaryMessage.count.mockResolvedValue(0);
-    mockGenerateDiaryStructuredReply.mockResolvedValue(structuredOutput);
+    mockGenerateDiaryStructuredReply.mockResolvedValue({
+      ...structuredOutput,
+      conversationSummary: "Catatan mood yang tidak boleh jadi rangkuman.",
+    });
 
     await generateDiaryGreetingFromMood({
       userId: "user-1",
@@ -682,9 +749,9 @@ describe("lib/diary/service", () => {
       where: { id: "diary-1" },
       data: expect.objectContaining({
         topics: [DiaryTopic.KELUARGA, DiaryTopic.AKADEMIK_SEKOLAH],
-        conversationState: ConversationState.CLARIFICATION,
-        proactiveSuggestion:
-          "encrypted:Coba ceritakan satu kejadian yang paling mengganggu.",
+        conversationState: ConversationState.EXPLORATION,
+        conversationSummary: null,
+        proactiveSuggestion: null,
       }),
     });
     expect(mockTx.diaryMessage.create).toHaveBeenCalledWith({

@@ -92,7 +92,7 @@ describe("lib/diary/litellm", () => {
     );
     expect(mockCreate).toHaveBeenNthCalledWith(
       2,
-      expect.objectContaining({ max_tokens: 5000 }),
+      expect.objectContaining({ max_tokens: 2500 }),
     );
   });
 
@@ -152,6 +152,7 @@ describe("lib/diary/litellm", () => {
       reply: "Aku mendengarmu.",
       topics: ["KELUARGA", "PERTEMANAN"],
       conversationState: "CLARIFICATION",
+      conversationSummary: null,
       proactiveSuggestion: null,
       safety: {
         flag: false,

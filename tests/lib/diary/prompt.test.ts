@@ -59,6 +59,7 @@ describe("lib/diary/prompt", () => {
       conversation: [{ role: "user", content: "Aku juga sulit belajar." }],
       currentTopics: [DiaryTopic.KELUARGA],
       currentState: ConversationState.EXPLORATION,
+      currentSummary: "Aku kecewa setelah bertengkar dengan ibu.",
     });
 
     expect(messages[1]?.role).toBe("system");
@@ -66,6 +67,10 @@ describe("lib/diary/prompt", () => {
     expect(messages[1]?.content).toContain("hapus topik lama");
     expect(messages[1]?.content).toContain("KELUARGA");
     expect(messages[1]?.content).toContain("EXPLORATION");
+    expect(messages[1]?.content).toContain(
+      "Aku kecewa setelah bertengkar dengan ibu.",
+    );
+    expect(messages[1]?.content).toContain("bukan analisis harian premium");
     expect(messages.at(-1)?.content).toBe("Aku juga sulit belajar.");
   });
 

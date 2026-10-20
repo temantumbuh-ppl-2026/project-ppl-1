@@ -23,6 +23,7 @@ type BuildDiaryPromptInput = {
 type BuildDiaryStructuredPromptInput = BuildDiaryPromptInput & {
   currentTopics: DiaryTopic[];
   currentState: ConversationState;
+  currentSummary?: string | null;
   isOpening?: boolean;
 };
 
@@ -84,6 +85,7 @@ export function buildDiaryPromptMessages({
 export function buildDiaryStructuredPromptMessages({
   currentTopics,
   currentState,
+  currentSummary,
   isOpening = false,
   ...input
 }: BuildDiaryStructuredPromptInput): DiaryPromptMessage[] {
@@ -92,7 +94,7 @@ export function buildDiaryStructuredPromptMessages({
     role: "system",
     content: [
       "Balas dengan satu objek JSON saja, tanpa Markdown atau teks di luar JSON.",
-      'Bentuk wajib: {"reply":"string","topics":[],"conversationState":"EXPLORATION","proactiveSuggestion":null,"safety":{"flag":false,"riskLevel":"NONE","category":null,"summary":null}}.',
+      'Bentuk wajib: {"reply":"string","topics":[],"conversationState":"EXPLORATION","conversationSummary":null,"proactiveSuggestion":null,"safety":{"flag":false,"riskLevel":"NONE","category":null,"summary":null}}.',
       "reply adalah balasan yang langsung ditampilkan kepada pengguna; tetap ikuti persona dan panjang balasan di atas.",
       "Bantu pengguna menggali cerita secara bertahap. Akui hal yang baru ia sampaikan, hubungkan dengan konteks yang masih relevan, lalu ajukan paling banyak satu pertanyaan terbuka yang spesifik dan lembut bila itu membantu. Jangan memberi solusi sebelum cukup memahami situasi, kecuali pengguna memintanya atau keselamatan mendesak.",
       "Perhatikan pertanyaanmu dalam balasan sebelumnya dan jawaban terbaru pengguna. Jangan mengulang pertanyaan yang sudah dijawab atau diabaikan. Sesuaikan pertanyaan berikutnya dengan detail baru; jika pengguna hanya ingin didengar, tidak perlu selalu bertanya.",
@@ -103,7 +105,9 @@ export function buildDiaryStructuredPromptMessages({
       `topics adalah daftar topik yang masih relevan dalam konteks percakapan sekarang. Pilih nol atau lebih dari: ${Object.values(DiaryTopic).join(", ")}.`,
       "Nilai topik dari pesan terbaru dan konteks yang masih aktif. Tambahkan topik baru ketika cerita bergeser, hapus topik lama yang tidak lagi relevan. Jangan mengumpulkan semua topik yang pernah disebut. Jangan ulangi topik; LAINNYA hanya boleh berdiri sendiri; gunakan [] jika belum ada topik yang jelas.",
       `Topik sesi sebelum pesan ini: ${currentTopics.length ? currentTopics.join(", ") : "belum ada"}. Ini konteks awal, bukan daftar yang wajib dipertahankan.`,
-      `State sebelum pesan ini: ${currentState}. Pilih conversationState dari EXPLORATION, CLARIFICATION, REFLECTION, ACTION, CLOSING menurut tahap percakapan sekarang; jangan buru-buru berpindah ke ACTION.`,
+      `State sebelum pesan ini: ${currentState}. EXPLORATION berarti cerita baru atau arah baru; CLARIFICATION berarti satu rincian penting masih perlu ditanyakan; REFLECTION berarti konteks cukup untuk mencerminkan kembali cerita pengguna; ACTION berarti pengguna secara jelas ingin membahas langkah setelah klarifikasi atau refleksi; CLOSING berarti pengguna ingin mengakhiri percakapan. Jangan pindah ke ACTION hanya karena kamu ingin memberi saran, dan jangan pindah ke CLOSING hanya karena balasanmu terdengar lengkap.`,
+      `Rangkuman sesi sebelumnya: ${currentSummary || "belum ada"}. Ini konteks internal, bukan fakta baru yang boleh kamu karang.`,
+      "conversationSummary adalah catatan konteks internal, bukan analisis harian premium. Pilih 1 sampai 3 potongan kalimat pendek yang benar-benar diucapkan pengguna, salin persis tanpa parafrase, dan pisahkan dengan baris baru. Boleh mempertahankan potongan dari rangkuman sebelumnya. Jangan mengambil klaim dari balasan AI, menebak sebab, atau memberi diagnosis. Gunakan null bila pengguna belum memberi cerita yang cukup spesifik. Jangan tampilkan field ini secara terpisah dalam reply kecuali pengguna meminta rangkuman.",
       "proactiveSuggestion boleh berisi satu saran singkat yang sesuai konteks matang, atau null. Jangan sisipkan saran tersebut ke reply hanya karena field ini terisi.",
       `safety.category harus null atau salah satu dari: ${Object.values(SafetyCategory).join(", ")}.`,
       "Nilai safety dari pesan terbaru dan konteksnya. Jika tidak ada risiko: flag=false, riskLevel=NONE, category=null, summary=null. Jika ada risiko: flag=true, riskLevel=ATTENTION atau HIGH, category dan summary wajib terisi. Summary singkat, tanpa nama atau detail pribadi. Untuk bahaya segera, tanggapi secara empatik di reply dan anjurkan bantuan orang dewasa tepercaya atau layanan darurat setempat.",

@@ -10,6 +10,7 @@ const validOutput = {
     "  Kedengarannya berat. Bagian mana yang paling ingin kamu ceritakan?  ",
   topics: ["KELUARGA", "AKADEMIK_SEKOLAH"],
   conversationState: "EXPLORATION",
+  conversationSummary: null,
   proactiveSuggestion: null,
   safety: {
     flag: false,
@@ -84,6 +85,7 @@ describe("diary structured output validation", () => {
         reply: "Aku mendengarkanmu.",
         topics: ["perasaan", "akademik_sekolah", "KELUARGA", "KELUARGA"],
         conversationState: "exploration",
+        conversationSummary: "  Aku punya tugas sekolah yang membuatku cemas. ",
         proactiveSuggestion: "",
         safety: {
           flag: false,
@@ -100,6 +102,9 @@ describe("diary structured output validation", () => {
     expect(parsed.reply).toBe("Aku mendengarkanmu.");
     expect(parsed.topics).toEqual(["AKADEMIK_SEKOLAH", "KELUARGA"]);
     expect(parsed.conversationState).toBe("EXPLORATION");
+    expect(parsed.conversationSummary).toBe(
+      "Aku punya tugas sekolah yang membuatku cemas.",
+    );
     expect(parsed.proactiveSuggestion).toBeNull();
     expect(parsed.safety).toEqual({
       flag: false,

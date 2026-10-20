@@ -33,6 +33,7 @@ export const diaryStructuredOutputSchema = z
     reply: z.string().trim().min(1).max(4000),
     topics: z.array(z.enum(DiaryTopic)).max(9),
     conversationState: z.enum(ConversationState),
+    conversationSummary: z.string().trim().min(1).max(1000).nullable(),
     proactiveSuggestion: z.string().trim().min(1).max(500).nullable(),
     safety: safetySchema,
   })
@@ -148,6 +149,13 @@ export function sanitizeAiOutputPayload(rawPayload: unknown): unknown {
     record.proactiveSuggestion = null;
   }
 
+  if (typeof record.conversationSummary === "string") {
+    const trimmed = record.conversationSummary.trim();
+    record.conversationSummary = trimmed.length > 0 ? trimmed : null;
+  } else {
+    record.conversationSummary = null;
+  }
+
   if (
     record.safety &&
     typeof record.safety === "object" &&
@@ -192,6 +200,7 @@ export function sanitizeAiOutputPayload(rawPayload: unknown): unknown {
     "reply",
     "topics",
     "conversationState",
+    "conversationSummary",
     "proactiveSuggestion",
     "safety",
   ]);

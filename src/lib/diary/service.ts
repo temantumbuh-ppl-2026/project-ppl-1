@@ -10,6 +10,8 @@ import {
   generateDiaryAssistantReply,
   generateDiaryStructuredReply,
 } from "@/lib/diary/litellm";
+import { resolveConversationState } from "@/lib/diary/conversation-state";
+import { resolveConversationSummary } from "@/lib/diary/conversation-summary";
 import {
   buildDiaryMoodGreetingPromptMessages,
   buildDiaryPromptMessages,
@@ -249,6 +251,7 @@ export type PreparedDiaryChatSession = {
     date: Date;
     topics: DiaryTopic[];
     conversationState: ConversationState;
+    conversationSummary: string | null;
     riskLevel: RiskLevel;
   } | null;
   todayKey: string;
@@ -322,6 +325,7 @@ export async function prepareDiaryChatSession(
           select: {
             topics: true,
             conversationState: true,
+            conversationSummary: true,
             riskLevel: true,
           },
         })
@@ -332,6 +336,9 @@ export async function prepareDiaryChatSession(
         topics: currentMetadata?.topics ?? [],
         conversationState:
           currentMetadata?.conversationState ?? ConversationState.EXPLORATION,
+        conversationSummary: currentMetadata?.conversationSummary
+          ? decrypt(currentMetadata.conversationSummary)
+          : null,
         riskLevel: currentMetadata?.riskLevel ?? RiskLevel.NONE,
       }
     : null;
@@ -408,6 +415,7 @@ export async function prepareDiaryChatSession(
     currentTopics: preparedDiary?.topics ?? [],
     currentState:
       preparedDiary?.conversationState ?? ConversationState.EXPLORATION,
+    currentSummary: preparedDiary?.conversationSummary ?? null,
     isOpening: promptHistory.length === 0,
   });
 
@@ -456,6 +464,34 @@ export async function persistDiaryChatSession({
   // encryption key cannot leave even the user's message behind.
   const encryptedUserText = encrypt(session.trimmedText);
   const encryptedAssistantText = encrypt(normalizedAssistantText);
+  const nextSummary = assistantOutput
+    ? resolveConversationSummary({
+        proposed: assistantOutput.conversationSummary,
+        previous: session.diary?.conversationSummary ?? null,
+        userMessages: [
+          ...session.promptHistory
+            .filter((message) => message.senderType === Sender.USER)
+            .map((message) => message.content),
+          session.trimmedText,
+        ],
+      })
+    : null;
+  const encryptedSummary = nextSummary ? encrypt(nextSummary) : null;
+  const conversationState = assistantOutput
+    ? resolveConversationState({
+        previous:
+          session.diary?.conversationState ?? ConversationState.EXPLORATION,
+        proposed: assistantOutput.conversationState,
+        previousTopics: session.diary?.topics ?? [],
+        nextTopics: assistantOutput.topics,
+        userMessage: session.trimmedText,
+        hasSummary: Boolean(nextSummary),
+        riskLevel: higherRiskLevel(
+          session.diary?.riskLevel ?? RiskLevel.NONE,
+          assistantOutput.safety.riskLevel,
+        ),
+      })
+    : null;
   const encryptedSuggestion = assistantOutput?.proactiveSuggestion
     ? encrypt(assistantOutput.proactiveSuggestion)
     : null;
@@ -479,7 +515,8 @@ export async function persistDiaryChatSession({
   const metadataData = assistantOutput
     ? {
         topics: assistantOutput.topics,
-        conversationState: assistantOutput.conversationState,
+        conversationState: conversationState!,
+        conversationSummary: encryptedSummary,
         proactiveSuggestion: encryptedSuggestion,
         safetyFlag: riskLevel !== RiskLevel.NONE,
         riskLevel,
@@ -602,7 +639,7 @@ export async function persistDiaryChatSession({
       ? {
           conversation: {
             topics: assistantOutput.topics,
-            conversationState: assistantOutput.conversationState,
+            conversationState: conversationState!,
             proactiveSuggestion: assistantOutput.proactiveSuggestion,
             safetyFlag: riskLevel !== RiskLevel.NONE,
             riskLevel,
@@ -705,6 +742,7 @@ export async function generateDiaryGreetingFromMood({
     todayLabel: formatDateLabel(todayDate, timezone),
     currentTopics: diary.topics,
     currentState: diary.conversationState,
+    currentSummary: null,
     moodDescription: getMoodDescription(moodScore),
     note: notes,
   });
@@ -720,9 +758,6 @@ export async function generateDiaryGreetingFromMood({
 
     const output = parsed.data;
     const encryptedReply = encrypt(output.reply);
-    const encryptedSuggestion = output.proactiveSuggestion
-      ? encrypt(output.proactiveSuggestion)
-      : null;
 
     await prisma.$transaction(
       async (tx) => {
@@ -752,8 +787,18 @@ export async function generateDiaryGreetingFromMood({
           where: { id: diaryId },
           data: {
             topics: output.topics,
-            conversationState: output.conversationState,
-            proactiveSuggestion: encryptedSuggestion,
+            conversationState: resolveConversationState({
+              previous: diary.conversationState,
+              proposed: output.conversationState,
+              previousTopics: diary.topics,
+              nextTopics: output.topics,
+              userMessage: notes,
+              hasSummary: false,
+              riskLevel,
+              isMoodGreeting: true,
+            }),
+            conversationSummary: null,
+            proactiveSuggestion: null,
             safetyFlag: riskLevel !== RiskLevel.NONE,
             riskLevel,
           },
