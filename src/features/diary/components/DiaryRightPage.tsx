@@ -39,6 +39,7 @@ import type {
 import { MoodFace } from "./MoodFace";
 import { ChatBubble } from "./ChatBubble";
 import { AiAvatar } from "./AiAvatar";
+import { SafetyNotice } from "./SafetyNotice";
 import { TypingIndicator } from "./TypingIndicator";
 
 type Props = {
@@ -246,6 +247,11 @@ export function DiaryRightPage({
   const lastMessageText =
     displayMessages[displayMessages.length - 1]?.text ?? "";
   const actionOptions = conversation?.actionOptions ?? [];
+  // Saat risiko HIGH, arahan keselamatan menggantikan saran tindakan.
+  const showSafetyNotice =
+    conversation?.riskLevel === RiskLevel.HIGH &&
+    !isMessagesLoading &&
+    messages.length > 0;
   const showActionOptions =
     !isAiTyping &&
     !isMessagesLoading &&
@@ -556,6 +562,8 @@ export function DiaryRightPage({
               showTimestamp={msg.showTimestamp}
             />
           ))}
+
+          {showSafetyNotice ? <SafetyNotice /> : null}
 
           {showActionOptions ? (
             <section
