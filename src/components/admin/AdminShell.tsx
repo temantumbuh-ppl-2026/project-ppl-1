@@ -9,6 +9,7 @@ import {
   LogOut,
   Users,
   BookOpen,
+  ShieldAlert,
   ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
@@ -18,7 +19,7 @@ import {
 import { authClient } from "@/lib/auth-client";
 import { LogoutConfirmDialog } from "@/components/ui/manual/logout-confirm-dialog";
 
-export type AdminPage = "overview" | "users" | "quiz";
+export type AdminPage = "overview" | "users" | "quiz" | "safety";
 
 const NAV: { id: AdminPage; label: string; href: string; icon: LucideIcon }[] =
   [
@@ -35,6 +36,12 @@ const NAV: { id: AdminPage; label: string; href: string; icon: LucideIcon }[] =
       href: "/admin/quiz",
       icon: BookOpen,
     },
+    {
+      id: "safety",
+      label: "Safety Monitoring",
+      href: "/admin/safety",
+      icon: ShieldAlert,
+    },
   ];
 
 const PAGE_META: Record<AdminPage, { title: string; sub: string }> = {
@@ -47,6 +54,10 @@ const PAGE_META: Record<AdminPage, { title: string; sub: string }> = {
     title: "BraveChoice CMS",
     sub: "Kelola soal Brave Choice per segmen usia",
   },
+  safety: {
+    title: "Safety Monitoring",
+    sub: "Tinjau alert keselamatan tanpa melihat isi percakapan",
+  },
 };
 
 const MOBILE_BREAKPOINT = 1024;
@@ -54,6 +65,7 @@ const MOBILE_BREAKPOINT = 1024;
 function getActivePage(pathname: string): AdminPage {
   if (pathname.startsWith("/admin/users")) return "users";
   if (pathname.startsWith("/admin/quiz")) return "quiz";
+  if (pathname.startsWith("/admin/safety")) return "safety";
   return "overview";
 }
 

@@ -18,6 +18,7 @@ import {
 import {
   useEffect,
   useMemo,
+  useState,
   useRef,
   useCallback,
   type RefObject,
@@ -38,6 +39,7 @@ import type {
 import { MoodFace } from "./MoodFace";
 import { ChatBubble } from "./ChatBubble";
 import { AiAvatar } from "./AiAvatar";
+import { SafetyNotice } from "./SafetyNotice";
 import { TypingIndicator } from "./TypingIndicator";
 
 type Props = {
@@ -222,6 +224,10 @@ export function DiaryRightPage({
   onKeyDown,
 }: Props) {
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
+  const [pickedAction, setPickedAction] = useState<{
+    option: string;
+    key: string;
+  } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const canSend =
     inputValue.trim().length > 0 &&
@@ -241,6 +247,11 @@ export function DiaryRightPage({
   const lastMessageText =
     displayMessages[displayMessages.length - 1]?.text ?? "";
   const actionOptions = conversation?.actionOptions ?? [];
+  // Saat risiko HIGH, arahan keselamatan menggantikan saran tindakan.
+  const showSafetyNotice =
+    conversation?.riskLevel === RiskLevel.HIGH &&
+    !isMessagesLoading &&
+    messages.length > 0;
   const showActionOptions =
     !isAiTyping &&
     !isMessagesLoading &&
@@ -248,6 +259,10 @@ export function DiaryRightPage({
     conversation?.conversationState === ConversationState.ACTION &&
     conversation?.riskLevel === RiskLevel.NONE &&
     actionOptions.length >= 2;
+  // Pilihan hanya berlaku untuk balasan yang sedang tampil.
+  const actionPickKey = `${entry.id}:${messages.length}`;
+  const selectedActionOption =
+    pickedAction?.key === actionPickKey ? pickedAction.option : null;
   const canDiscussOption =
     !isReadOnly && canWriteDiary && !requiresReload && !isAiTyping;
 
@@ -375,6 +390,7 @@ export function DiaryRightPage({
   };
 
   const handleActionOption = (option: string) => {
+    setPickedAction({ option, key: actionPickKey });
     const selectedOption = option.trim().replace(/[.!?]+$/, "");
     const draft = `Aku ingin mencoba langkah ini: ${selectedOption}. Bantu aku memikirkan cara memulainya yang sederhana.`;
     const currentDraft = inputValue.trim();
@@ -547,6 +563,8 @@ export function DiaryRightPage({
             />
           ))}
 
+          {showSafetyNotice ? <SafetyNotice /> : null}
+
           {showActionOptions ? (
             <section
               className="dy-action-choices"
@@ -566,7 +584,8 @@ export function DiaryRightPage({
                     {canDiscussOption ? (
                       <button
                         type="button"
-                        className="dy-action-choice"
+                        className={`dy-action-choice${selectedActionOption === option ? " is-selected" : ""}`}
+                        aria-pressed={selectedActionOption === option}
                         onClick={() => handleActionOption(option)}
                       >
                         <span
