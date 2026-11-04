@@ -149,7 +149,7 @@ function createDiaryOpenAIClient() {
     .trim()
     .replace(/\/$/, "");
 
-  const model = DEFAULT_MODEL.trim();
+  const model = (process.env.LLM_MODEL || DEFAULT_MODEL).trim();
   const client = new OpenAI({
     apiKey,
     baseURL: baseUrl,

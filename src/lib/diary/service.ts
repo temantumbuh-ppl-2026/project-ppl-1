@@ -856,8 +856,11 @@ export async function generateDiaryGreetingFromMood({
         timeout: PERSIST_TRANSACTION_TIMEOUT_MS,
       },
     );
-  } catch {
-    console.error("Gagal menginisiasi diary dari mood.");
+  } catch (error) {
+    console.error("Gagal menginisiasi diary dari mood.", {
+      name: error instanceof Error ? error.name : typeof error,
+      message: error instanceof Error ? error.message : undefined,
+    });
   }
 }
 
