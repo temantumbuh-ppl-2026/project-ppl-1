@@ -438,6 +438,7 @@ export async function prepareDiaryChatSession(
       preparedDiary?.conversationState ?? ConversationState.EXPLORATION,
     currentSummary: preparedDiary?.conversationSummary ?? null,
     currentActionOptions: preparedDiary?.actionOptions ?? [],
+    sessionRiskLevel: preparedDiary?.riskLevel ?? RiskLevel.NONE,
     isOpening: promptHistory.length === 0,
   });
 

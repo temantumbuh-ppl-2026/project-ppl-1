@@ -71,7 +71,6 @@ export class DiaryStructuredOutputError extends Error {
 const VALID_TOPIC_SET = new Set<string>(Object.values(DiaryTopic));
 const VALID_STATE_SET = new Set<string>(Object.values(ConversationState));
 const VALID_RISK_SET = new Set<string>(Object.values(RiskLevel));
-const VALID_CATEGORY_SET = new Set<string>(Object.values(SafetyCategory));
 
 function cleanJsonString(raw: string): string {
   let cleaned = raw.trim();
@@ -184,28 +183,14 @@ export function sanitizeAiOutputPayload(rawPayload: unknown): unknown {
     } else {
       const riskLevel = rawRisk as RiskLevel;
 
-      if (riskLevel === RiskLevel.NONE) {
-        safetyRecord.flag = false;
-        safetyRecord.riskLevel = RiskLevel.NONE;
-        safetyRecord.category = null;
-        safetyRecord.summary = null;
-      } else {
-        safetyRecord.flag = true;
-        safetyRecord.riskLevel = riskLevel;
-        const rawCategory =
-          typeof safetyRecord.category === "string"
-            ? safetyRecord.category.trim().toUpperCase()
-            : null;
-        safetyRecord.category =
-          rawCategory && VALID_CATEGORY_SET.has(rawCategory)
-            ? (rawCategory as SafetyCategory)
-            : SafetyCategory.OTHER;
-        const rawSummary =
-          typeof safetyRecord.summary === "string"
-            ? safetyRecord.summary.trim()
-            : "";
-        safetyRecord.summary =
-          rawSummary || "Perhatian keselamatan terdeteksi dalam pesan.";
+      // Normalize spelling only. Do not invent evidence, a category, or a flag
+      // to turn inconsistent safety metadata into an apparently valid result.
+      safetyRecord.riskLevel = riskLevel;
+      if (typeof safetyRecord.category === "string") {
+        safetyRecord.category = safetyRecord.category.trim().toUpperCase();
+      }
+      if (typeof safetyRecord.summary === "string") {
+        safetyRecord.summary = safetyRecord.summary.trim();
       }
       record.safety = safetyRecord;
     }

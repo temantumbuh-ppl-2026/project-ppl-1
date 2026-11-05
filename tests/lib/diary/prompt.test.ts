@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { ConversationState, DiaryTopic } from "@/app/generated/prisma/client";
+import {
+  ConversationState,
+  DiaryTopic,
+  RiskLevel,
+} from "@/app/generated/prisma/client";
 import {
   buildDiaryPromptMessages,
   buildDiaryMoodGreetingPromptMessages,
@@ -104,9 +108,32 @@ describe("lib/diary/prompt", () => {
 
     expect(messages[1]?.content).toContain("satu objek JSON");
     expect(messages[2]?.content).toContain("sapaan pertama");
+    expect(messages[2]?.content).toContain(
+      "menyimpulkan risiko hanya dari angka mood",
+    );
     expect(messages.at(-1)).toEqual({
       role: "user",
       content: "Perasaanku hari ini: sedih. Catatan moodku: Capek belajar",
     });
+  });
+
+  it("membedakan risiko maksimum sesi dari penilaian kejadian baru", () => {
+    const messages = buildDiaryStructuredPromptMessages({
+      userName: "Ruri",
+      todayLabel: "Hari ini",
+      currentTopics: [DiaryTopic.KELUARGA],
+      currentState: ConversationState.REFLECTION,
+      sessionRiskLevel: RiskLevel.HIGH,
+      conversation: [
+        { role: "user", content: "Aku sudah bersama guru yang kupercaya." },
+      ],
+    });
+    expect(messages[1]?.content).toContain(
+      "Risiko tertinggi yang tersimpan pada sesi: HIGH",
+    );
+    expect(messages[1]?.content).toContain("bukan bukti bahaya baru");
+    expect(messages.at(-1)?.content).toBe(
+      "Aku sudah bersama guru yang kupercaya.",
+    );
   });
 });

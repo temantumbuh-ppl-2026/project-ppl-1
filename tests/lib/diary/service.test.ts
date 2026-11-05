@@ -69,6 +69,7 @@ import type { DiaryStructuredOutput } from "@/lib/diary/structured-output";
 import { diaryConversationStarters } from "@/lib/diary/starters";
 import {
   DiaryServiceError,
+  completePreparedDiaryStructuredChatSession,
   ensureDiaryShellFromMood,
   generateDiaryGreetingFromMood,
   getDiaryConversationMetadata,
@@ -1016,6 +1017,57 @@ describe("lib/diary/service", () => {
     });
     expect(mockPrisma.$transaction).not.toHaveBeenCalled();
     consoleSpy.mockRestore();
+  });
+
+  it("memakai respons HIGH yang aman sebelum menyimpan dan mengirim hasil satu generation", async () => {
+    mockGenerateDiaryStructuredReply.mockResolvedValueOnce({
+      ...structuredOutput,
+      reply: "Kamu pasti mengalami depresi klinis.",
+      proactiveSuggestion: "Susun jadwal kegiatan.",
+      actionOptions: ["Susun jadwal kegiatan.", "Buat rencana liburan."],
+      safety: {
+        flag: true,
+        riskLevel: RiskLevel.HIGH,
+        category: "SELF_HARM",
+        summary: "Ada indikasi bahaya terhadap diri saat ini.",
+      },
+    });
+    mockTx.diary.create.mockResolvedValue({ id: "diary-1", date: todayDate });
+    mockTx.diaryMessage.create
+      .mockResolvedValueOnce({
+        id: "user-message",
+        senderType: Sender.USER,
+        createdAt: today,
+      })
+      .mockResolvedValueOnce({
+        id: "ai-message",
+        senderType: Sender.AI,
+        createdAt: today,
+      });
+    mockTx.diary.count.mockResolvedValue(1);
+
+    const result = await completePreparedDiaryStructuredChatSession(
+      createSession({ trimmedText: "Aku sedang tidak aman." }),
+    );
+
+    expect(mockGenerateDiaryStructuredReply).toHaveBeenCalledTimes(1);
+    expect(result.aiMessage.text).toContain("darurat setempat");
+    expect(result.aiMessage.text).not.toContain("depresi klinis");
+    expect(mockTx.diaryMessage.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          senderType: Sender.AI,
+          content: `encrypted:${result.aiMessage.text}`,
+        }),
+      }),
+    );
+    expect(result.conversation).toMatchObject({
+      riskLevel: RiskLevel.HIGH,
+      safetyFlag: true,
+      proactiveSuggestion: null,
+      actionOptions: [],
+    });
+    expect(mockTx.safetyAlert.create).toHaveBeenCalledTimes(1);
   });
 
   it("starter dan jawaban lanjutan memakai riwayat sesi serta memperbarui topik", async () => {
