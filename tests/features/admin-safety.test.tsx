@@ -29,6 +29,7 @@ const baseFilters: SafetyAlertFilters = {
 
 const listItem: SafetyAlertListItem = {
   id: "alert-1",
+  anonymousUserId: "TT-0123456789abcdef01234567",
   riskLevel: "HIGH",
   category: "SELF_HARM",
   status: "OPEN",
@@ -41,6 +42,7 @@ const detail: SafetyAlertDetail = {
   updatedAt: "2026-11-04T03:00:00.000Z",
   reviewNote: null,
   reviewedByName: null,
+  allowedStatuses: ["OPEN", "REVIEWED"],
 };
 
 afterEach(() => cleanup());
@@ -53,6 +55,8 @@ describe("SafetyAlertsPage", () => {
         total={1}
         filters={baseFilters}
         onFilterChange={vi.fn()}
+        isRefreshing={false}
+        onRefresh={vi.fn()}
       />,
     );
 
@@ -71,13 +75,22 @@ describe("SafetyAlertsPage", () => {
         total={1}
         filters={baseFilters}
         onFilterChange={vi.fn()}
+        isRefreshing={false}
+        onRefresh={vi.fn()}
       />,
     );
 
     const headers = screen
       .getAllByRole("columnheader")
       .map((header) => header.textContent);
-    expect(headers).toEqual(["Waktu", "Kategori", "Risiko", "Status", "Aksi"]);
+    expect(headers).toEqual([
+      "Identifier anonim",
+      "Waktu",
+      "Kategori",
+      "Risiko",
+      "Status",
+      "Aksi",
+    ]);
     expect(screen.queryByText(/email/i)).toBeNull();
   });
 
@@ -88,6 +101,8 @@ describe("SafetyAlertsPage", () => {
         total={0}
         filters={baseFilters}
         onFilterChange={vi.fn()}
+        isRefreshing={false}
+        onRefresh={vi.fn()}
       />,
     );
 
@@ -104,6 +119,8 @@ describe("SafetyAlertsPage", () => {
         total={0}
         filters={{ ...baseFilters, status: "RESOLVED" }}
         onFilterChange={onFilterChange}
+        isRefreshing={false}
+        onRefresh={vi.fn()}
       />,
     );
 
@@ -127,6 +144,8 @@ describe("SafetyAlertsPage", () => {
         total={25}
         filters={baseFilters}
         onFilterChange={onFilterChange}
+        isRefreshing={false}
+        onRefresh={vi.fn()}
       />,
     );
 
@@ -161,6 +180,10 @@ describe("SafetyAlertDetailPage", () => {
         isSaving={false}
         isSaved={false}
         saveError={null}
+        hasConflict={false}
+        isReloading={false}
+        onReload={vi.fn()}
+        onEdit={vi.fn()}
         onSubmit={onSubmit}
         {...overrides}
       />,
@@ -222,21 +245,21 @@ describe("safety alert filters", () => {
 
     expect(filters).toEqual({
       status: "RESOLVED",
-      riskLevel: "all",
+      riskLevel: "HIGH",
       category: "all",
       page: 1,
       limit: 10,
     });
   });
 
-  it("membangun URL API hanya dengan filter aktif", () => {
+  it("membangun URL API dengan nilai filter eksplisit", () => {
     expect(buildAlertListUrl(baseFilters)).toBe(
-      "/api/admin/safety-alerts?page=1&limit=10",
+      "/api/admin/safety-alerts?status=all&riskLevel=all&category=all&page=1&limit=10",
     );
     expect(
       buildAlertListUrl({ ...baseFilters, status: "OPEN", riskLevel: "HIGH" }),
     ).toBe(
-      "/api/admin/safety-alerts?status=OPEN&riskLevel=HIGH&page=1&limit=10",
+      "/api/admin/safety-alerts?status=OPEN&riskLevel=HIGH&category=all&page=1&limit=10",
     );
   });
 });

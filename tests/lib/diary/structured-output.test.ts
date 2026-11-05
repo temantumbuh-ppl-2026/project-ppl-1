@@ -5,6 +5,7 @@ import {
   parseDiaryStructuredOutput,
 } from "@/lib/diary/structured-output";
 import { applyDiaryResponseGuardrails } from "@/lib/diary/response-guardrails";
+import { RiskLevel, SafetyCategory } from "@/app/generated/prisma/client";
 
 const validOutput = {
   reply:
@@ -94,7 +95,7 @@ describe("diary structured output validation", () => {
           flag: false,
           riskLevel: "NONE",
           category: null,
-          summary: "Tidak ada indikasi bahaya",
+          summary: null,
         },
         thought: "Pengguna bercerita tentang sekolah",
       }) +
@@ -149,5 +150,172 @@ describe("diary structured output validation", () => {
         "Aku stres karena tugas sekolah.",
       ).reply,
     ).toBe("Aku paham, mau cerita lebih jauh?");
+  });
+
+  it.each([
+    {
+      flag: false,
+      riskLevel: "HIGH",
+      category: "SELF_HARM",
+      summary: "Ada ancaman saat ini.",
+    },
+    {
+      flag: true,
+      riskLevel: "HIGH",
+      category: null,
+      summary: "Ada ancaman saat ini.",
+    },
+    {
+      flag: true,
+      riskLevel: "HIGH",
+      category: "BOGUS",
+      summary: "Ada ancaman saat ini.",
+    },
+    { flag: true, riskLevel: "HIGH", category: "SELF_HARM", summary: " " },
+    { flag: true, riskLevel: "HIGH", category: "SELF_HARM" },
+    { flag: true, riskLevel: "NONE", category: null, summary: null },
+    {
+      flag: false,
+      riskLevel: "NONE",
+      category: null,
+      summary: "Ada ancaman yang sedang berlangsung.",
+    },
+  ])(
+    "sanitize tidak mengarang metadata keselamatan agar lolos validasi",
+    (safety) => {
+      expect(() =>
+        parseDiaryStructuredOutput(JSON.stringify({ ...validOutput, safety }), {
+          sanitize: true,
+        }),
+      ).toThrow(DiaryStructuredOutputError);
+    },
+  );
+
+  it("menormalisasi casing safety yang lengkap tanpa mengganti isinya", () => {
+    const parsed = parseDiaryStructuredOutput(
+      JSON.stringify({
+        ...validOutput,
+        safety: {
+          flag: true,
+          riskLevel: " attention ",
+          category: " severe_distress ",
+          summary: "  Keselamatan saat ini perlu diperjelas.  ",
+        },
+      }),
+      { sanitize: true },
+    );
+    expect(parsed.safety).toEqual({
+      flag: true,
+      riskLevel: "ATTENTION",
+      category: "SEVERE_DISTRESS",
+      summary: "Keselamatan saat ini perlu diperjelas.",
+    });
+  });
+
+  it.each(Object.values(SafetyCategory))(
+    "HIGH memakai respons terkontrol untuk %s",
+    (category) => {
+      const parsed = parseDiaryStructuredOutput(
+        JSON.stringify({
+          ...validOutput,
+          reply: "Balasan model yang tidak layak ditampilkan.",
+          proactiveSuggestion: "Buat rencana liburan.",
+          actionOptions: ["Atur kegiatan keluarga.", "Buat daftar belanja."],
+          safety: {
+            flag: true,
+            riskLevel: "HIGH",
+            category,
+            summary: "Ada indikasi bahaya aktif.",
+          },
+        }),
+      );
+      const guarded = applyDiaryResponseGuardrails(
+        parsed,
+        "Aku sedang tidak aman.",
+      );
+      expect(guarded.reply).not.toBe(parsed.reply);
+      expect(guarded.reply).toContain("darurat setempat");
+      expect(guarded.reply).toContain("aman");
+      expect(guarded.reply).not.toMatch(
+        /orang tua|\u2014|sudah menghubungi admin/,
+      );
+      expect(guarded.proactiveSuggestion).toBeNull();
+      expect(guarded.actionOptions).toEqual([]);
+      expect(guarded.safety).toEqual(parsed.safety);
+    },
+  );
+
+  it("ATTENTION mempertahankan balasan kontekstual dan menghapus saran", () => {
+    const parsed = parseDiaryStructuredOutput(
+      JSON.stringify({
+        ...validOutput,
+        reply:
+          "Kamu menyebut ancaman di sekolah. Sekarang kamu berada di tempat yang aman?",
+        proactiveSuggestion: "Tulis rencana.",
+        actionOptions: ["Tulis rencana.", "Buat jadwal."],
+        safety: {
+          flag: true,
+          riskLevel: "ATTENTION",
+          category: "BULLYING_THREAT",
+          summary: "Waktu ancaman dan keselamatan saat ini belum jelas.",
+        },
+      }),
+    );
+    const guarded = applyDiaryResponseGuardrails(
+      parsed,
+      "Aku takut ancaman di sekolah.",
+    );
+    expect(guarded.reply).toBe(parsed.reply);
+    expect(guarded.safety.riskLevel).toBe(RiskLevel.ATTENTION);
+    expect(guarded.proactiveSuggestion).toBeNull();
+    expect(guarded.actionOptions).toEqual([]);
+  });
+
+  it.each([
+    "Kamu pasti mengalami depresi klinis.",
+    "Kamu memang lebay.",
+    "Ini semua salahmu.",
+    "Saya adalah psikolog yang menangani kondisimu.",
+    "Sebaiknya kamu menyakiti diri.",
+    "Coba lakukan hal itu untuk melukai diri.",
+    "Aku sudah menghubungi admin untukmu.",
+  ])(
+    "mengganti respons yang melanggar batas tanpa mengubah risiko: %s",
+    (reply) => {
+      const parsed = parseDiaryStructuredOutput(
+        JSON.stringify({ ...validOutput, reply }),
+      );
+      const guarded = applyDiaryResponseGuardrails(parsed, "Aku ingin cerita.");
+      expect(guarded.reply).not.toBe(reply);
+      expect(guarded.safety.riskLevel).toBe(RiskLevel.NONE);
+      expect(guarded.actionOptions).toEqual([]);
+    },
+  );
+
+  it("menyaring saran berbahaya meskipun reply terlihat aman", () => {
+    const parsed = parseDiaryStructuredOutput(
+      JSON.stringify({
+        ...validOutput,
+        reply: "Kita bisa membahas langkah kecil.",
+        actionOptions: ["Sebaiknya kamu menyakiti diri.", "Tulis ceritamu."],
+      }),
+    );
+    expect(
+      applyDiaryResponseGuardrails(parsed, "Aku mau membahas langkah.")
+        .actionOptions,
+    ).toEqual([]);
+  });
+
+  it.each([
+    "Kamu tidak lemah karena meminta bantuan.",
+    "Aku bukan psikolog dan tidak bisa memberi diagnosis.",
+    "Kita bisa mulai dengan menanyakan waktu makan bersama yang cocok untuk keluarga.",
+  ])("tetap menerima percakapan suportif dan rencana pribadi: %s", (reply) => {
+    const parsed = parseDiaryStructuredOutput(
+      JSON.stringify({ ...validOutput, reply }),
+    );
+    expect(
+      applyDiaryResponseGuardrails(parsed, "Aku ingin bercerita.").reply,
+    ).toBe(reply);
   });
 });

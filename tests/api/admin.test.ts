@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockAuth, mockHeaders, mockPrisma } = vi.hoisted(() => ({
   mockAuth: {
@@ -8,6 +8,13 @@ const { mockAuth, mockHeaders, mockPrisma } = vi.hoisted(() => ({
   },
   mockHeaders: vi.fn(),
   mockPrisma: {
+    $transaction: vi.fn(),
+    safetyAlert: {
+      findMany: vi.fn(),
+      count: vi.fn(),
+      findFirst: vi.fn(),
+      updateMany: vi.fn(),
+    },
     user: {
       findUnique: vi.fn(),
       count: vi.fn(),
@@ -39,11 +46,427 @@ vi.mock("@/lib/prisma", () => ({
 import { GET as GET_OVERVIEW } from "@/app/api/admin/overview/route";
 import { GET as GET_QUIZ } from "@/app/api/admin/quiz/route";
 import { GET as GET_USERS } from "@/app/api/admin/users/route";
+import { GET as GET_SAFETY } from "@/app/api/admin/safety-alerts/route";
+import {
+  GET as GET_SAFETY_DETAIL,
+  PATCH as PATCH_SAFETY,
+} from "@/app/api/admin/safety-alerts/[alertId]/route";
+import { encrypt, decrypt } from "@/lib/encryption";
 
 describe("Admin API Routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockHeaders.mockResolvedValue(new Headers());
+    vi.stubEnv("ENCRYPTION_KEY", "a".repeat(64));
+    vi.stubEnv("SAFETY_PSEUDONYM_KEY", "c".repeat(64));
+    mockPrisma.$transaction.mockImplementation((input) =>
+      typeof input === "function" ? input(mockPrisma) : Promise.all(input),
+    );
+    mockPrisma.safetyAlert.findMany.mockReset().mockResolvedValue([]);
+    mockPrisma.safetyAlert.count.mockReset().mockResolvedValue(0);
+    mockPrisma.safetyAlert.findFirst.mockReset().mockResolvedValue(null);
+    mockPrisma.safetyAlert.updateMany
+      .mockReset()
+      .mockResolvedValue({ count: 1 });
+  });
+  afterEach(() => vi.unstubAllEnvs());
+
+  describe("Safety Alert API", () => {
+    const context = () => ({ params: Promise.resolve({ alertId: "alert-1" }) });
+    const request = (method = "GET", payload?: unknown) =>
+      new Request("http://localhost/api/admin/safety-alerts/alert-1", {
+        method,
+        ...(payload !== undefined
+          ? {
+              body: JSON.stringify(payload),
+              headers: { "Content-Type": "application/json" },
+            }
+          : {}),
+      });
+    const row = (overrides: Record<string, unknown> = {}) => ({
+      id: "alert-1",
+      riskLevel: "HIGH",
+      category: "SELF_HARM",
+      status: "OPEN",
+      createdAt: new Date("2026-11-05T08:00:00Z"),
+      updatedAt: new Date("2026-11-05T08:00:00Z"),
+      reviewedAt: null,
+      reviewNote: null,
+      reviewedBy: null,
+      diary: { userId: "private-user-id" },
+      summary: "PRIVATE_SUMMARY",
+      content: "PRIVATE_CONVERSATION",
+      user: { name: "Private User", email: "private@example.invalid" },
+      ...overrides,
+    });
+    beforeEach(() => {
+      mockAuth.api.getSession.mockResolvedValue({ user: { id: "admin-1" } });
+      mockPrisma.user.findUnique.mockResolvedValue({
+        id: "admin-1",
+        name: "Reviewer",
+        role: "admin",
+      });
+    });
+
+    const handlers = [
+      () => GET_SAFETY(new Request("http://localhost/api/admin/safety-alerts")),
+      () => GET_SAFETY_DETAIL(request(), context()),
+      () => PATCH_SAFETY(request("PATCH", { status: "REVIEWED" }), context()),
+    ];
+    it.each(handlers)(
+      "menolak session kosong sebelum membaca alert",
+      async (handler) => {
+        mockAuth.api.getSession.mockResolvedValue(null);
+        expect((await handler()).status).toBe(401);
+        expect(mockPrisma.safetyAlert.findFirst).not.toHaveBeenCalled();
+        expect(mockPrisma.safetyAlert.findMany).not.toHaveBeenCalled();
+      },
+    );
+    it.each(handlers)(
+      "memeriksa role dari DB dan menolak pengguna biasa",
+      async (handler) => {
+        mockAuth.api.getSession.mockResolvedValue({
+          user: { id: "user-1", role: "admin" },
+        });
+        mockPrisma.user.findUnique.mockResolvedValue({
+          id: "user-1",
+          role: "user",
+        });
+        expect((await handler()).status).toBe(403);
+        expect(mockPrisma.safetyAlert.findFirst).not.toHaveBeenCalled();
+        expect(mockPrisma.safetyAlert.updateMany).not.toHaveBeenCalled();
+      },
+    );
+
+    it("mengembalikan daftar metadata dan alias stabil tanpa data percakapan", async () => {
+      mockPrisma.safetyAlert.findMany.mockResolvedValue([
+        row(),
+        row({ id: "alert-2" }),
+        row({ id: "alert-3", diary: { userId: "another-private-user" } }),
+      ]);
+      mockPrisma.safetyAlert.count.mockResolvedValue(3);
+      const response = await GET_SAFETY(
+        new Request(
+          "http://localhost/api/admin/safety-alerts?status=all&riskLevel=all&category=SELF_HARM&page=2&limit=5",
+        ),
+      );
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Cache-Control")).toContain("no-store");
+      const body = await response.json();
+      expect(body.data).toMatchObject({ total: 3, page: 2, limit: 5 });
+      expect(body.data.alerts[0].anonymousUserId).toMatch(/^TT-[0-9a-f]{24}$/);
+      expect(body.data.alerts[0].anonymousUserId).toBe(
+        body.data.alerts[1].anonymousUserId,
+      );
+      expect(body.data.alerts[2].anonymousUserId).not.toBe(
+        body.data.alerts[0].anonymousUserId,
+      );
+      expect(JSON.stringify(body)).not.toMatch(
+        /PRIVATE_|private-user|Private User|private@example|summary|content|diary|email/,
+      );
+      expect(mockPrisma.safetyAlert.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          skip: 5,
+          take: 5,
+          where: { riskLevel: "HIGH", category: "SELF_HARM" },
+          orderBy: [{ createdAt: "desc" }, { id: "asc" }],
+        }),
+      );
+      const select = mockPrisma.safetyAlert.findMany.mock.calls[0][0].select;
+      expect(select).not.toHaveProperty("summary");
+      expect(select).not.toHaveProperty("triggerMessage");
+      expect(select).not.toHaveProperty("reviewNote");
+    });
+
+    it("default OPEN/HIGH dan filter ATTENTION tidak membuka alert di luar HIGH", async () => {
+      await GET_SAFETY(new Request("http://localhost/api/admin/safety-alerts"));
+      expect(mockPrisma.safetyAlert.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { status: "OPEN", riskLevel: "HIGH" },
+          take: 10,
+          skip: 0,
+        }),
+      );
+      const response = await GET_SAFETY(
+        new Request(
+          "http://localhost/api/admin/safety-alerts?riskLevel=ATTENTION",
+        ),
+      );
+      expect(response.status).toBe(200);
+      expect(mockPrisma.safetyAlert.findMany).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            riskLevel: "HIGH",
+            AND: [{ riskLevel: "ATTENTION" }],
+          }),
+        }),
+      );
+    });
+
+    it.each([
+      "page=0",
+      "page=1.5",
+      "page=Infinity",
+      "limit=51",
+      "limit=-1",
+      "status=BOGUS",
+      "riskLevel=NONE",
+      "category=BOGUS",
+      "include=messages",
+      "userId=someone",
+    ])("menolak query tidak valid: %s", async (query) => {
+      expect(
+        (
+          await GET_SAFETY(
+            new Request(`http://localhost/api/admin/safety-alerts?${query}`),
+          )
+        ).status,
+      ).toBe(400);
+      expect(mockPrisma.safetyAlert.findMany).not.toHaveBeenCalled();
+    });
+
+    it("detail hanya mendekripsi catatan review dan menampilkan nama admin reviewer", async () => {
+      mockPrisma.safetyAlert.findFirst.mockResolvedValue(
+        row({
+          status: "REVIEWED",
+          reviewNote: encrypt("Tinjauan administratif."),
+          reviewedBy: { name: "Reviewer" },
+          reviewedAt: new Date("2026-11-05T09:00:00Z"),
+        }),
+      );
+      const response = await GET_SAFETY_DETAIL(request(), context());
+      const body = await response.json();
+      expect(body.data.alert).toMatchObject({
+        reviewNote: "Tinjauan administratif.",
+        reviewedByName: "Reviewer",
+        allowedStatuses: ["REVIEWED", "RESOLVED"],
+        reviewedAt: "2026-11-05T09:00:00.000Z",
+      });
+      expect(JSON.stringify(body)).not.toMatch(
+        /PRIVATE_|private-user|Private User|private@example|summary|content|triggerMessage|diaryId/,
+      );
+      expect(
+        mockPrisma.safetyAlert.findFirst.mock.calls[0][0].select,
+      ).not.toHaveProperty("summary");
+    });
+    it.each(["GET", "PATCH"])(
+      "%s mengembalikan 404 untuk alert yang tidak tersedia",
+      async (method) => {
+        const response =
+          method === "GET"
+            ? await GET_SAFETY_DETAIL(request(), context())
+            : await PATCH_SAFETY(
+                request("PATCH", { status: "REVIEWED" }),
+                context(),
+              );
+        expect(response.status).toBe(404);
+      },
+    );
+
+    it.each([
+      { status: "BOGUS" },
+      { status: "REVIEWED", reviewNote: "a".repeat(1001) },
+      { status: "REVIEWED", reviewedById: "another-admin" },
+      { status: "REVIEWED", reviewedAt: "2026-11-05T00:00:00Z" },
+      { status: "REVIEWED", riskLevel: "NONE" },
+      { status: "REVIEWED", expectedUpdatedAt: "yesterday" },
+    ])("menolak PATCH invalid atau field milik server", async (payload) => {
+      expect(
+        (await PATCH_SAFETY(request("PATCH", payload), context())).status,
+      ).toBe(400);
+      expect(mockPrisma.safetyAlert.updateMany).not.toHaveBeenCalled();
+    });
+    it("menolak JSON rusak", async () => {
+      const response = await PATCH_SAFETY(
+        new Request("http://localhost/api/admin/safety-alerts/alert-1", {
+          method: "PATCH",
+          body: "{invalid",
+        }),
+        context(),
+      );
+      expect(response.status).toBe(400);
+    });
+
+    it("menyimpan reviewer dari session, waktu server, dan catatan terenkripsi", async () => {
+      const note = "Tinjauan administratif.";
+      mockPrisma.safetyAlert.findFirst
+        .mockResolvedValueOnce(row())
+        .mockResolvedValueOnce(
+          row({
+            status: "REVIEWED",
+            reviewNote: encrypt(note),
+            reviewedBy: { name: "Reviewer" },
+            reviewedAt: new Date(),
+          }),
+        );
+      const response = await PATCH_SAFETY(
+        request("PATCH", { status: "REVIEWED", reviewNote: ` ${note} ` }),
+        context(),
+      );
+      expect(response.status).toBe(200);
+      const saved = mockPrisma.safetyAlert.updateMany.mock.calls[0][0];
+      expect(saved.where).toMatchObject({
+        id: "alert-1",
+        riskLevel: "HIGH",
+        status: "OPEN",
+        updatedAt: row().updatedAt,
+      });
+      expect(saved.data).toMatchObject({
+        status: "REVIEWED",
+        reviewedById: "admin-1",
+        reviewedAt: expect.any(Date),
+      });
+      expect(saved.data.reviewNote).not.toBe(note);
+      expect(
+        decrypt(saved.data.reviewNote, { allowLegacyPlaintext: false }),
+      ).toBe(note);
+      expect((await response.json()).data.alert.reviewNote).toBe(note);
+    });
+    it("menerima catatan tepat 1000 karakter sesuai kontrak frontend", async () => {
+      const note = "a".repeat(1000);
+      mockPrisma.safetyAlert.findFirst
+        .mockResolvedValueOnce(row())
+        .mockResolvedValueOnce(
+          row({ status: "REVIEWED", reviewNote: encrypt(note) }),
+        );
+      const response = await PATCH_SAFETY(
+        request("PATCH", { status: "REVIEWED", reviewNote: note }),
+        context(),
+      );
+      expect(response.status).toBe(200);
+      expect((await response.json()).data.alert.reviewNote).toHaveLength(1000);
+    });
+    it.each(["", null])(
+      "memungkinkan penghapusan catatan tanpa mengirim plaintext",
+      async (reviewNote) => {
+        mockPrisma.safetyAlert.findFirst.mockResolvedValue(
+          row({ status: "REVIEWED" }),
+        );
+        expect(
+          (
+            await PATCH_SAFETY(
+              request("PATCH", { status: "REVIEWED", reviewNote }),
+              context(),
+            )
+          ).status,
+        ).toBe(200);
+        expect(
+          mockPrisma.safetyAlert.updateMany.mock.calls[0][0].data.reviewNote,
+        ).toBeNull();
+      },
+    );
+    it("catatan yang tidak dikirim tetap dipertahankan", async () => {
+      mockPrisma.safetyAlert.findFirst.mockResolvedValue(
+        row({ status: "REVIEWED" }),
+      );
+      expect(
+        (
+          await PATCH_SAFETY(
+            request("PATCH", { status: "RESOLVED" }),
+            context(),
+          )
+        ).status,
+      ).toBe(200);
+      expect(
+        mockPrisma.safetyAlert.updateMany.mock.calls[0][0].data,
+      ).not.toHaveProperty("reviewNote");
+    });
+    it.each([
+      ["OPEN", "RESOLVED"],
+      ["REVIEWED", "OPEN"],
+      ["RESOLVED", "REVIEWED"],
+    ])("menolak transisi %s ke %s", async (current, next) => {
+      mockPrisma.safetyAlert.findFirst.mockResolvedValue(
+        row({ status: current }),
+      );
+      expect(
+        (await PATCH_SAFETY(request("PATCH", { status: next }), context()))
+          .status,
+      ).toBe(409);
+      expect(mockPrisma.safetyAlert.updateMany).not.toHaveBeenCalled();
+    });
+    it("menolak versi form lama sebelum menulis", async () => {
+      mockPrisma.safetyAlert.findFirst.mockResolvedValue(row());
+      expect(
+        (
+          await PATCH_SAFETY(
+            request("PATCH", {
+              status: "REVIEWED",
+              expectedUpdatedAt: "2026-11-04T08:00:00Z",
+            }),
+            context(),
+          )
+        ).status,
+      ).toBe(409);
+      expect(mockPrisma.safetyAlert.updateMany).not.toHaveBeenCalled();
+    });
+    it("versi review selalu bertambah meskipun pembaruan terjadi dalam milidetik yang sama", async () => {
+      const updatedAt = new Date("2099-01-01T00:00:00.000Z");
+      mockPrisma.safetyAlert.findFirst.mockResolvedValue(
+        row({ status: "REVIEWED", updatedAt }),
+      );
+      expect(
+        (
+          await PATCH_SAFETY(
+            request("PATCH", {
+              status: "REVIEWED",
+              reviewNote: "Catatan baru.",
+            }),
+            context(),
+          )
+        ).status,
+      ).toBe(200);
+      expect(
+        mockPrisma.safetyAlert.updateMany.mock.calls[0][0].data.updatedAt.getTime(),
+      ).toBe(updatedAt.getTime() + 1);
+    });
+    it("menangani pembaruan bersamaan tanpa menimpa reviewer lain", async () => {
+      mockPrisma.safetyAlert.findFirst.mockResolvedValue(row());
+      mockPrisma.safetyAlert.updateMany.mockResolvedValue({ count: 0 });
+      expect(
+        (
+          await PATCH_SAFETY(
+            request("PATCH", { status: "REVIEWED" }),
+            context(),
+          )
+        ).status,
+      ).toBe(409);
+    });
+    it.each(["catatan plaintext", "broken:cipher:text"])(
+      "dekripsi gagal tidak mengirim catatan atau ciphertext",
+      async (reviewNote) => {
+        mockPrisma.safetyAlert.findFirst.mockResolvedValue(row({ reviewNote }));
+        const response = await GET_SAFETY_DETAIL(request(), context());
+        expect(response.status).toBe(503);
+        expect(JSON.stringify(await response.json())).not.toContain(reviewNote);
+      },
+    );
+    it("kegagalan enkripsi membatalkan perubahan review", async () => {
+      vi.stubEnv("ENCRYPTION_KEY", "");
+      expect(
+        (
+          await PATCH_SAFETY(
+            request("PATCH", {
+              status: "REVIEWED",
+              reviewNote: "Jangan simpan terbuka.",
+            }),
+            context(),
+          )
+        ).status,
+      ).toBe(503);
+      expect(mockPrisma.safetyAlert.updateMany).not.toHaveBeenCalled();
+    });
+    it("tidak mengganti pseudonym dengan identitas user saat konfigurasi hilang", async () => {
+      vi.stubEnv("SAFETY_PSEUDONYM_KEY", "");
+      mockPrisma.safetyAlert.findMany.mockResolvedValue([row()]);
+      const response = await GET_SAFETY(
+        new Request("http://localhost/api/admin/safety-alerts"),
+      );
+      expect(response.status).toBe(503);
+      expect(JSON.stringify(await response.json())).not.toContain(
+        "private-user-id",
+      );
+    });
   });
 
   describe("GET /api/admin/overview", () => {

@@ -20,6 +20,10 @@ type Props = {
   isSaving: boolean;
   saveError: string | null;
   isSaved: boolean;
+  hasConflict: boolean;
+  isReloading: boolean;
+  onReload: () => void;
+  onEdit: () => void;
   onSubmit: (input: { status: AlertStatus; reviewNote: string }) => void;
 };
 
@@ -49,6 +53,10 @@ export function SafetyAlertDetailPage({
   isSaving,
   saveError,
   isSaved,
+  hasConflict,
+  isReloading,
+  onReload,
+  onEdit,
   onSubmit,
 }: Props) {
   const [status, setStatus] = useState<AlertStatus>(alert.status);
@@ -56,6 +64,7 @@ export function SafetyAlertDetailPage({
 
   const isDirty =
     status !== alert.status || reviewNote.trim() !== (alert.reviewNote ?? "");
+  const isBlocked = isSaving || hasConflict || isReloading;
 
   return (
     <div
@@ -116,6 +125,12 @@ export function SafetyAlertDetailPage({
           }}
         >
           <div>
+            <dt style={termStyle}>Identifier anonim</dt>
+            <dd style={{ ...valueStyle, overflowWrap: "anywhere" }}>
+              {alert.anonymousUserId}
+            </dd>
+          </div>
+          <div>
             <dt style={termStyle}>Tingkat risiko</dt>
             <dd style={valueStyle}>
               <RiskBadge level={alert.riskLevel} />
@@ -149,7 +164,8 @@ export function SafetyAlertDetailPage({
         style={{ ...card, display: "grid", gap: 16 }}
         onSubmit={(event) => {
           event.preventDefault();
-          if (isSaving || !isDirty) return;
+          if (isBlocked || !isDirty || !alert.allowedStatuses.includes(status))
+            return;
           onSubmit({ status, reviewNote: reviewNote.trim() });
         }}
       >
@@ -166,6 +182,7 @@ export function SafetyAlertDetailPage({
         </h2>
 
         <fieldset
+          disabled={isBlocked}
           style={{ border: 0, margin: 0, padding: 0, display: "grid", gap: 8 }}
         >
           <legend style={{ ...termStyle, marginBottom: 8, padding: 0 }}>
@@ -184,7 +201,11 @@ export function SafetyAlertDetailPage({
                 border: "1px solid var(--tt-dashboard-card-border)",
                 fontSize: 14,
                 fontWeight: 600,
-                cursor: "pointer",
+                cursor:
+                  isBlocked || !alert.allowedStatuses.includes(option)
+                    ? "not-allowed"
+                    : "pointer",
+                opacity: !alert.allowedStatuses.includes(option) ? 0.5 : 1,
                 color: "var(--tt-dashboard-text)",
                 background:
                   status === option
@@ -197,20 +218,33 @@ export function SafetyAlertDetailPage({
                 name="status"
                 value={option}
                 checked={status === option}
-                onChange={() => setStatus(option)}
+                disabled={!alert.allowedStatuses.includes(option)}
+                onChange={() => {
+                  setStatus(option);
+                  onEdit();
+                }}
               />
               {STATUS_LABELS[option]}
             </label>
           ))}
         </fieldset>
 
+        <p style={{ ...termStyle, margin: 0 }}>
+          Review dilakukan berurutan: belum ditinjau, sedang ditinjau, lalu
+          selesai. Catatan tetap dapat diperbarui setelah review selesai.
+        </p>
+
         <label style={{ display: "grid", gap: 6 }}>
           <span style={termStyle}>Catatan review (opsional)</span>
           <textarea
             value={reviewNote}
+            disabled={isBlocked}
             maxLength={REVIEW_NOTE_MAX_LENGTH}
             rows={4}
-            onChange={(event) => setReviewNote(event.target.value)}
+            onChange={(event) => {
+              setReviewNote(event.target.value);
+              onEdit();
+            }}
             style={{
               padding: 12,
               borderRadius: 12,
@@ -224,7 +258,8 @@ export function SafetyAlertDetailPage({
           />
           <span style={{ fontSize: 12, color: "var(--tt-dashboard-text-2)" }}>
             Jangan menulis isi percakapan atau data pribadi pengguna di catatan.
-            ({reviewNote.length}/{REVIEW_NOTE_MAX_LENGTH})
+            Kosongkan untuk menghapus catatan sebelumnya. ({reviewNote.length}/
+            {REVIEW_NOTE_MAX_LENGTH})
           </span>
         </label>
 
@@ -241,7 +276,18 @@ export function SafetyAlertDetailPage({
             {saveError}
           </p>
         ) : null}
-        {isSaved && !saveError ? (
+        {hasConflict ? (
+          <div style={{ display: "grid", gap: 8 }}>
+            <p style={{ ...termStyle, margin: 0 }}>
+              Muat ulang untuk menggunakan data terbaru. Perubahan yang belum
+              tersimpan akan diganti.
+            </p>
+            <button type="button" disabled={isReloading} onClick={onReload}>
+              {isReloading ? "Memuat..." : "Muat ulang alert"}
+            </button>
+          </div>
+        ) : null}
+        {isSaved && !saveError && !isDirty ? (
           <p
             role="status"
             style={{
@@ -258,7 +304,7 @@ export function SafetyAlertDetailPage({
         <div>
           <button
             type="submit"
-            disabled={isSaving || !isDirty}
+            disabled={isBlocked || !isDirty}
             style={{
               minHeight: 44,
               padding: "0 20px",
@@ -266,8 +312,8 @@ export function SafetyAlertDetailPage({
               border: 0,
               fontSize: 14,
               fontWeight: 700,
-              cursor: isSaving || !isDirty ? "not-allowed" : "pointer",
-              opacity: isSaving || !isDirty ? 0.6 : 1,
+              cursor: isBlocked || !isDirty ? "not-allowed" : "pointer",
+              opacity: isBlocked || !isDirty ? 0.6 : 1,
               color: "var(--tt-dashboard-active-text)",
               background: "var(--tt-dashboard-button-bg)",
             }}

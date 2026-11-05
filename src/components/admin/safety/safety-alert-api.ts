@@ -1,11 +1,11 @@
 // Kontrak FE untuk monitoring safety admin (PB34/PB35).
 //
-// Endpoint yang diharapkan dari backend:
+// Endpoint backend:
 //   GET   /api/admin/safety-alerts?status=&riskLevel=&category=&page=&limit=
 //         -> { data: { alerts, total, page, limit } }
 //   GET   /api/admin/safety-alerts/:id        -> { data: { alert } }
 //   PATCH /api/admin/safety-alerts/:id        -> { data: { alert } }
-//         body: { status, reviewNote? }
+//         body: { status, reviewNote?, expectedUpdatedAt }
 //
 // Hanya metadata. Isi percakapan, ringkasan, dan identitas pengguna tidak
 // pernah dikirim ke halaman ini.
@@ -22,6 +22,7 @@ export type AlertCategory = SafetyCategory;
 
 export type SafetyAlertListItem = {
   id: string;
+  anonymousUserId: string;
   riskLevel: AlertRiskLevel;
   category: AlertCategory;
   status: AlertStatus;
@@ -33,6 +34,7 @@ export type SafetyAlertDetail = SafetyAlertListItem & {
   updatedAt: string;
   reviewNote: string | null;
   reviewedByName: string | null;
+  allowedStatuses: AlertStatus[];
 };
 
 export type SafetyAlertList = {
@@ -56,10 +58,7 @@ export const STATUS_OPTIONS: AlertStatus[] = [
   SafetyAlertStatus.RESOLVED,
 ];
 
-export const RISK_OPTIONS: AlertRiskLevel[] = [
-  RiskLevel.HIGH,
-  RiskLevel.ATTENTION,
-];
+export const RISK_OPTIONS: AlertRiskLevel[] = [RiskLevel.HIGH];
 
 export const CATEGORY_OPTIONS = Object.values(SafetyCategory);
 
@@ -90,9 +89,9 @@ export const REVIEW_NOTE_MAX_LENGTH = 1000;
 
 export function buildAlertListUrl(filters: SafetyAlertFilters) {
   const params = new URLSearchParams();
-  if (filters.status !== "all") params.set("status", filters.status);
-  if (filters.riskLevel !== "all") params.set("riskLevel", filters.riskLevel);
-  if (filters.category !== "all") params.set("category", filters.category);
+  params.set("status", filters.status);
+  params.set("riskLevel", filters.riskLevel);
+  params.set("category", filters.category);
   params.set("page", String(filters.page));
   params.set("limit", String(filters.limit));
   return `/api/admin/safety-alerts?${params.toString()}`;
@@ -108,16 +107,18 @@ export function parseAlertFilters(
   const limit = Number(params.get("limit"));
 
   return {
-    status: STATUS_OPTIONS.includes(status as AlertStatus)
-      ? (status as AlertStatus)
-      : "all",
-    riskLevel: RISK_OPTIONS.includes(riskLevel as AlertRiskLevel)
-      ? (riskLevel as AlertRiskLevel)
-      : "all",
+    status:
+      status === "all" || STATUS_OPTIONS.includes(status as AlertStatus)
+        ? (status as SafetyAlertFilters["status"])
+        : "OPEN",
+    riskLevel:
+      riskLevel === "all" || RISK_OPTIONS.includes(riskLevel as AlertRiskLevel)
+        ? (riskLevel as SafetyAlertFilters["riskLevel"])
+        : "HIGH",
     category: CATEGORY_OPTIONS.includes(category as AlertCategory)
       ? (category as AlertCategory)
       : "all",
-    page: Number.isInteger(page) && page > 0 ? page : 1,
+    page: Number.isInteger(page) && page > 0 && page <= 1_000_000 ? page : 1,
     limit:
       Number.isInteger(limit) && limit > 0 && limit <= 50
         ? limit
@@ -125,25 +126,66 @@ export function parseAlertFilters(
   };
 }
 
+export class SafetyAlertApiError extends Error {
+  constructor(public readonly status: number) {
+    super(
+      status === 401
+        ? "Sesi sudah berakhir. Silakan masuk kembali."
+        : status === 403
+          ? "Halaman ini hanya dapat diakses oleh admin."
+          : status === 404
+            ? "Alert tidak ditemukan atau sudah tidak tersedia."
+            : status === 409
+              ? "Alert telah diperbarui atau status sudah berubah. Muat ulang alert sebelum menyimpan lagi."
+              : status === 400
+                ? "Data tidak valid. Periksa status dan panjang catatan review."
+                : status === 503
+                  ? "Monitoring safety sedang tidak tersedia. Coba lagi beberapa saat."
+                  : "Permintaan gagal. Periksa koneksi lalu coba lagi.",
+    );
+    this.name = "SafetyAlertApiError";
+  }
+}
+
+export function safetyErrorMessage(error: unknown) {
+  return error instanceof SafetyAlertApiError
+    ? error.message
+    : "Permintaan gagal. Periksa koneksi lalu coba lagi.";
+}
+
 export async function fetchSafetyAlerts(
   filters: SafetyAlertFilters,
+  signal?: AbortSignal,
 ): Promise<SafetyAlertList> {
-  const res = await fetch(buildAlertListUrl(filters));
-  if (!res.ok) throw new Error("Failed to fetch safety alerts");
+  const res = await fetch(buildAlertListUrl(filters), {
+    cache: "no-store",
+    signal,
+  });
+  if (!res.ok) throw new SafetyAlertApiError(res.status);
   const json = (await res.json()) as { data: SafetyAlertList };
   return json.data;
 }
 
-export async function fetchSafetyAlert(id: string): Promise<SafetyAlertDetail> {
-  const res = await fetch(`/api/admin/safety-alerts/${encodeURIComponent(id)}`);
-  if (!res.ok) throw new Error("Failed to fetch safety alert");
+export async function fetchSafetyAlert(
+  id: string,
+  signal?: AbortSignal,
+): Promise<SafetyAlertDetail> {
+  const res = await fetch(
+    `/api/admin/safety-alerts/${encodeURIComponent(id)}`,
+    { cache: "no-store", signal },
+  );
+  if (!res.ok) throw new SafetyAlertApiError(res.status);
   const json = (await res.json()) as { data: { alert: SafetyAlertDetail } };
   return json.data.alert;
 }
 
 export async function updateSafetyAlert(
   id: string,
-  input: { status: AlertStatus; reviewNote?: string },
+  input: {
+    status: AlertStatus;
+    reviewNote?: string | null;
+    expectedUpdatedAt: string;
+  },
 ): Promise<SafetyAlertDetail> {
   const res = await fetch(
     `/api/admin/safety-alerts/${encodeURIComponent(id)}`,
@@ -153,7 +195,7 @@ export async function updateSafetyAlert(
       body: JSON.stringify(input),
     },
   );
-  if (!res.ok) throw new Error("Failed to update safety alert");
+  if (!res.ok) throw new SafetyAlertApiError(res.status);
   const json = (await res.json()) as { data: { alert: SafetyAlertDetail } };
   return json.data.alert;
 }

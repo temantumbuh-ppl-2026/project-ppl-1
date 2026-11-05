@@ -43,17 +43,30 @@ export function encrypt(text: string): string {
   }
 }
 
-export function decrypt(hash: string): string {
-  if (!hash || typeof hash !== "string") return hash;
+export function decrypt(
+  hash: string,
+  { allowLegacyPlaintext = true }: { allowLegacyPlaintext?: boolean } = {},
+): string {
+  if (!hash || typeof hash !== "string") {
+    if (!allowLegacyPlaintext) throw new EncryptionError();
+    return hash;
+  }
 
   const parts = hash.split(":");
   if (parts.length !== 3) {
-    // Return original if it's not encrypted (e.g. old unencrypted messages)
+    if (!allowLegacyPlaintext) throw new EncryptionError();
+    // Compatibility is limited to historical fields that allow plaintext.
     return hash;
   }
 
   try {
     const [ivStr, authTagStr, encryptedStr] = parts;
+    if (
+      parts.some(
+        (part) => Buffer.from(part, "base64").toString("base64") !== part,
+      )
+    )
+      throw new EncryptionError();
     const iv = Buffer.from(ivStr, "base64");
     const authTag = Buffer.from(authTagStr, "base64");
     if (iv.length !== 12 || authTag.length !== 16) {

@@ -93,7 +93,6 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Diary chat stream POST error:", {
       name: error instanceof Error ? error.name : typeof error,
-      message: error instanceof Error ? error.message : undefined,
     });
 
     if (error instanceof DiaryServiceError) {
