@@ -100,5 +100,20 @@ describe("lib/encryption", () => {
       const decrypted = decrypt(encrypted);
       expect(decrypted).toBe("");
     });
+    it("strict mode menolak plaintext, input kosong, dan base64 yang dimodifikasi", () => {
+      expect(() =>
+        decrypt("catatan review", { allowLegacyPlaintext: false }),
+      ).toThrow(EncryptionError);
+      expect(() => decrypt("", { allowLegacyPlaintext: false })).toThrow(
+        EncryptionError,
+      );
+      const encrypted = encrypt("catatan review");
+      expect(() =>
+        decrypt(`${encrypted}!`, { allowLegacyPlaintext: false }),
+      ).toThrow(EncryptionError);
+      expect(decrypt(encrypted, { allowLegacyPlaintext: false })).toBe(
+        "catatan review",
+      );
+    });
   });
 });

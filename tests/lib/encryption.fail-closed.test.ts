@@ -47,9 +47,7 @@ describe("lib/encryption.fail-closed", () => {
   it("throws instead of returning plaintext when ENCRYPTION_KEY is invalid", () => {
     vi.stubEnv("ENCRYPTION_KEY", "abcd");
 
-    expect(() => encrypt("jangan simpan plaintext")).toThrow(
-      "ENCRYPTION_KEY must be a 32-byte hex string",
-    );
+    expect(() => encrypt("jangan simpan plaintext")).toThrow(EncryptionError);
   });
 
   it("keeps decrypt backward-compatible for old plaintext values", () => {
@@ -58,11 +56,11 @@ describe("lib/encryption.fail-closed", () => {
     );
   });
 
-  it("returns the original hash when decryption fails", () => {
+  it("throws instead of returning ciphertext when decryption fails", () => {
     const encrypted = encrypt("data penting");
 
     vi.stubEnv("ENCRYPTION_KEY", "b".repeat(64));
 
-    expect(decrypt(encrypted)).toBe(encrypted);
+    expect(() => decrypt(encrypted)).toThrow(EncryptionError);
   });
 });
