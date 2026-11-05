@@ -21,6 +21,8 @@ type Props = {
   total: number;
   filters: SafetyAlertFilters;
   onFilterChange: (patch: Partial<SafetyAlertFilters>) => void;
+  isRefreshing: boolean;
+  onRefresh: () => void;
 };
 
 const card: React.CSSProperties = {
@@ -72,6 +74,8 @@ export function SafetyAlertsPage({
   total,
   filters,
   onFilterChange,
+  isRefreshing,
+  onRefresh,
 }: Props) {
   const totalPages = Math.max(1, Math.ceil(total / filters.limit));
   const hasFilter =
@@ -96,8 +100,9 @@ export function SafetyAlertsPage({
           color: "var(--tt-dashboard-text-2)",
         }}
       >
-        Halaman ini hanya menampilkan metadata alert. Isi percakapan dan
-        identitas pengguna sengaja tidak ditampilkan.
+        Halaman ini menampilkan metadata alert berisiko tinggi (HIGH) dan
+        identifier anonim. Isi percakapan dan identitas pengguna tidak
+        ditampilkan.
       </p>
 
       <form
@@ -144,7 +149,7 @@ export function SafetyAlertsPage({
               })
             }
           >
-            <option value="all">Semua risiko</option>
+            <option value="all">Semua risiko alert (HIGH)</option>
             {RISK_OPTIONS.map((level) => (
               <option key={level} value={level}>
                 {RISK_LABELS[level]}
@@ -192,6 +197,14 @@ export function SafetyAlertsPage({
             Reset filter
           </button>
         ) : null}
+        <button
+          type="button"
+          disabled={isRefreshing}
+          onClick={onRefresh}
+          style={{ ...selectStyle, cursor: isRefreshing ? "wait" : "pointer" }}
+        >
+          {isRefreshing ? "Memuat..." : "Muat ulang"}
+        </button>
       </form>
 
       {alerts.length === 0 ? (
@@ -253,6 +266,9 @@ export function SafetyAlertsPage({
               <thead>
                 <tr>
                   <th scope="col" style={headStyle}>
+                    Identifier anonim
+                  </th>
+                  <th scope="col" style={headStyle}>
                     Waktu
                   </th>
                   <th scope="col" style={headStyle}>
@@ -282,6 +298,9 @@ export function SafetyAlertsPage({
               <tbody>
                 {alerts.map((alert) => (
                   <tr key={alert.id}>
+                    <td style={{ ...cellStyle, overflowWrap: "anywhere" }}>
+                      {alert.anonymousUserId}
+                    </td>
                     <td style={cellStyle}>
                       {formatAlertDate(alert.createdAt)}
                     </td>
@@ -316,45 +335,44 @@ export function SafetyAlertsPage({
               </tbody>
             </table>
           </div>
-
-          <nav
-            aria-label="Paginasi"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-              padding: "12px 16px",
-              borderTop: "1px solid var(--tt-dashboard-card-border)",
-              fontSize: 13,
-              color: "var(--tt-dashboard-text-2)",
-            }}
-          >
-            <span>
-              {total.toLocaleString("id-ID")} alert · Halaman {filters.page}{" "}
-              dari {totalPages}
-            </span>
-            <span style={{ display: "flex", gap: 8 }}>
-              <button
-                type="button"
-                style={{ ...selectStyle, cursor: "pointer" }}
-                disabled={filters.page <= 1}
-                onClick={() => onFilterChange({ page: filters.page - 1 })}
-              >
-                Sebelumnya
-              </button>
-              <button
-                type="button"
-                style={{ ...selectStyle, cursor: "pointer" }}
-                disabled={filters.page >= totalPages}
-                onClick={() => onFilterChange({ page: filters.page + 1 })}
-              >
-                Berikutnya
-              </button>
-            </span>
-          </nav>
         </div>
       )}
+      <nav
+        aria-label="Paginasi"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          padding: "12px 16px",
+          borderTop: "1px solid var(--tt-dashboard-card-border)",
+          fontSize: 13,
+          color: "var(--tt-dashboard-text-2)",
+        }}
+      >
+        <span>
+          {total.toLocaleString("id-ID")} alert · Halaman {filters.page} dari{" "}
+          {totalPages}
+        </span>
+        <span style={{ display: "flex", gap: 8 }}>
+          <button
+            type="button"
+            style={{ ...selectStyle, cursor: "pointer" }}
+            disabled={filters.page <= 1}
+            onClick={() => onFilterChange({ page: filters.page - 1 })}
+          >
+            Sebelumnya
+          </button>
+          <button
+            type="button"
+            style={{ ...selectStyle, cursor: "pointer" }}
+            disabled={filters.page >= totalPages}
+            onClick={() => onFilterChange({ page: filters.page + 1 })}
+          >
+            Berikutnya
+          </button>
+        </span>
+      </nav>
     </div>
   );
 }
