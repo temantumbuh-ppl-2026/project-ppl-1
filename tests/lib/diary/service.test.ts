@@ -7,13 +7,15 @@ const { mockPrisma, mockTx } = vi.hoisted(() => {
       count: vi.fn(),
       create: vi.fn(),
       update: vi.fn(),
+      findFirst: vi.fn(),
     },
     diaryMessage: {
       count: vi.fn(),
       create: vi.fn(),
+      findUnique: vi.fn(),
     },
     safetyAlert: {
-      create: vi.fn(),
+      upsert: vi.fn(),
     },
   };
 
@@ -35,6 +37,7 @@ const { mockPrisma, mockTx } = vi.hoisted(() => {
         count: vi.fn(),
         create: vi.fn(),
         findMany: vi.fn(),
+        findUnique: vi.fn(),
       },
     },
   };
@@ -135,7 +138,20 @@ describe("lib/diary/service", () => {
 
       return Promise.resolve(arg);
     });
-    mockTx.$queryRaw.mockResolvedValue([{ riskLevel: RiskLevel.NONE }]);
+    mockTx.$queryRaw.mockResolvedValue([
+      {
+        id: "diary-1",
+        date: todayDate,
+        topics: [DiaryTopic.KELUARGA],
+        conversationState: ConversationState.EXPLORATION,
+        conversationSummary: null,
+        riskLevel: RiskLevel.NONE,
+      },
+    ]);
+    mockTx.diary.findFirst.mockReset().mockResolvedValue(null);
+    mockTx.diaryMessage.findUnique.mockReset().mockResolvedValue(null);
+    mockPrisma.diaryMessage.findUnique.mockReset().mockResolvedValue(null);
+    mockTx.diaryMessage.count.mockReset().mockResolvedValue(0);
   });
 
   afterEach(() => {
@@ -602,14 +618,17 @@ describe("lib/diary/service", () => {
         }),
       }),
     );
-    expect(mockTx.safetyAlert.create).toHaveBeenCalledWith({
-      data: {
+    expect(mockTx.safetyAlert.upsert).toHaveBeenCalledWith({
+      where: { triggerMessageId: "user-message" },
+      create: {
         diaryId: "diary-1",
         triggerMessageId: "user-message",
         riskLevel: RiskLevel.HIGH,
         category: "SELF_HARM",
         summary: "encrypted:Pengguna menyebut niat menyakiti diri.",
       },
+      update: {},
+      select: { id: true },
     });
     expect(result.conversation).toMatchObject({
       topics: output.topics,
@@ -619,6 +638,16 @@ describe("lib/diary/service", () => {
   });
 
   it("mengganti topik lama dan mempertahankan risiko tertinggi pada diary existing", async () => {
+    mockTx.$queryRaw.mockResolvedValue([
+      {
+        id: "diary-1",
+        date: todayDate,
+        topics: [DiaryTopic.KELUARGA],
+        conversationState: ConversationState.EXPLORATION,
+        conversationSummary: null,
+        riskLevel: RiskLevel.HIGH,
+      },
+    ]);
     mockTx.diary.update.mockResolvedValue({ id: "diary-1", date: todayDate });
     mockTx.diaryMessage.create
       .mockResolvedValueOnce({
@@ -666,10 +695,20 @@ describe("lib/diary/service", () => {
       },
       select: { id: true, date: true },
     });
-    expect(mockTx.safetyAlert.create).not.toHaveBeenCalled();
+    expect(mockTx.safetyAlert.upsert).not.toHaveBeenCalled();
   });
 
   it("menyimpan rangkuman internal terenkripsi bersama state dan pesan", async () => {
+    mockTx.$queryRaw.mockResolvedValue([
+      {
+        id: "diary-1",
+        date: todayDate,
+        topics: [DiaryTopic.KELUARGA],
+        conversationState: ConversationState.CLARIFICATION,
+        conversationSummary: null,
+        riskLevel: RiskLevel.NONE,
+      },
+    ]);
     mockTx.diary.update.mockResolvedValue({ id: "diary-1", date: todayDate });
     mockTx.diaryMessage.create
       .mockResolvedValueOnce({
@@ -722,6 +761,17 @@ describe("lib/diary/service", () => {
   });
 
   it("menyimpan dua pilihan tindakan terenkripsi ketika pengguna meminta langkah", async () => {
+    mockTx.$queryRaw.mockResolvedValue([
+      {
+        id: "diary-1",
+        date: todayDate,
+        topics: [DiaryTopic.KELUARGA],
+        conversationState: ConversationState.EXPLORATION,
+        conversationSummary:
+          "encrypted:Aku bertengkar dengan ibu setelah pulang sekolah.",
+        riskLevel: RiskLevel.NONE,
+      },
+    ]);
     mockTx.diary.update.mockResolvedValue({ id: "diary-1", date: todayDate });
     mockTx.diaryMessage.create
       .mockResolvedValueOnce({
@@ -784,7 +834,7 @@ describe("lib/diary/service", () => {
   });
 
   it("ensureDiaryShellFromMood memakai diary existing atau membuat shell baru", async () => {
-    mockPrisma.diary.findFirst.mockResolvedValueOnce({
+    mockTx.diary.findFirst.mockResolvedValueOnce({
       id: "existing",
       messages: [{ id: "m1" }],
     });
@@ -798,8 +848,8 @@ describe("lib/diary/service", () => {
       }),
     );
 
-    mockPrisma.diary.findFirst.mockResolvedValueOnce(null);
-    mockPrisma.diary.create.mockResolvedValueOnce({ id: "created" });
+    mockTx.diary.findFirst.mockResolvedValueOnce(null);
+    mockTx.diary.create.mockResolvedValueOnce({ id: "created" });
 
     await expect(
       ensureDiaryShellFromMood({ userId: "user-1", timezone: "" }),
@@ -815,6 +865,7 @@ describe("lib/diary/service", () => {
     mockPrisma.diaryMessage.count.mockResolvedValueOnce(1);
 
     await generateDiaryGreetingFromMood({
+      moodLogId: "mood-1",
       userId: "user-1",
       moodScore: 5,
       notes: "",
@@ -837,6 +888,7 @@ describe("lib/diary/service", () => {
     });
 
     await generateDiaryGreetingFromMood({
+      moodLogId: "mood-1",
       userId: "user-1",
       moodScore: 2,
       notes: "Capek belajar",
@@ -878,6 +930,7 @@ describe("lib/diary/service", () => {
 
     await expect(
       generateDiaryGreetingFromMood({
+        moodLogId: "mood-1",
         userId: "user-1",
         moodScore: 99,
         notes: "",
@@ -901,6 +954,7 @@ describe("lib/diary/service", () => {
     mockTx.diaryMessage.count.mockResolvedValueOnce(1);
 
     await generateDiaryGreetingFromMood({
+      moodLogId: "mood-1",
       userId: "user-1",
       moodScore: 3,
       notes: "",
@@ -915,12 +969,13 @@ describe("lib/diary/service", () => {
   });
 
   it("initiateDiaryFromMood hanya generate greeting saat shell kosong", async () => {
-    mockPrisma.diary.findFirst.mockResolvedValueOnce({
+    mockTx.diary.findFirst.mockResolvedValueOnce({
       id: "existing",
       messages: [{ id: "m1" }],
     });
 
     await initiateDiaryFromMood({
+      moodLogId: "mood-1",
       userId: "user-1",
       moodScore: 3,
       notes: "",
@@ -1067,7 +1122,305 @@ describe("lib/diary/service", () => {
       proactiveSuggestion: null,
       actionOptions: [],
     });
-    expect(mockTx.safetyAlert.create).toHaveBeenCalledTimes(1);
+    expect(mockTx.safetyAlert.upsert).toHaveBeenCalledTimes(1);
+  });
+
+  it("hasil lama tidak menurunkan HIGH atau mengembalikan opsi tindakan", async () => {
+    mockTx.$queryRaw.mockResolvedValue([
+      {
+        id: "diary-1",
+        date: todayDate,
+        topics: [DiaryTopic.KELUARGA],
+        conversationState: ConversationState.REFLECTION,
+        conversationSummary: "encrypted:Konteks yang tersimpan lebih baru.",
+        riskLevel: RiskLevel.HIGH,
+      },
+    ]);
+    mockTx.diary.update.mockResolvedValue({ id: "diary-1", date: todayDate });
+    mockTx.diaryMessage.create
+      .mockResolvedValueOnce({
+        id: "user-message",
+        senderType: Sender.USER,
+        createdAt: today,
+      })
+      .mockResolvedValueOnce({
+        id: "ai-message",
+        senderType: Sender.AI,
+        createdAt: today,
+      });
+    mockTx.diary.count.mockResolvedValue(1);
+    const result = await persistDiaryChatSession({
+      session: createSession({
+        trimmedText: "Aku ingin membahas pilihan langkah.",
+        diary: {
+          id: "diary-1",
+          date: todayDate,
+          topics: [DiaryTopic.KELUARGA],
+          conversationState: ConversationState.EXPLORATION,
+          conversationSummary: "Konteks lama.",
+          riskLevel: RiskLevel.NONE,
+        },
+      }),
+      assistantText: structuredOutput.reply,
+      assistantOutput: {
+        ...structuredOutput,
+        conversationState: ConversationState.ACTION,
+        actionOptions: ["Tulis rencana.", "Buat jadwal."],
+      },
+    });
+    expect(result.conversation).toMatchObject({
+      riskLevel: RiskLevel.HIGH,
+      safetyFlag: true,
+      actionOptions: [],
+      proactiveSuggestion: null,
+    });
+    expect(mockTx.diary.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          riskLevel: RiskLevel.HIGH,
+          conversationSummary: "encrypted:Konteks yang tersimpan lebih baru.",
+        }),
+      }),
+    );
+    expect(mockTx.safetyAlert.upsert).not.toHaveBeenCalled();
+  });
+
+  it("memakai diary yang dibuat request lain sebelum membuat diary hari ini", async () => {
+    mockTx.diary.findFirst.mockResolvedValue({ id: "diary-1" });
+    mockTx.diary.update.mockResolvedValue({ id: "diary-1", date: todayDate });
+    mockTx.diaryMessage.create
+      .mockResolvedValueOnce({
+        id: "user-message",
+        senderType: Sender.USER,
+        createdAt: today,
+      })
+      .mockResolvedValueOnce({
+        id: "ai-message",
+        senderType: Sender.AI,
+        createdAt: today,
+      });
+    mockTx.diary.count.mockResolvedValue(1);
+    await persistDiaryChatSession({
+      session: createSession(),
+      assistantText: structuredOutput.reply,
+      assistantOutput: structuredOutput,
+    });
+    expect(mockTx.diary.create).not.toHaveBeenCalled();
+    const calls = mockTx.$queryRaw.mock.calls;
+    expect(calls[0][0].join("")).toContain("pg_advisory_xact_lock");
+    expect(calls[0][1]).toBe("diary:user-1:2026-05-23");
+    expect(calls[1][0].join("")).toContain("FOR UPDATE");
+    expect(calls[1].slice(1)).toEqual(["diary-1", "user-1"]);
+  });
+
+  it("menolak diary yang hilang atau tidak lagi dimiliki saat penyimpanan", async () => {
+    mockTx.$queryRaw.mockResolvedValue([]);
+    await expect(
+      persistDiaryChatSession({
+        session: createSession({
+          diary: {
+            id: "diary-1",
+            date: todayDate,
+            topics: [],
+            conversationState: ConversationState.EXPLORATION,
+            conversationSummary: null,
+            riskLevel: RiskLevel.NONE,
+          },
+        }),
+        assistantText: structuredOutput.reply,
+        assistantOutput: structuredOutput,
+      }),
+    ).rejects.toMatchObject({ code: "SESSION_NOT_FOUND", status: 404 });
+    expect(mockTx.diaryMessage.create).not.toHaveBeenCalled();
+    expect(mockTx.diary.update).not.toHaveBeenCalled();
+  });
+
+  it("tidak mengembalikan keberhasilan jika pencatatan alert gagal di transaksi yang sama", async () => {
+    mockTx.diary.create.mockResolvedValue({ id: "diary-1", date: todayDate });
+    mockTx.diaryMessage.create
+      .mockResolvedValueOnce({
+        id: "user-message",
+        senderType: Sender.USER,
+        createdAt: today,
+      })
+      .mockResolvedValueOnce({
+        id: "ai-message",
+        senderType: Sender.AI,
+        createdAt: today,
+      });
+    mockTx.safetyAlert.upsert.mockRejectedValueOnce(
+      new Error("alert storage failed"),
+    );
+    await expect(
+      persistDiaryChatSession({
+        session: createSession(),
+        assistantText: structuredOutput.reply,
+        assistantOutput: {
+          ...structuredOutput,
+          safety: {
+            flag: true,
+            riskLevel: RiskLevel.HIGH,
+            category: "SELF_HARM",
+            summary: "Bahaya aktif terhadap diri.",
+          },
+        },
+      }),
+    ).rejects.toThrow("alert storage failed");
+    expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(mockPrisma.diary.create).not.toHaveBeenCalled();
+    expect(mockPrisma.diaryMessage.create).not.toHaveBeenCalled();
+  });
+
+  it.each([RiskLevel.HIGH, RiskLevel.ATTENTION])(
+    "mencatat catatan mood %s meskipun chat telah dimulai",
+    async (riskLevel) => {
+      mockPrisma.diaryMessage.count.mockResolvedValue(1);
+      mockPrisma.user.findUnique.mockResolvedValue({ name: "Ruri" });
+      mockPrisma.diary.findFirst.mockResolvedValue({
+        topics: [DiaryTopic.KELUARGA],
+        conversationState: ConversationState.REFLECTION,
+      });
+      mockTx.diaryMessage.count.mockResolvedValue(1);
+      mockGenerateDiaryStructuredReply.mockResolvedValueOnce({
+        ...structuredOutput,
+        safety: {
+          flag: true,
+          riskLevel,
+          category: "DOMESTIC_VIOLENCE",
+          summary: "Keselamatan di rumah perlu diperhatikan.",
+        },
+      });
+      const notes = "Aku merasa tidak aman di rumah.";
+      await generateDiaryGreetingFromMood({
+        userId: "user-1",
+        moodLogId: "mood-safety",
+        moodScore: 1,
+        notes,
+        timezone: "Asia/Jakarta",
+        diaryId: "diary-1",
+        todayDate,
+      });
+      expect(mockGenerateDiaryStructuredReply).toHaveBeenCalledTimes(1);
+      expect(mockTx.diaryMessage.create).toHaveBeenCalledWith({
+        data: {
+          id: "mood-note:mood-safety",
+          diaryId: "diary-1",
+          senderType: Sender.USER,
+          content: `encrypted:${notes}`,
+        },
+      });
+      expect(mockTx.diaryMessage.create).toHaveBeenCalledTimes(2);
+      const data = mockTx.diary.update.mock.calls[0][0].data;
+      expect(data).toMatchObject({
+        safetyFlag: true,
+        riskLevel,
+        actionOptions: null,
+        proactiveSuggestion: null,
+      });
+      expect(data).not.toHaveProperty("topics");
+      expect(data).not.toHaveProperty("conversationSummary");
+      if (riskLevel === RiskLevel.HIGH) {
+        expect(mockTx.safetyAlert.upsert).toHaveBeenCalledWith({
+          where: { triggerMessageId: "mood-note:mood-safety" },
+          create: {
+            diaryId: "diary-1",
+            triggerMessageId: "mood-note:mood-safety",
+            riskLevel: RiskLevel.HIGH,
+            category: "DOMESTIC_VIOLENCE",
+            summary: "encrypted:Keselamatan di rumah perlu diperhatikan.",
+          },
+          update: {},
+          select: { id: true },
+        });
+      } else {
+        expect(mockTx.safetyAlert.upsert).not.toHaveBeenCalled();
+      }
+    },
+  );
+
+  it("tidak mengulang generation untuk mood berisiko yang sudah tersimpan", async () => {
+    mockPrisma.diaryMessage.count.mockResolvedValue(2);
+    mockPrisma.diaryMessage.findUnique.mockResolvedValue({
+      id: "mood-note:mood-1",
+    });
+    await generateDiaryGreetingFromMood({
+      userId: "user-1",
+      moodLogId: "mood-1",
+      moodScore: 1,
+      notes: "Aku merasa tidak aman.",
+      timezone: "Asia/Jakarta",
+      diaryId: "diary-1",
+      todayDate,
+    });
+    expect(mockGenerateDiaryStructuredReply).not.toHaveBeenCalled();
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("mencegah dua background task menulis pemicu mood yang sama", async () => {
+    mockPrisma.diaryMessage.count.mockResolvedValue(0);
+    mockPrisma.user.findUnique.mockResolvedValue({ name: "Ruri" });
+    mockPrisma.diary.findFirst.mockResolvedValue({
+      topics: [],
+      conversationState: ConversationState.EXPLORATION,
+    });
+    mockGenerateDiaryStructuredReply.mockResolvedValueOnce({
+      ...structuredOutput,
+      safety: {
+        flag: true,
+        riskLevel: RiskLevel.HIGH,
+        category: "SELF_HARM",
+        summary: "Ada indikasi bahaya aktif.",
+      },
+    });
+    mockTx.diaryMessage.findUnique.mockResolvedValue({
+      id: "mood-note:mood-1",
+    });
+    await generateDiaryGreetingFromMood({
+      userId: "user-1",
+      moodLogId: "mood-1",
+      moodScore: 1,
+      notes: "Aku merasa tidak aman.",
+      timezone: "Asia/Jakarta",
+      diaryId: "diary-1",
+      todayDate,
+    });
+    expect(mockTx.diaryMessage.create).not.toHaveBeenCalled();
+    expect(mockTx.safetyAlert.upsert).not.toHaveBeenCalled();
+    expect(mockTx.diary.update).not.toHaveBeenCalled();
+  });
+
+  it("menolak risiko dari angka mood tanpa catatan dan tidak mencatat isi error", async () => {
+    mockPrisma.diaryMessage.count.mockResolvedValue(0);
+    mockPrisma.user.findUnique.mockResolvedValue({ name: "Ruri" });
+    mockPrisma.diary.findFirst.mockResolvedValue({
+      topics: [],
+      conversationState: ConversationState.EXPLORATION,
+    });
+    mockGenerateDiaryStructuredReply.mockResolvedValueOnce({
+      ...structuredOutput,
+      safety: {
+        flag: true,
+        riskLevel: RiskLevel.HIGH,
+        category: "SELF_HARM",
+        summary: "Alasan model tanpa catatan pengguna.",
+      },
+    });
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    await generateDiaryGreetingFromMood({
+      userId: "user-1",
+      moodLogId: "mood-1",
+      moodScore: 1,
+      notes: "",
+      timezone: "Asia/Jakarta",
+      diaryId: "diary-1",
+      todayDate,
+    });
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+    expect(spy).toHaveBeenCalledWith("Gagal menginisiasi diary dari mood.", {
+      code: "AI_OUTPUT_INVALID",
+      status: 502,
+    });
+    spy.mockRestore();
   });
 
   it("starter dan jawaban lanjutan memakai riwayat sesi serta memperbarui topik", async () => {
