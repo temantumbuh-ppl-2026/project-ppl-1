@@ -58,7 +58,6 @@ describe("Admin API Routes", () => {
     vi.clearAllMocks();
     mockHeaders.mockResolvedValue(new Headers());
     vi.stubEnv("ENCRYPTION_KEY", "a".repeat(64));
-    vi.stubEnv("SAFETY_PSEUDONYM_KEY", "c".repeat(64));
     mockPrisma.$transaction.mockImplementation((input) =>
       typeof input === "function" ? input(mockPrisma) : Promise.all(input),
     );
@@ -93,7 +92,10 @@ describe("Admin API Routes", () => {
       reviewedAt: null,
       reviewNote: null,
       reviewedBy: null,
-      diary: { userId: "private-user-id" },
+      diary: {
+        userId: "private-user-id",
+        user: { email: "student@example.invalid", name: "Private User" },
+      },
       summary: "PRIVATE_SUMMARY",
       content: "PRIVATE_CONVERSATION",
       user: { name: "Private User", email: "private@example.invalid" },
@@ -138,11 +140,14 @@ describe("Admin API Routes", () => {
       },
     );
 
-    it("mengembalikan daftar metadata dan alias stabil tanpa data percakapan", async () => {
+    it("mengembalikan email pemilik alert tanpa data percakapan atau profil lainnya", async () => {
       mockPrisma.safetyAlert.findMany.mockResolvedValue([
         row(),
         row({ id: "alert-2" }),
-        row({ id: "alert-3", diary: { userId: "another-private-user" } }),
+        row({
+          id: "alert-3",
+          diary: { user: { email: "another@example.invalid" } },
+        }),
       ]);
       mockPrisma.safetyAlert.count.mockResolvedValue(3);
       const response = await GET_SAFETY(
@@ -154,15 +159,16 @@ describe("Admin API Routes", () => {
       expect(response.headers.get("Cache-Control")).toContain("no-store");
       const body = await response.json();
       expect(body.data).toMatchObject({ total: 3, page: 2, limit: 5 });
-      expect(body.data.alerts[0].anonymousUserId).toMatch(/^TT-[0-9a-f]{24}$/);
-      expect(body.data.alerts[0].anonymousUserId).toBe(
-        body.data.alerts[1].anonymousUserId,
-      );
-      expect(body.data.alerts[2].anonymousUserId).not.toBe(
-        body.data.alerts[0].anonymousUserId,
-      );
+      expect(
+        body.data.alerts.map((alert: { userEmail: string }) => alert.userEmail),
+      ).toEqual([
+        "student@example.invalid",
+        "student@example.invalid",
+        "another@example.invalid",
+      ]);
+      expect(body.data.alerts[0]).not.toHaveProperty("anonymousUserId");
       expect(JSON.stringify(body)).not.toMatch(
-        /PRIVATE_|private-user|Private User|private@example|summary|content|diary|email/,
+        /PRIVATE_|private-user|Private User|private@example|summary|content|diary/,
       );
       expect(mockPrisma.safetyAlert.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -173,6 +179,9 @@ describe("Admin API Routes", () => {
         }),
       );
       const select = mockPrisma.safetyAlert.findMany.mock.calls[0][0].select;
+      expect(select.diary).toEqual({
+        select: { user: { select: { email: true } } },
+      });
       expect(select).not.toHaveProperty("summary");
       expect(select).not.toHaveProperty("triggerMessage");
       expect(select).not.toHaveProperty("reviewNote");
@@ -237,6 +246,7 @@ describe("Admin API Routes", () => {
       const response = await GET_SAFETY_DETAIL(request(), context());
       const body = await response.json();
       expect(body.data.alert).toMatchObject({
+        userEmail: "student@example.invalid",
         reviewNote: "Tinjauan administratif.",
         reviewedByName: "Reviewer",
         allowedStatuses: ["REVIEWED", "RESOLVED"],
@@ -320,7 +330,10 @@ describe("Admin API Routes", () => {
       expect(
         decrypt(saved.data.reviewNote, { allowLegacyPlaintext: false }),
       ).toBe(note);
-      expect((await response.json()).data.alert.reviewNote).toBe(note);
+      expect((await response.json()).data.alert).toMatchObject({
+        userEmail: "student@example.invalid",
+        reviewNote: note,
+      });
     });
     it("menerima catatan tepat 1000 karakter sesuai kontrak frontend", async () => {
       const note = "a".repeat(1000);
@@ -455,17 +468,6 @@ describe("Admin API Routes", () => {
         ).status,
       ).toBe(503);
       expect(mockPrisma.safetyAlert.updateMany).not.toHaveBeenCalled();
-    });
-    it("tidak mengganti pseudonym dengan identitas user saat konfigurasi hilang", async () => {
-      vi.stubEnv("SAFETY_PSEUDONYM_KEY", "");
-      mockPrisma.safetyAlert.findMany.mockResolvedValue([row()]);
-      const response = await GET_SAFETY(
-        new Request("http://localhost/api/admin/safety-alerts"),
-      );
-      expect(response.status).toBe(503);
-      expect(JSON.stringify(await response.json())).not.toContain(
-        "private-user-id",
-      );
     });
   });
 

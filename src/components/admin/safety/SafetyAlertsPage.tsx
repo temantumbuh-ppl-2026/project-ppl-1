@@ -100,9 +100,9 @@ export function SafetyAlertsPage({
           color: "var(--tt-dashboard-text-2)",
         }}
       >
-        Halaman ini menampilkan metadata alert berisiko tinggi (HIGH) dan
-        identifier anonim. Isi percakapan dan identitas pengguna tidak
-        ditampilkan.
+        Halaman ini menampilkan metadata alert berisiko tinggi (HIGH) dan email
+        pengguna untuk tindak lanjut oleh admin. Isi percakapan dan ringkasan
+        tidak ditampilkan.
       </p>
 
       <form
@@ -266,7 +266,7 @@ export function SafetyAlertsPage({
               <thead>
                 <tr>
                   <th scope="col" style={headStyle}>
-                    Identifier anonim
+                    Email pengguna
                   </th>
                   <th scope="col" style={headStyle}>
                     Waktu
@@ -299,7 +299,7 @@ export function SafetyAlertsPage({
                 {alerts.map((alert) => (
                   <tr key={alert.id}>
                     <td style={{ ...cellStyle, overflowWrap: "anywhere" }}>
-                      {alert.anonymousUserId}
+                      {alert.userEmail}
                     </td>
                     <td style={cellStyle}>
                       {formatAlertDate(alert.createdAt)}

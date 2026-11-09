@@ -29,7 +29,7 @@ const baseFilters: SafetyAlertFilters = {
 
 const listItem: SafetyAlertListItem = {
   id: "alert-1",
-  anonymousUserId: "TT-0123456789abcdef01234567",
+  userEmail: "student@example.invalid",
   riskLevel: "HIGH",
   category: "SELF_HARM",
   status: "OPEN",
@@ -68,7 +68,7 @@ describe("SafetyAlertsPage", () => {
     ).toBe("/admin/safety/alert-1");
   });
 
-  it("tidak menampilkan kolom identitas pengguna atau isi percakapan", () => {
+  it("menampilkan kolom email pengguna tanpa isi percakapan", () => {
     render(
       <SafetyAlertsPage
         alerts={[listItem]}
@@ -84,14 +84,14 @@ describe("SafetyAlertsPage", () => {
       .getAllByRole("columnheader")
       .map((header) => header.textContent);
     expect(headers).toEqual([
-      "Identifier anonim",
+      "Email pengguna",
       "Waktu",
       "Kategori",
       "Risiko",
       "Status",
       "Aksi",
     ]);
-    expect(screen.queryByText(/email/i)).toBeNull();
+    expect(screen.getByText(listItem.userEmail)).toBeTruthy();
   });
 
   it("menampilkan empty state tanpa alert", () => {
@@ -227,11 +227,11 @@ describe("SafetyAlertDetailPage", () => {
     expect(screen.getByRole("status").textContent).toContain("berhasil");
   });
 
-  it("tidak menampilkan identitas pengguna", () => {
+  it("menampilkan email pengguna tanpa isi percakapan", () => {
     renderDetail();
 
     expect(screen.getByText(/tidak ditampilkan/)).toBeTruthy();
-    expect(screen.queryByText(/email/i)).toBeNull();
+    expect(screen.getByText(listItem.userEmail)).toBeTruthy();
   });
 });
 

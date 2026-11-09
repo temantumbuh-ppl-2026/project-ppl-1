@@ -7,8 +7,8 @@
 //   PATCH /api/admin/safety-alerts/:id        -> { data: { alert } }
 //         body: { status, reviewNote?, expectedUpdatedAt }
 //
-// Hanya metadata. Isi percakapan, ringkasan, dan identitas pengguna tidak
-// pernah dikirim ke halaman ini.
+// Metadata alert dan email akun untuk tindak lanjut oleh admin.
+// Isi percakapan dan ringkasan tidak dikirim ke halaman ini.
 
 import {
   RiskLevel,
@@ -22,7 +22,7 @@ export type AlertCategory = SafetyCategory;
 
 export type SafetyAlertListItem = {
   id: string;
-  anonymousUserId: string;
+  userEmail: string;
   riskLevel: AlertRiskLevel;
   category: AlertCategory;
   status: AlertStatus;

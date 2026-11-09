@@ -1,4 +1,3 @@
-import { createHmac } from "node:crypto";
 import {
   RiskLevel,
   SafetyAlertStatus,
@@ -26,8 +25,8 @@ const listSelect = {
   status: true,
   createdAt: true,
   reviewedAt: true,
-  // This internal ID is used only to construct a pseudonym, never returned.
-  diary: { select: { userId: true } },
+  // Admins can identify the account for follow-up without reading its diary.
+  diary: { select: { user: { select: { email: true } } } },
 } satisfies Prisma.SafetyAlertSelect;
 
 const detailSelect = {
@@ -42,23 +41,11 @@ type AlertDetailRow = Prisma.SafetyAlertGetPayload<{
   select: typeof detailSelect;
 }>;
 
-function anonymousUserId(userId: string) {
-  const secret = process.env.SAFETY_PSEUDONYM_KEY ?? "";
-  if (!/^[0-9a-fA-F]{64}$/.test(secret)) {
-    throw new SafetyAlertError(
-      503,
-      "SAFETY_CONFIGURATION_UNAVAILABLE",
-      "Monitoring safety sedang tidak tersedia.",
-    );
-  }
-  return `TT-${createHmac("sha256", Buffer.from(secret, "hex")).update(`safety-user:${userId}`).digest("hex").slice(0, 24)}`;
-}
-
 function toListItem(row: AlertRow) {
   // Explicit projection also protects responses if a query is extended later.
   return {
     id: row.id,
-    anonymousUserId: anonymousUserId(row.diary.userId),
+    userEmail: row.diary.user.email,
     riskLevel: row.riskLevel,
     category: row.category,
     status: row.status,

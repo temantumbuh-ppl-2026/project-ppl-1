@@ -112,8 +112,8 @@ export function SafetyAlertDetailPage({
             color: "var(--tt-dashboard-text-2)",
           }}
         >
-          Isi percakapan dan identitas pengguna tidak ditampilkan di halaman
-          ini.
+          Email pengguna tersedia untuk tindak lanjut oleh admin. Isi percakapan
+          dan ringkasan tidak ditampilkan di halaman ini.
         </p>
 
         <dl
@@ -125,9 +125,9 @@ export function SafetyAlertDetailPage({
           }}
         >
           <div>
-            <dt style={termStyle}>Identifier anonim</dt>
+            <dt style={termStyle}>Email pengguna</dt>
             <dd style={{ ...valueStyle, overflowWrap: "anywhere" }}>
-              {alert.anonymousUserId}
+              {alert.userEmail}
             </dd>
           </div>
           <div>
