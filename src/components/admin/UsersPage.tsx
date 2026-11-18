@@ -1,15 +1,13 @@
 "use client";
 
 // src/components/admin/UsersPage.tsx
-// Full CRUD: Add, Edit, Delete, Toggle Status, Toggle Premium, View Detail, Link Parent
+// Full CRUD: Add, Edit, Delete, Toggle Status, Toggle Premium, View Detail
 
 import {
   updateUserAction,
   deleteUserAction,
   toggleStatusAction,
   togglePremiumAction,
-  linkParentAction,
-  unlinkParentAction,
 } from "@/lib/admin/action";
 
 import { useRouter } from "next/navigation";
@@ -25,7 +23,6 @@ import {
   Trash2,
   Power,
   Crown,
-  Users as UsersIcon,
   X,
   Check,
   AlertCircle,
@@ -44,7 +41,6 @@ type User = {
   gender: string | null;
   profileFilled: boolean;
   currentStreak: number;
-  parentEmail?: string | null;
 };
 
 type Props = {
@@ -1112,40 +1108,6 @@ function UserDetailBody({
         ))}
       </div>
 
-      {user.parentEmail && (
-        <div
-          style={{
-            padding: "12px 16px",
-            borderRadius: 12,
-            background: "rgba(139,92,246,0.07)",
-            border: "1px solid rgba(139,92,246,0.2)",
-          }}
-        >
-          <p
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: "#7c3aed",
-              textTransform: "uppercase",
-              letterSpacing: "0.04em",
-              marginBottom: 4,
-            }}
-          >
-            Akun Orang Tua Tersambung
-          </p>
-          <p
-            style={{
-              fontSize: 12,
-              color: C.text3,
-              marginTop: 2,
-              wordBreak: "break-all",
-            }}
-          >
-            {user.parentEmail}
-          </p>
-        </div>
-      )}
-
       <div
         style={{ display: "flex", justifyContent: "flex-end", paddingTop: 6 }}
       >
@@ -1169,184 +1131,6 @@ function UserDetailBody({
         </button>
       </div>
     </div>
-  );
-}
-
-// ── Link Parent Form ─────────────────────────────────────────────
-type ParentFormData = { parentEmail: string };
-
-function LinkParentForm({
-  user,
-  onSubmit,
-  onUnlink,
-  onCancel,
-  loading,
-}: {
-  user: User;
-  onSubmit: (d: ParentFormData) => void;
-  onUnlink: () => void;
-  onCancel: () => void;
-  loading: boolean;
-}) {
-  const [form, setForm] = useState<ParentFormData>({
-    parentEmail: user.parentEmail ?? "",
-  });
-  const isLinked = !!user.parentEmail;
-
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!form.parentEmail.trim()) return;
-    onSubmit(form);
-  }
-
-  return (
-    <form
-      onSubmit={handleSubmit}
-      style={{ display: "flex", flexDirection: "column", gap: 14 }}
-    >
-      <div
-        style={{
-          display: "flex",
-          gap: 10,
-          padding: "12px 14px",
-          borderRadius: 12,
-          background: "rgba(139,92,246,0.07)",
-          border: "1px solid rgba(139,92,246,0.2)",
-          alignItems: "flex-start",
-        }}
-      >
-        <UsersIcon
-          size={17}
-          strokeWidth={2}
-          color="#7c3aed"
-          style={{ flexShrink: 0, marginTop: 1 }}
-        />
-        <div>
-          <p style={{ fontSize: 13, fontWeight: 700, color: "#7c3aed" }}>
-            Laporan Mingguan ke Orang Tua
-          </p>
-          <p
-            style={{
-              fontSize: 12,
-              color: C.text2,
-              marginTop: 4,
-              lineHeight: 1.5,
-            }}
-          >
-            Setelah disambungkan, sistem akan mengirim ringkasan aktivitas{" "}
-            <strong>{user.name}</strong> ke email orang tua setiap minggu.
-          </p>
-        </div>
-      </div>
-
-      <div>
-        <label style={mLabel}>
-          Email Orang Tua <span style={{ color: "#ef4444" }}>*</span>
-        </label>
-        <input
-          type="email"
-          value={form.parentEmail}
-          onChange={(e) =>
-            setForm((p) => ({ ...p, parentEmail: e.target.value }))
-          }
-          placeholder="orangtua@email.com"
-          required
-          style={mInput}
-        />
-        <p style={{ fontSize: 12, color: C.text3, marginTop: 4 }}>
-          Laporan mingguan otomatis dikirim ke email ini.
-        </p>
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          gap: 10,
-          justifyContent: "space-between",
-          paddingTop: 14,
-          borderTop: "1px solid #e0f0ee",
-          marginTop: 4,
-          flexWrap: "wrap",
-        }}
-      >
-        {isLinked ? (
-          <button
-            type="button"
-            onClick={onUnlink}
-            disabled={loading}
-            style={{
-              height: 44,
-              padding: "0 18px",
-              borderRadius: 10,
-              border: "1.5px solid rgba(239,68,68,0.3)",
-              background: "rgba(239,68,68,0.06)",
-              color: C.danger,
-              fontSize: 13,
-              fontWeight: 600,
-              fontFamily: "inherit",
-              cursor: loading ? "not-allowed" : "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            <Trash2 size={13} strokeWidth={2} /> Putuskan Sambungan
-          </button>
-        ) : (
-          <span />
-        )}
-
-        <div style={{ display: "flex", gap: 10 }}>
-          <button
-            type="button"
-            onClick={onCancel}
-            style={{
-              height: 44,
-              padding: "0 18px",
-              borderRadius: 10,
-              border: "1.5px solid #d1ebe8",
-              background: "#fff",
-              color: "#4a7a74",
-              fontSize: 13,
-              fontWeight: 600,
-              fontFamily: "inherit",
-              cursor: "pointer",
-            }}
-          >
-            Batal
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              height: 44,
-              padding: "0 22px",
-              borderRadius: 10,
-              background: loading ? "rgba(124,58,237,0.5)" : "#7c3aed",
-              border: "none",
-              color: "#fff",
-              fontSize: 13,
-              fontWeight: 700,
-              fontFamily: "inherit",
-              cursor: loading ? "not-allowed" : "pointer",
-              boxShadow: loading ? "none" : "0 4px 14px rgba(124,58,237,0.3)",
-              display: "flex",
-              alignItems: "center",
-              gap: 7,
-            }}
-          >
-            {loading ? (
-              "Menyimpan…"
-            ) : (
-              <>
-                <Check size={14} strokeWidth={2.5} />{" "}
-                {isLinked ? "Update" : "Sambungkan"}
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-    </form>
   );
 }
 
@@ -1544,21 +1328,6 @@ function UserCard({ u, menuItems }: { u: User; menuItems: MenuItem[] }) {
           label={u.status}
           variant={u.status === "Aktif" ? "success" : "danger"}
         />
-        {u.parentEmail && (
-          <span
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              padding: "3px 10px",
-              borderRadius: 100,
-              background: "rgba(139,92,246,0.12)",
-              color: "#7c3aed",
-              whiteSpace: "nowrap",
-            }}
-          >
-            Ortu Tersambung
-          </span>
-        )}
       </div>
 
       <div
@@ -1701,9 +1470,9 @@ export function UsersPage({
     setUsers(initialUsers);
   }, [initialUsers]);
 
-  const [modal, setModal] = useState<
-    "none" | "edit" | "detail" | "parent" | "delete"
-  >("none");
+  const [modal, setModal] = useState<"none" | "edit" | "detail" | "delete">(
+    "none",
+  );
   const [target, setTarget] = useState<User | null>(null);
 
   const [saving, setSaving] = useState(false);
@@ -1800,41 +1569,6 @@ export function UsersPage({
     setToast(`${u.name} → ${next ? "Premium" : "Basic"}`);
   }
 
-  async function handleLinkParent(data: ParentFormData) {
-    if (!target) return;
-    setSaving(true);
-    setError(null);
-    const result = await linkParentAction({
-      userId: target.id,
-      parentEmail: data.parentEmail,
-    });
-    setSaving(false);
-    if (!result.success) {
-      setError(result.error);
-      return;
-    }
-    setModal("none");
-    setTarget(null);
-    setToast(result.message ?? "Email persetujuan dikirim");
-    router.refresh();
-  }
-
-  async function handleUnlinkParent() {
-    if (!target) return;
-    setSaving(true);
-    setError(null);
-    const result = await unlinkParentAction(target.id);
-    setSaving(false);
-    if (!result.success) {
-      setError(result.error);
-      return;
-    }
-    setModal("none");
-    setTarget(null);
-    setToast(result.message ?? "Sambungan ortu dihapus");
-    router.refresh();
-  }
-
   function menuFor(u: User): MenuItem[] {
     return [
       {
@@ -1862,14 +1596,6 @@ export function UsersPage({
         label: u.status === "Aktif" ? "Nonaktifkan" : "Aktifkan",
         icon: <Power size={14} strokeWidth={2} />,
         onClick: () => handleToggleStatus(u),
-      },
-      {
-        label: u.parentEmail ? "Kelola Akun Ortu" : "Sambung Akun Ortu",
-        icon: <UsersIcon size={14} strokeWidth={2} />,
-        onClick: () => {
-          setTarget(u);
-          setModal("parent");
-        },
       },
       {
         label: "Hapus User",
@@ -2078,18 +1804,6 @@ export function UsersPage({
                           >
                             {u.name}
                           </p>
-                          {u.parentEmail && (
-                            <p
-                              style={{
-                                fontSize: 12,
-                                color: "#7c3aed",
-                                marginTop: 1,
-                                fontWeight: 600,
-                              }}
-                            >
-                              Ortu tersambung
-                            </p>
-                          )}
                         </div>
                       </div>
                     </td>
@@ -2188,32 +1902,6 @@ export function UsersPage({
               setModal("none");
               setTarget(null);
             }}
-          />
-        )}
-      </Modal>
-
-      <Modal
-        open={modal === "parent" && !!target}
-        onClose={() => {
-          setModal("none");
-          setTarget(null);
-        }}
-        title={
-          target?.parentEmail
-            ? "Kelola Akun Orang Tua"
-            : "Sambung Akun Orang Tua"
-        }
-      >
-        {target && (
-          <LinkParentForm
-            user={target}
-            onSubmit={handleLinkParent}
-            onUnlink={handleUnlinkParent}
-            onCancel={() => {
-              setModal("none");
-              setTarget(null);
-            }}
-            loading={saving}
           />
         )}
       </Modal>

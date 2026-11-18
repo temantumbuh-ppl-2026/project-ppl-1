@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { LogOut, User, Users } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { toast } from "sonner";
 
 import { authClient } from "@/lib/auth-client";
@@ -25,7 +25,6 @@ export function SettingsSidebar({ profile }: SettingsSidebarProps) {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const isProfileTab = pathname === "/profile";
-  const isParentReportTab = pathname === "/profile/parent-report";
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -93,19 +92,6 @@ export function SettingsSidebar({ profile }: SettingsSidebarProps) {
           >
             <User className="h-4 w-4 shrink-0" />
             Profil Pengguna
-          </button>
-
-          <button
-            type="button"
-            onClick={() => router.push("/profile/parent-report")}
-            className={`flex w-full cursor-pointer items-center gap-3 border-l-[3px] px-5 py-3 text-left text-sm transition-all sm:px-6 ${
-              isParentReportTab
-                ? "border-[var(--color-brand-teal)] bg-[var(--color-brand-teal-ghost)] font-bold text-[var(--color-brand-teal)]"
-                : "border-transparent font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-            }`}
-          >
-            <Users className="h-4 w-4 shrink-0" />
-            Laporan Orang Tua
           </button>
         </div>
 

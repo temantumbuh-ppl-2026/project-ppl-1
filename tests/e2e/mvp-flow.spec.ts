@@ -109,11 +109,6 @@ test.describe("E2E MVP smoke coverage", () => {
     { code: "F004", route: "/profile", name: "Kelola Profil" },
     { code: "F006", route: "/baseline", name: "Baseline Questions" },
     { code: "F007", route: "/mood", name: "Mood Check-In" },
-    {
-      code: "F008",
-      route: "/profile/parent-report",
-      name: "Manage Parent Email",
-    },
     { code: "F009", route: "/home", name: "User Dashboard" },
     { code: "F010", route: "/diary/today", name: "Safe Diary" },
     { code: "F011", route: "/diary/today", name: "Brave Choice" },

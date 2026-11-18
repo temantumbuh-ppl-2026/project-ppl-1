@@ -32,15 +32,6 @@ export const registerSchema = z
 
     confirmPassword: z.string({ error: "Konfirmasi password wajib diisi" }),
 
-    // Opsional — untuk laporan ke orang tua
-    parentEmail: z
-      .string()
-      .email("Format email orang tua tidak valid")
-      .toLowerCase()
-      .trim()
-      .optional()
-      .or(z.literal("")),
-
     agreeToTerms: z.literal(true, {
       error: "Kamu harus menyetujui syarat dan ketentuan",
     }),
@@ -93,18 +84,6 @@ export const registerStep2Schema = z.object({
 });
 
 export type RegisterStep2Input = z.infer<typeof registerStep2Schema>;
-
-export const registerStep3Schema = z.object({
-  parentEmail: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .email("Format email tidak valid")
-    .optional()
-    .or(z.literal("")),
-});
-
-export type RegisterStep3Input = z.infer<typeof registerStep3Schema>;
 
 // ─── Login Schema ─────────────────────────────────────────────
 export const loginSchema = z.object({
@@ -231,13 +210,6 @@ export const profileEditFormSchema = z.object({
   gender: z.enum(["male", "female", "prefer_not"], {
     error: "Pilih jenis kelamin",
   }),
-  parentEmail: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .email("Format email tidak valid")
-    .optional()
-    .or(z.literal("")),
 });
 
 export type ProfileEditFormInput = z.infer<typeof profileEditFormSchema>;

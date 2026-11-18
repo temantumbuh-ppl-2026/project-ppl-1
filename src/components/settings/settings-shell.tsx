@@ -9,9 +9,6 @@ import { PageLoader } from "@/components/ui/manual/page-loader";
 import { BrandPageBackground } from "@/components/layout/brand-page-background";
 import { SettingsSidebar } from "@/components/settings/settings-sidebar";
 
-type ParentStatus = "pending" | "verified" | "expired" | null;
-type ParentStatusReason = "rejected" | "expired" | null;
-
 export type UserProfile = {
   id: string;
   name: string;
@@ -19,17 +16,9 @@ export type UserProfile = {
   image: string | null;
   birthYear: number | null;
   gender: "male" | "female" | "prefer_not" | null;
-  parentEmail: string | null;
   profileFilled: boolean;
   createdAt?: string | null;
   isPremium?: boolean;
-};
-
-type ParentStatusResponse = {
-  email: string | null;
-  status: ParentStatus;
-  expiresAt: string | null;
-  reason: ParentStatusReason;
 };
 
 type SecurityStateResponse = {
@@ -41,9 +30,6 @@ type SecurityStateResponse = {
 
 export type ProfileQueryData = {
   user: UserProfile;
-  parentStatus: ParentStatus;
-  parentStatusReason: ParentStatusReason;
-  pendingParentEmail: string | null;
   isGoogleLinked: boolean;
   hasPassword: boolean;
 };
@@ -54,29 +40,6 @@ export async function fetchProfileData(): Promise<ProfileQueryData> {
 
   if (!user) {
     throw new Error("UNAUTHORIZED");
-  }
-
-  let parentStatus: ParentStatus = null;
-  let parentStatusReason: ParentStatusReason = null;
-  let pendingParentEmail: string | null = null;
-
-  const parentStatusResponse = await fetch("/api/parent/status", {
-    method: "GET",
-    cache: "no-store",
-  });
-
-  if (parentStatusResponse.ok) {
-    const parentStatusPayload =
-      (await parentStatusResponse.json()) as ParentStatusResponse;
-
-    parentStatus = parentStatusPayload.status;
-    parentStatusReason = parentStatusPayload.reason;
-    pendingParentEmail =
-      parentStatusPayload.status === "pending" ||
-      (parentStatusPayload.status === "expired" &&
-        parentStatusPayload.reason === "expired")
-        ? parentStatusPayload.email
-        : null;
   }
 
   let hasPassword = false;
@@ -108,14 +71,10 @@ export async function fetchProfileData(): Promise<ProfileQueryData> {
         user.gender === "prefer_not"
           ? user.gender
           : null,
-      parentEmail: user.parentEmail ?? null,
       profileFilled: Boolean(user.profileFilled),
       createdAt: user.createdAt ?? null,
       isPremium: Boolean(user.isPremium),
     },
-    parentStatus,
-    parentStatusReason,
-    pendingParentEmail,
     isGoogleLinked,
     hasPassword,
   };

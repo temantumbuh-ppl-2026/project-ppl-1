@@ -24,15 +24,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AuthField } from "@/components/auth/auth-field";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { UserProfile } from "@/components/settings/settings-shell";
-
-type ParentStatus = "pending" | "verified" | "expired" | null;
 
 type ProfileContentProps = {
   profile: UserProfile;
-  parentStatus: ParentStatus;
-  pendingParentEmail: string | null;
   isGoogleLinked: boolean;
   hasPassword: boolean;
   onRefresh: () => Promise<void>;
@@ -48,7 +43,6 @@ const profileSettingsSchema = profileEditFormSchema.pick({
   name: true,
   birthYear: true,
   gender: true,
-  parentEmail: true,
 });
 
 function getGenderLabel(gender: string | null) {
@@ -59,8 +53,6 @@ function getGenderLabel(gender: string | null) {
 
 export function ProfileContent({
   profile,
-  parentStatus,
-  pendingParentEmail,
   isGoogleLinked,
   hasPassword,
   onRefresh,
@@ -74,16 +66,13 @@ export function ProfileContent({
     control,
     handleSubmit,
     formState: { errors, isValid },
-  } = useForm<
-    Pick<ProfileEditFormInput, "name" | "birthYear" | "gender" | "parentEmail">
-  >({
+  } = useForm<Pick<ProfileEditFormInput, "name" | "birthYear" | "gender">>({
     resolver: zodResolver(profileSettingsSchema),
     mode: "onChange",
     defaultValues: {
       name: "",
       birthYear: "",
       gender: "prefer_not",
-      parentEmail: "",
     },
   });
 
@@ -97,7 +86,6 @@ export function ProfileContent({
         profile.gender === "prefer_not"
           ? profile.gender
           : "prefer_not",
-      parentEmail: profile.parentEmail || "",
     });
   }, [profile, reset]);
 
@@ -117,10 +105,7 @@ export function ProfileContent({
 
   const updateProfileMutation = useMutation({
     mutationFn: async (
-      formData: Pick<
-        ProfileEditFormInput,
-        "name" | "birthYear" | "gender" | "parentEmail"
-      >,
+      formData: Pick<ProfileEditFormInput, "name" | "birthYear" | "gender">,
     ) => {
       const response = await authClient.updateUser({
         name: formData.name.trim(),
@@ -162,7 +147,6 @@ export function ProfileContent({
         profile.gender === "prefer_not"
           ? profile.gender
           : "prefer_not",
-      parentEmail: profile.parentEmail || "",
     });
     setIsEditingProfile(false);
   };
@@ -190,17 +174,6 @@ export function ProfileContent({
 
   return (
     <div className="space-y-4">
-      {pendingParentEmail && parentStatus === "pending" ? (
-        <Alert className="border-amber-200 bg-amber-50 text-amber-800">
-          <AlertTitle>Menunggu Persetujuan Orang Tua</AlertTitle>
-          <AlertDescription>
-            Permintaan verifikasi email orang tua sudah dikirim ke{" "}
-            <strong>{pendingParentEmail}</strong>. Email akan terhubung setelah
-            orang tua atau wali menyetujui.
-          </AlertDescription>
-        </Alert>
-      ) : null}
-
       <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-sm">
         <div className="flex items-center gap-2.5 border-b border-slate-200 px-4 py-4 sm:px-5 md:px-6">
           <User className="h-[18px] w-[18px] text-[var(--color-brand-teal)]" />

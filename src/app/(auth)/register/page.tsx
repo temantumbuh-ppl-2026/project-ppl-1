@@ -10,23 +10,14 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import {
-  AlertCircle,
-  ArrowRight,
-  Loader2,
-  LogIn,
-  MailCheck,
-  UsersRound,
-} from "lucide-react";
+import { AlertCircle, Loader2, LogIn, MailCheck } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
 import {
   registerStep1Schema,
   registerStep2Schema,
-  registerStep3Schema,
   type RegisterStep1Input,
   type RegisterStep2Input,
-  type RegisterStep3Input,
 } from "@/lib/validations";
 import { slideInVariants, springSmooth } from "@/lib/animations";
 
@@ -56,7 +47,6 @@ import { RegistrationStepper } from "@/components/auth/redesign/registration-ste
 
 type Step1 = RegisterStep1Input;
 type Step2 = RegisterStep2Input;
-type Step3 = RegisterStep3Input;
 
 type SessionUser = {
   name?: string | null;
@@ -526,15 +516,17 @@ function Step1Form({
 }
 
 function Step2Form({
-  onNext,
+  onSubmit: onFinalSubmit,
   onBack,
   canGoBack,
   defaultValues,
+  isLoading,
 }: {
-  onNext: (data: Step2) => void;
-  onBack: () => void;
+  onSubmit: (data: Step2) => void;
+  onBack: (data: Partial<Step2>) => void;
   canGoBack: boolean;
   defaultValues: Partial<Step2>;
+  isLoading: boolean;
 }) {
   const currentYear = new Date().getFullYear();
 
@@ -550,7 +542,7 @@ function Step2Form({
     control,
     getValues,
     setValue,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<Step2>({
     resolver: zodResolver(registerStep2Schema),
     defaultValues,
@@ -572,7 +564,12 @@ function Step2Form({
         description="Lengkapi data dirimu supaya pengalaman TemanTumbuh sesuai untukmu."
       />
 
-      <form onSubmit={handleSubmit(onNext)} className="auth-form" noValidate>
+      <form
+        onSubmit={handleSubmit(onFinalSubmit)}
+        className="auth-form"
+        noValidate
+        aria-busy={isLoading}
+      >
         <AuthField
           id="reg-name"
           label="Nama Lengkap"
@@ -656,8 +653,13 @@ function Step2Form({
           />
         </AuthField>
 
-        <Button type="submit" disabled={isSubmitting} className="auth-submit">
-          {isSubmitting ? (
+        <Button
+          type="submit"
+          disabled={isLoading}
+          aria-busy={isLoading}
+          className="auth-submit"
+        >
+          {isLoading ? (
             <>
               <Loader2
                 className="mr-2 h-4 w-4 animate-spin"
@@ -666,116 +668,20 @@ function Step2Form({
               Memproses...
             </>
           ) : (
-            <>
-              Lanjut <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
-            </>
+            <>Selesai</>
           )}
         </Button>
       </form>
 
       {canGoBack ? (
-        <button type="button" onClick={onBack} className="step-back-link">
+        <button
+          type="button"
+          onClick={() => onBack(getValues())}
+          className="step-back-link"
+        >
           ← Kembali ke akun
         </button>
       ) : null}
-    </>
-  );
-}
-
-function Step3Form({
-  onSubmit: onFinalSubmit,
-  onBack,
-  defaultValues,
-  isLoading,
-}: {
-  onSubmit: (data: Step3) => void;
-  onBack: (data: Partial<Step3>) => void;
-  defaultValues: Partial<Step3>;
-  isLoading: boolean;
-}) {
-  const {
-    register,
-    handleSubmit,
-    getValues,
-    formState: { errors },
-  } = useForm<Step3>({
-    resolver: zodResolver(registerStep3Schema),
-    defaultValues,
-  });
-
-  return (
-    <>
-      <AuthFormHeading
-        eyebrow="sesuai pilihanmu"
-        title="Atur laporan mingguan."
-        description="Ringkasan emosi mingguan dapat dikirim ke orang tua atau wali."
-      />
-
-      <div className="auth-note report-info">
-        <UsersRound aria-hidden="true" />
-        <span>
-          Orang tua akan menerima ringkasan emosi mingguan tanpa isi diary.
-        </span>
-      </div>
-
-      <form
-        onSubmit={handleSubmit(onFinalSubmit)}
-        className="auth-form"
-        noValidate
-        aria-busy={isLoading}
-      >
-        <AuthField
-          id="reg-parentEmail"
-          label="Email Orang Tua / Wali (Opsional)"
-          error={errors.parentEmail?.message}
-          hint="Kosongkan jika tidak ingin mengirim laporan"
-        >
-          <Input
-            id="reg-parentEmail"
-            type="email"
-            inputMode="email"
-            placeholder="email-orangtua@contoh.com"
-            autoComplete="off"
-            autoFocus
-            {...register("parentEmail")}
-          />
-        </AuthField>
-
-        <div className="auth-form-actions">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onBack(getValues())}
-            disabled={isLoading}
-            className="auth-secondary"
-          >
-            Kembali
-          </Button>
-
-          <Button
-            type="submit"
-            disabled={isLoading}
-            aria-busy={isLoading}
-            className="auth-submit"
-          >
-            {isLoading ? (
-              <>
-                <Loader2
-                  className="mr-2 h-4 w-4 animate-spin"
-                  aria-hidden="true"
-                />
-                Mendaftar...
-              </>
-            ) : (
-              <>Selesai</>
-            )}
-          </Button>
-        </div>
-      </form>
-
-      <p className="later-note">
-        Email orang tua bisa ditambahkan nanti melalui pengaturan akun.
-      </p>
     </>
   );
 }
@@ -792,7 +698,6 @@ function RegisterPageContent() {
 
   const [step1Data, setStep1Data] = useState<Partial<Step1>>({});
   const [step2Data, setStep2Data] = useState<Partial<Step2>>({});
-  const [step3Data, setStep3Data] = useState<Partial<Step3>>({});
   const [verificationEmail, setVerificationEmail] = useState<string | null>(
     null,
   );
@@ -937,14 +842,11 @@ function RegisterPageContent() {
   });
 
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: Step3) => {
+    mutationFn: async (data: Step2) => {
       const response = await authClient.updateUser({
-        name: step2Data.name,
-        birthYear: step2Data.birthYear
-          ? Number(step2Data.birthYear)
-          : undefined,
-        gender: step2Data.gender,
-        parentEmail: data.parentEmail || null,
+        name: data.name,
+        birthYear: data.birthYear ? Number(data.birthYear) : undefined,
+        gender: data.gender,
         profileFilled: true,
       });
 
@@ -952,22 +854,15 @@ function RegisterPageContent() {
         throw response.error;
       }
 
-      return {
-        response,
-        parentEmail: data.parentEmail,
-      };
+      return response;
     },
 
-    onSuccess: ({ parentEmail }: { parentEmail?: string }) => {
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
 
       setDone(true);
 
-      toast.success(
-        parentEmail
-          ? "Data diri tersimpan. Jika email orang tua baru, permintaan persetujuan telah dikirim."
-          : "Data diri berhasil dilengkapi.",
-      );
+      toast.success("Data diri berhasil dilengkapi.");
 
       window.location.href = "/home";
     },
@@ -1000,20 +895,15 @@ function RegisterPageContent() {
     [isCompleteProfileFlow, signUpMutation],
   );
 
-  const handleStep2 = useCallback((data: Step2) => {
+  const handleStep2Back = useCallback((data: Partial<Step2>) => {
     setStep2Data(data);
-    setStep(2);
-  }, []);
-
-  const handleStep3Back = useCallback((data: Partial<Step3>) => {
-    setStep3Data(data);
-    setStep(1);
+    setStep(0);
   }, []);
 
   const handleFinalSubmit = useCallback(
-    (data: Step3) => {
+    (data: Step2) => {
       if (updateProfileMutation.isPending) return;
-      setStep3Data(data);
+      setStep2Data(data);
       updateProfileMutation.mutate(data);
     },
     [updateProfileMutation],
@@ -1093,21 +983,13 @@ function RegisterPageContent() {
               />
             )}
           </StepMotion>
-        ) : step === 1 ? (
+        ) : (
           <StepMotion key="s2" stepKey="s2">
             <Step2Form
-              onNext={handleStep2}
-              onBack={() => setStep(0)}
+              onSubmit={handleFinalSubmit}
+              onBack={handleStep2Back}
               canGoBack={!isCompleteProfileFlow}
               defaultValues={step2Data}
-            />
-          </StepMotion>
-        ) : (
-          <StepMotion key="s3" stepKey="s3">
-            <Step3Form
-              onSubmit={handleFinalSubmit}
-              onBack={handleStep3Back}
-              defaultValues={step3Data}
               isLoading={updateProfileMutation.isPending}
             />
           </StepMotion>
