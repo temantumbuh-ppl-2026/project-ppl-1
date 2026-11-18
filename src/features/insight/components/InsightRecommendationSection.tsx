@@ -26,13 +26,13 @@ const PRIORITY_VISUAL: Record<
   }
 > = {
   High: {
-    indexBg: "linear-gradient(135deg, #DC2626 0%, #EF4444 100%)",
-    indexShadow: "0 8px 18px rgba(220,38,38,0.28)",
+    indexBg: "var(--tt-attention-text)",
+    indexShadow: "0 8px 18px rgba(138,74,31,0.28)",
     cardBg: "#FFFFFF",
-    border: "rgba(220,38,38,0.18)",
-    elevation: "0 1px 2px rgba(16,24,40,0.04), 0 8px 20px rgba(220,38,38,0.06)",
-    dotColor: "#DC2626",
-    headerLabelColor: "#DC2626",
+    border: "var(--tt-attention-border)",
+    elevation: "0 1px 2px rgba(16,24,40,0.04), 0 8px 20px rgba(138,74,31,0.06)",
+    dotColor: "var(--tt-attention-text)",
+    headerLabelColor: "var(--tt-attention-text)",
   },
   Medium: {
     indexBg: "linear-gradient(135deg, #D97706 0%, #F59E0B 100%)",

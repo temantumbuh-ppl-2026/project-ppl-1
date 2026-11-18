@@ -144,7 +144,7 @@ function ChangePasswordPageContent() {
             noValidate
           >
             {serverError ? (
-              <Alert className="border-red-200 bg-red-50 text-red-800">
+              <Alert className="border-tt-attention-border bg-tt-attention-bg text-tt-attention-text">
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>Gagal mengganti password</AlertTitle>
                 <AlertDescription>{serverError}</AlertDescription>

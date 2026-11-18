@@ -248,8 +248,8 @@ export function InsightPageHeader({
                         void handleLogout();
                       }}
                       disabled={isLoggingOut}
-                      className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[rgba(239,68,68,0.06)] disabled:cursor-not-allowed disabled:opacity-60"
-                      style={{ color: "#DC2626" }}
+                      className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-tt-attention-bg disabled:cursor-not-allowed disabled:opacity-60"
+                      style={{ color: "var(--tt-attention-text)" }}
                     >
                       <LogOut size={15} /> Keluar
                     </button>

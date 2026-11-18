@@ -483,7 +483,7 @@ function Topbar({
             borderRadius: 10,
             border: "none",
             background: "transparent",
-            color: "#DC2626",
+            color: "var(--tt-attention-text)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",

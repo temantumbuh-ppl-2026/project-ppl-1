@@ -99,7 +99,7 @@ export function SettingsSidebar({ profile }: SettingsSidebarProps) {
           <button
             type="button"
             onClick={() => setShowLogoutConfirm(true)}
-            className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-red-500 transition-colors hover:bg-red-50"
+            className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-tt-attention-text transition-colors hover:bg-tt-attention-bg"
           >
             <LogOut className="h-4 w-4 shrink-0" />
             Keluar

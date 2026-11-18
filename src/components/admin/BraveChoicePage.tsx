@@ -383,7 +383,8 @@ function QuestionForm({
       <div className="tt-form-grid">
         <div>
           <label style={mLabel}>
-            Kategori <span style={{ color: "#ef4444" }}>*</span>
+            Kategori{" "}
+            <span style={{ color: "var(--tt-attention-text)" }}>*</span>
           </label>
           <input
             type="text"
@@ -396,7 +397,8 @@ function QuestionForm({
         </div>
         <div>
           <label style={mLabel}>
-            Segmen Usia <span style={{ color: "#ef4444" }}>*</span>
+            Segmen Usia{" "}
+            <span style={{ color: "var(--tt-attention-text)" }}>*</span>
           </label>
           <div style={{ position: "relative" }}>
             <select
@@ -428,7 +430,8 @@ function QuestionForm({
 
       <div>
         <label style={mLabel}>
-          Skenario / Pertanyaan <span style={{ color: "#ef4444" }}>*</span>
+          Skenario / Pertanyaan{" "}
+          <span style={{ color: "var(--tt-attention-text)" }}>*</span>
         </label>
         <textarea
           value={form.scenario}
@@ -445,7 +448,8 @@ function QuestionForm({
       <div className="tt-form-grid">
         <div>
           <label style={mLabel}>
-            Pilihan A <span style={{ color: "#ef4444" }}>*</span>
+            Pilihan A{" "}
+            <span style={{ color: "var(--tt-attention-text)" }}>*</span>
           </label>
           <input
             type="text"
@@ -458,7 +462,8 @@ function QuestionForm({
         </div>
         <div>
           <label style={mLabel}>
-            Pilihan B <span style={{ color: "#ef4444" }}>*</span>
+            Pilihan B{" "}
+            <span style={{ color: "var(--tt-attention-text)" }}>*</span>
           </label>
           <input
             type="text"
@@ -647,19 +652,25 @@ function DeleteConfirm({
             gap: 12,
             padding: "14px 16px",
             borderRadius: 13,
-            background: "rgba(239,68,68,0.07)",
-            border: "1px solid rgba(239,68,68,0.18)",
+            background: "var(--tt-attention-bg)",
+            border: "1px solid var(--tt-attention-border)",
             alignItems: "flex-start",
           }}
         >
           <AlertCircle
             size={17}
             strokeWidth={2}
-            color="#ef4444"
+            color="var(--tt-attention-text)"
             style={{ flexShrink: 0, marginTop: 1 }}
           />
           <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#ef4444" }}>
+            <p
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: "var(--tt-attention-text)",
+              }}
+            >
               Tindakan ini tidak bisa dibatalkan
             </p>
             <p
@@ -725,7 +736,9 @@ function DeleteConfirm({
               height: 44,
               padding: "0 22px",
               borderRadius: 10,
-              background: loading ? "rgba(239,68,68,0.5)" : "#ef4444",
+              background: loading
+                ? "rgba(138,74,31,0.5)"
+                : "var(--tt-attention-text)",
               border: "none",
               color: "#fff",
               fontSize: 13,
@@ -735,7 +748,7 @@ function DeleteConfirm({
               display: "flex",
               alignItems: "center",
               gap: 6,
-              boxShadow: loading ? "none" : "0 4px 14px rgba(239,68,68,0.25)",
+              boxShadow: loading ? "none" : "0 4px 14px rgba(138,74,31,0.25)",
             }}
           >
             {loading ? (
@@ -851,8 +864,8 @@ function QuestionCard({
               width: 34,
               height: 34,
               borderRadius: 9,
-              border: "1px solid rgba(239,68,68,0.2)",
-              background: "rgba(239,68,68,0.07)",
+              border: "1px solid var(--tt-attention-border)",
+              background: "var(--tt-attention-bg)",
               color: C.danger,
               display: "flex",
               alignItems: "center",
@@ -1270,8 +1283,8 @@ export function BraveChoicePage({
             alignItems: "center",
             padding: "12px 16px",
             borderRadius: 13,
-            background: "rgba(239,68,68,0.08)",
-            border: "1px solid rgba(239,68,68,0.2)",
+            background: "var(--tt-attention-bg)",
+            border: "1px solid var(--tt-attention-border)",
           }}
         >
           <AlertCircle size={15} strokeWidth={2} color={C.danger} />
@@ -1891,8 +1904,8 @@ export function BraveChoicePage({
                               width: 32,
                               height: 32,
                               borderRadius: 9,
-                              border: "1px solid rgba(239,68,68,0.2)",
-                              background: "rgba(239,68,68,0.07)",
+                              border: "1px solid var(--tt-attention-border)",
+                              background: "var(--tt-attention-bg)",
                               color: C.danger,
                               display: "flex",
                               alignItems: "center",

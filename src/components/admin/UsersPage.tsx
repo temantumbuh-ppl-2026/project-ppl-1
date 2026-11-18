@@ -170,7 +170,7 @@ function Badge({
   const map = {
     success: { bg: "var(--tt-dashboard-success-soft)", color: C.success },
     warning: { bg: "var(--tt-dashboard-warning-soft)", color: C.warning },
-    danger: { bg: "rgba(239,68,68,0.1)", color: C.danger },
+    danger: { bg: "var(--tt-attention-bg)", color: C.danger },
     muted: { bg: "var(--tt-dashboard-chip-bg)", color: C.text3 },
   };
   return (
@@ -474,7 +474,7 @@ function ActionMenu({ items }: { items: MenuItem[] }) {
                   }}
                   onMouseEnter={(e) =>
                     (e.currentTarget.style.background = it.danger
-                      ? "rgba(239,68,68,0.07)"
+                      ? "var(--tt-attention-bg)"
                       : "rgba(26,150,136,0.07)")
                   }
                   onMouseLeave={(e) =>
@@ -798,7 +798,8 @@ function UserForm({
 
       <div>
         <label style={mLabel}>
-          Nama Lengkap <span style={{ color: "#ef4444" }}>*</span>
+          Nama Lengkap{" "}
+          <span style={{ color: "var(--tt-attention-text)" }}>*</span>
         </label>
         <input
           type="text"
@@ -812,7 +813,7 @@ function UserForm({
 
       <div>
         <label style={mLabel}>
-          Email <span style={{ color: "#ef4444" }}>*</span>
+          Email <span style={{ color: "var(--tt-attention-text)" }}>*</span>
         </label>
         <input
           type="email"
@@ -1154,19 +1155,25 @@ function DeleteUserBody({
           gap: 12,
           padding: "14px 16px",
           borderRadius: 13,
-          background: "rgba(239,68,68,0.07)",
-          border: "1px solid rgba(239,68,68,0.18)",
+          background: "var(--tt-attention-bg)",
+          border: "1px solid var(--tt-attention-border)",
           alignItems: "flex-start",
         }}
       >
         <AlertCircle
           size={17}
           strokeWidth={2}
-          color="#ef4444"
+          color="var(--tt-attention-text)"
           style={{ flexShrink: 0, marginTop: 1 }}
         />
         <div>
-          <p style={{ fontSize: 13, fontWeight: 700, color: "#ef4444" }}>
+          <p
+            style={{
+              fontSize: 13,
+              fontWeight: 700,
+              color: "var(--tt-attention-text)",
+            }}
+          >
             Tindakan ini tidak bisa dibatalkan
           </p>
           <p
@@ -1239,7 +1246,9 @@ function DeleteUserBody({
             height: 44,
             padding: "0 22px",
             borderRadius: 10,
-            background: loading ? "rgba(239,68,68,0.5)" : "#ef4444",
+            background: loading
+              ? "rgba(138,74,31,0.5)"
+              : "var(--tt-attention-text)",
             border: "none",
             color: "#fff",
             fontSize: 13,
@@ -1249,7 +1258,7 @@ function DeleteUserBody({
             display: "flex",
             alignItems: "center",
             gap: 6,
-            boxShadow: loading ? "none" : "0 4px 14px rgba(239,68,68,0.25)",
+            boxShadow: loading ? "none" : "0 4px 14px rgba(138,74,31,0.25)",
           }}
         >
           {loading ? (
@@ -1656,8 +1665,8 @@ export function UsersPage({
             alignItems: "center",
             padding: "12px 16px",
             borderRadius: 13,
-            background: "rgba(239,68,68,0.08)",
-            border: "1px solid rgba(239,68,68,0.2)",
+            background: "var(--tt-attention-bg)",
+            border: "1px solid var(--tt-attention-border)",
           }}
         >
           <AlertCircle size={15} strokeWidth={2} color={C.danger} />

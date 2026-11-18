@@ -50,7 +50,7 @@ export function AdminSafetyClient() {
     return (
       <div
         role="alert"
-        className="flex h-[75vh] w-full flex-col items-center justify-center gap-4 text-red-500"
+        className="flex h-[75vh] w-full flex-col items-center justify-center gap-4 text-tt-attention-text"
       >
         <p>{safetyErrorMessage(error)}</p>
         <button

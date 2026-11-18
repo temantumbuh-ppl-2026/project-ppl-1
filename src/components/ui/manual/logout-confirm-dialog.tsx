@@ -48,9 +48,9 @@ export function LogoutConfirmDialog({
               <div className="flex items-center gap-2.5">
                 <div
                   className="flex h-8 w-8 items-center justify-center rounded-lg"
-                  style={{ background: "rgba(239,68,68,0.08)" }}
+                  style={{ background: "var(--tt-attention-bg)" }}
                 >
-                  <LogOut size={15} color="#DC2626" />
+                  <LogOut size={15} color="var(--tt-attention-text)" />
                 </div>
                 <p className="text-[15px] font-bold text-slate-900">
                   Keluar dari akun?
@@ -89,8 +89,8 @@ export function LogoutConfirmDialog({
                 disabled={loading}
                 className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl text-[13px] font-semibold text-white transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                 style={{
-                  background: "#DC2626",
-                  boxShadow: "0 4px 12px rgba(220,38,38,0.2)",
+                  background: "var(--tt-attention-text)",
+                  boxShadow: "0 4px 12px rgba(138,74,31,0.2)",
                 }}
               >
                 {loading ? "Keluar..." : "Ya, Keluar"}

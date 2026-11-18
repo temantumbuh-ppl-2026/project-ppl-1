@@ -566,7 +566,7 @@ function ProfileDropdown({ session }: { session: Session }) {
                   });
                 }}
                 className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition"
-                style={{ color: "#DC2626" }}
+                style={{ color: "var(--tt-attention-text)" }}
                 type="button"
               >
                 <LogOut size={16} />
@@ -846,7 +846,7 @@ function MobileMenu({
                     });
                   }}
                   className="mt-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium"
-                  style={{ color: "#EF4444" }}
+                  style={{ color: "var(--tt-attention-text)" }}
                   type="button"
                 >
                   <LogOut size={15} /> Keluar

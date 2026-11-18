@@ -229,7 +229,7 @@ export function ProfileContent({
                 </span>
 
                 {isGoogleLinked ? (
-                  <span className="shrink-0 rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[12px] font-bold text-red-600">
+                  <span className="shrink-0 rounded-full border border-tt-info-bg bg-tt-info-bg px-2 py-0.5 text-[12px] font-bold text-tt-info-text">
                     Google
                   </span>
                 ) : null}
