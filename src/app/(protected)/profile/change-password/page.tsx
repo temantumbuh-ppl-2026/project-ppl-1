@@ -118,13 +118,13 @@ function ChangePasswordPageContent() {
   return (
     <BrandPageBackground>
       <div className="mx-auto flex min-h-[calc(100vh-128px)] w-full max-w-lg items-center px-4 py-12">
-        <div className="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+        <div className="w-full rounded-2xl border border-tt-gray-200 bg-white p-6 shadow-sm sm:p-8">
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">
+              <h1 className="text-2xl font-bold text-tt-gray-900">
                 Ganti Password
               </h1>
-              <p className="mt-2 text-sm text-slate-600">
+              <p className="mt-2 text-sm text-tt-gray-600">
                 Demi keamanan, ubah password akunmu dengan password baru yang
                 lebih kuat.
               </p>
@@ -239,12 +239,12 @@ function ChangePasswordPageContent() {
             </div>
           </form>
 
-          <div className="mt-6 space-y-2 text-center text-sm text-slate-600">
+          <div className="mt-6 space-y-2 text-center text-sm text-tt-gray-600">
             <p>
               Lupa password saat ini?{" "}
               <Link
                 href="/forgot-password"
-                className="font-semibold text-teal-700 hover:underline"
+                className="font-semibold text-tt-primary-700 hover:underline"
               >
                 Atur ulang lewat email
               </Link>
@@ -253,7 +253,7 @@ function ChangePasswordPageContent() {
             <p>
               <Link
                 href="/profile"
-                className="font-semibold text-teal-700 hover:underline"
+                className="font-semibold text-tt-primary-700 hover:underline"
               >
                 <span className="inline-flex items-center gap-1">
                   <ArrowLeft className="h-4 w-4" />

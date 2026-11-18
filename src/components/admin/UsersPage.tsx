@@ -139,11 +139,11 @@ const mInput: React.CSSProperties = {
   width: "100%",
   padding: "10px 14px",
   borderRadius: 10,
-  border: "1.5px solid #d1ebe8",
-  background: "#ffffff",
+  border: "1.5px solid var(--tt-gray-200)",
+  background: "var(--tt-surface)",
   fontSize: 14,
   fontFamily: "inherit",
-  color: "#1a2e2b",
+  color: "var(--tt-primary-900)",
   outline: "none",
   boxSizing: "border-box",
   transition: "border-color 0.15s",
@@ -152,7 +152,7 @@ const mInput: React.CSSProperties = {
 const mLabel: React.CSSProperties = {
   fontSize: 12,
   fontWeight: 700,
-  color: "#4a7a74",
+  color: "var(--tt-gray-600)",
   display: "block",
   marginBottom: 6,
   textTransform: "uppercase",
@@ -198,13 +198,14 @@ function Avatar({ name, size = 32 }: { name: string; size?: number }) {
         width: size,
         height: size,
         borderRadius: size * 0.31,
-        background: "linear-gradient(135deg, #1a9688 0%, #0f7a6e 100%)",
+        background:
+          "linear-gradient(135deg, var(--tt-button-primary) 0%, var(--tt-primary-700) 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         fontWeight: 800,
         fontSize: size * 0.34,
-        color: "#fff",
+        color: "var(--tt-surface)",
         flexShrink: 0,
       }}
     >
@@ -229,7 +230,7 @@ function Toggle({
         height: 24,
         borderRadius: 100,
         border: "none",
-        background: checked ? "#1a9688" : "rgba(0,0,0,0.12)",
+        background: checked ? "var(--tt-button-primary)" : "rgba(0,0,0,0.12)",
         cursor: "pointer",
         position: "relative",
         transition: "background 0.2s",
@@ -241,7 +242,7 @@ function Toggle({
           width: 18,
           height: 18,
           borderRadius: "50%",
-          background: "#fff",
+          background: "var(--tt-surface)",
           position: "absolute",
           top: 3,
           left: checked ? 21 : 3,
@@ -301,7 +302,7 @@ function Modal({
             width: "100%",
             maxWidth: 540,
             overflowY: "auto",
-            background: "#ffffff",
+            background: "var(--tt-surface)",
             boxShadow:
               "0 -8px 48px rgba(0,0,0,0.2), 0 4px 24px rgba(0,0,0,0.1)",
             border: "1px solid rgba(0,0,0,0.06)",
@@ -313,11 +314,11 @@ function Modal({
           <div
             style={{
               padding: "14px 20px",
-              borderBottom: "1px solid #c8ede9",
+              borderBottom: "1px solid var(--tt-gray-200)",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              background: "#1a9688",
+              background: "var(--tt-button-primary)",
               position: "sticky",
               top: 0,
               zIndex: 1,
@@ -325,7 +326,13 @@ function Modal({
               borderRadius: "20px 20px 0 0",
             }}
           >
-            <p style={{ fontWeight: 700, fontSize: 15, color: "#fff" }}>
+            <p
+              style={{
+                fontWeight: 700,
+                fontSize: 15,
+                color: "var(--tt-surface)",
+              }}
+            >
               {title}
             </p>
             <button
@@ -341,13 +348,19 @@ function Modal({
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                color: "#fff",
+                color: "var(--tt-surface)",
               }}
             >
               <X size={14} strokeWidth={2.5} />
             </button>
           </div>
-          <div style={{ padding: "20px", background: "#f9fffe", flex: 1 }}>
+          <div
+            style={{
+              padding: "20px",
+              background: "var(--tt-gray-50)",
+              flex: 1,
+            }}
+          >
             {children}
           </div>
         </div>
@@ -427,7 +440,7 @@ function ActionMenu({ items }: { items: MenuItem[] }) {
               left: coords.left,
               minWidth: 220,
               zIndex: 9999,
-              background: "#fff",
+              background: "var(--tt-surface)",
               borderRadius: 12,
               border: "1px solid var(--tt-dashboard-card-border)",
               boxShadow:
@@ -475,7 +488,7 @@ function ActionMenu({ items }: { items: MenuItem[] }) {
                   onMouseEnter={(e) =>
                     (e.currentTarget.style.background = it.danger
                       ? "var(--tt-attention-bg)"
-                      : "rgba(26,150,136,0.07)")
+                      : "color-mix(in srgb, var(--tt-primary-500) 7%, transparent)")
                   }
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.background = "transparent")
@@ -513,7 +526,9 @@ function ActionMenu({ items }: { items: MenuItem[] }) {
           height: 32,
           borderRadius: 9,
           border: "1px solid var(--tt-dashboard-card-border)",
-          background: open ? "rgba(26,150,136,0.12)" : "rgba(255,255,255,0.7)",
+          background: open
+            ? "color-mix(in srgb, var(--tt-primary-500) 12%, transparent)"
+            : "rgba(255,255,255,0.7)",
           color: C.text2,
           display: "flex",
           alignItems: "center",
@@ -632,12 +647,13 @@ function FilterBar({
             borderRadius: 12,
             background: "var(--tt-dashboard-button-bg)",
             border: "none",
-            color: "#fff",
+            color: "var(--tt-surface)",
             fontSize: 13,
             fontWeight: 700,
             fontFamily: "inherit",
             cursor: "pointer",
-            boxShadow: "0 4px 12px rgba(26,150,136,0.25)",
+            boxShadow:
+              "0 4px 12px color-mix(in srgb, var(--tt-primary-500) 25%, transparent)",
             whiteSpace: "nowrap",
             flexShrink: 0,
           }}
@@ -785,8 +801,10 @@ function UserForm({
           style={{
             padding: "10px 14px",
             borderRadius: 11,
-            background: "rgba(26,150,136,0.07)",
-            border: "1px solid rgba(26,150,136,0.18)",
+            background:
+              "color-mix(in srgb, var(--tt-primary-500) 7%, transparent)",
+            border:
+              "1px solid color-mix(in srgb, var(--tt-primary-500) 18%, transparent)",
             fontSize: 12,
             color: C.brand,
             lineHeight: 1.5,
@@ -824,8 +842,8 @@ function UserForm({
           disabled={isEdit}
           style={{
             ...mInput,
-            background: isEdit ? "#f3f7f6" : "#fff",
-            color: isEdit ? "#7d9d99" : "#1a2e2b",
+            background: isEdit ? "var(--tt-gray-100)" : "var(--tt-surface)",
+            color: isEdit ? "var(--tt-gray-400)" : "var(--tt-primary-900)",
             cursor: isEdit ? "not-allowed" : "text",
           }}
         />
@@ -851,8 +869,8 @@ function UserForm({
             justifyContent: "space-between",
             padding: "12px 14px",
             borderRadius: 11,
-            border: "1px solid #d1ebe8",
-            background: "#fff",
+            border: "1px solid var(--tt-gray-200)",
+            background: "var(--tt-surface)",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -885,8 +903,8 @@ function UserForm({
             justifyContent: "space-between",
             padding: "12px 14px",
             borderRadius: 11,
-            border: "1px solid #d1ebe8",
-            background: "#fff",
+            border: "1px solid var(--tt-gray-200)",
+            background: "var(--tt-surface)",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -919,7 +937,7 @@ function UserForm({
           gap: 10,
           justifyContent: "flex-end",
           paddingTop: 14,
-          borderTop: "1px solid #e0f0ee",
+          borderTop: "1px solid var(--tt-gray-100)",
           marginTop: 4,
         }}
       >
@@ -930,9 +948,9 @@ function UserForm({
             height: 44,
             padding: "0 20px",
             borderRadius: 10,
-            border: "1.5px solid #d1ebe8",
-            background: "#fff",
-            color: "#4a7a74",
+            border: "1.5px solid var(--tt-gray-200)",
+            background: "var(--tt-surface)",
+            color: "var(--tt-gray-600)",
             fontSize: 13,
             fontWeight: 600,
             fontFamily: "inherit",
@@ -948,14 +966,18 @@ function UserForm({
             height: 44,
             padding: "0 22px",
             borderRadius: 10,
-            background: loading ? "rgba(26,150,136,0.5)" : "#1a9688",
+            background: loading
+              ? "color-mix(in srgb, var(--tt-primary-500) 50%, transparent)"
+              : "var(--tt-button-primary)",
             border: "none",
-            color: "#fff",
+            color: "var(--tt-surface)",
             fontSize: 13,
             fontWeight: 700,
             fontFamily: "inherit",
             cursor: loading ? "not-allowed" : "pointer",
-            boxShadow: loading ? "none" : "0 4px 14px rgba(26,150,136,0.3)",
+            boxShadow: loading
+              ? "none"
+              : "0 4px 14px color-mix(in srgb, var(--tt-primary-500) 30%, transparent)",
             display: "flex",
             alignItems: "center",
             gap: 7,
@@ -1040,8 +1062,8 @@ function UserDetailBody({
           padding: "16px 18px",
           borderRadius: 14,
           background:
-            "linear-gradient(135deg, rgba(26,150,136,0.08) 0%, rgba(26,150,136,0.02) 100%)",
-          border: "1px solid #d1ebe8",
+            "linear-gradient(135deg, color-mix(in srgb, var(--tt-primary-500) 8%, transparent) 0%, color-mix(in srgb, var(--tt-primary-500) 2%, transparent) 100%)",
+          border: "1px solid var(--tt-gray-200)",
         }}
       >
         <Avatar name={user.name} size={56} />
@@ -1071,9 +1093,9 @@ function UserDetailBody({
 
       <div
         style={{
-          background: "#fff",
+          background: "var(--tt-surface)",
           borderRadius: 12,
-          border: "1px solid #d1ebe8",
+          border: "1px solid var(--tt-gray-200)",
           overflow: "hidden",
         }}
       >
@@ -1086,7 +1108,7 @@ function UserDetailBody({
               gap: 12,
               padding: "11px 16px",
               borderBottom:
-                i === rows.length - 1 ? "none" : "1px solid #ecf6f4",
+                i === rows.length - 1 ? "none" : "1px solid var(--tt-gray-100)",
             }}
           >
             <p
@@ -1119,9 +1141,9 @@ function UserDetailBody({
             height: 42,
             padding: "0 22px",
             borderRadius: 10,
-            border: "1.5px solid #d1ebe8",
-            background: "#fff",
-            color: "#4a7a74",
+            border: "1.5px solid var(--tt-gray-200)",
+            background: "var(--tt-surface)",
+            color: "var(--tt-gray-600)",
             fontSize: 13,
             fontWeight: 600,
             fontFamily: "inherit",
@@ -1227,9 +1249,9 @@ function DeleteUserBody({
             height: 44,
             padding: "0 20px",
             borderRadius: 10,
-            border: "1.5px solid #d1ebe8",
-            background: "#fff",
-            color: "#4a7a74",
+            border: "1.5px solid var(--tt-gray-200)",
+            background: "var(--tt-surface)",
+            color: "var(--tt-gray-600)",
             fontSize: 13,
             fontWeight: 600,
             fontFamily: "inherit",
@@ -1247,10 +1269,10 @@ function DeleteUserBody({
             padding: "0 22px",
             borderRadius: 10,
             background: loading
-              ? "rgba(138,74,31,0.5)"
+              ? "color-mix(in srgb, var(--tt-attention-text) 50%, transparent)"
               : "var(--tt-attention-text)",
             border: "none",
-            color: "#fff",
+            color: "var(--tt-surface)",
             fontSize: 13,
             fontWeight: 700,
             fontFamily: "inherit",
@@ -1258,7 +1280,9 @@ function DeleteUserBody({
             display: "flex",
             alignItems: "center",
             gap: 6,
-            boxShadow: loading ? "none" : "0 4px 14px rgba(138,74,31,0.25)",
+            boxShadow: loading
+              ? "none"
+              : "0 4px 14px color-mix(in srgb, var(--tt-attention-text) 25%, transparent)",
           }}
         >
           {loading ? (
@@ -1442,9 +1466,9 @@ function Pagination({
             ...btnBase,
             ...(p === page
               ? {
-                  background: "#1a9688",
-                  borderColor: "#1a9688",
-                  color: "#fff",
+                  background: "var(--tt-button-primary)",
+                  borderColor: "var(--tt-primary-500)",
+                  color: "var(--tt-surface)",
                   fontWeight: 700,
                 }
               : {}),
@@ -1641,11 +1665,12 @@ export function UsersPage({
             zIndex: 1000,
             padding: "12px 20px",
             borderRadius: 12,
-            background: "#1a9688",
-            color: "#fff",
+            background: "var(--tt-button-primary)",
+            color: "var(--tt-surface)",
             fontSize: 13,
             fontWeight: 600,
-            boxShadow: "0 8px 24px rgba(26,150,136,0.35)",
+            boxShadow:
+              "0 8px 24px color-mix(in srgb, var(--tt-primary-500) 35%, transparent)",
             display: "flex",
             alignItems: "center",
             gap: 8,
@@ -1770,7 +1795,12 @@ export function UsersPage({
               }}
             >
               <thead>
-                <tr style={{ background: "rgba(26,150,136,0.04)" }}>
+                <tr
+                  style={{
+                    background:
+                      "color-mix(in srgb, var(--tt-primary-500) 4%, transparent)",
+                  }}
+                >
                   {[
                     "Pengguna",
                     "Email",
@@ -1791,7 +1821,9 @@ export function UsersPage({
                     key={u.id}
                     style={{
                       background:
-                        i % 2 === 0 ? "transparent" : "rgba(26,150,136,0.018)",
+                        i % 2 === 0
+                          ? "transparent"
+                          : "color-mix(in srgb, var(--tt-primary-500) 2%, transparent)",
                     }}
                   >
                     <td style={C.td}>

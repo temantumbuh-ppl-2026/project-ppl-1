@@ -105,7 +105,8 @@ function SectionCard({
         className="tt-section-header"
         style={{
           borderBottom: "1px solid var(--tt-dashboard-card-border)",
-          background: "rgba(26,150,136,0.04)",
+          background:
+            "color-mix(in srgb, var(--tt-primary-500) 4%, transparent)",
         }}
       >
         <p
@@ -219,7 +220,7 @@ export function OverviewPage({ stats }: { stats: Stats }) {
             label="Total Jawaban Quiz"
             value={stats.quizLogCount}
             sub="Seluruh log jawaban user"
-            accent="#8b5cf6"
+            accent="var(--tt-info-text)"
           />
         </div>
 

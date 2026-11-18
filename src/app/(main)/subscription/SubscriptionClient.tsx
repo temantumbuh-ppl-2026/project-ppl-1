@@ -155,7 +155,8 @@ export default function SubscriptionClient({
             style={{
               background: "var(--tt-dashboard-success-soft)",
               color: "var(--tt-dashboard-success)",
-              border: "1px solid rgba(26,150,136,0.18)",
+              border:
+                "1px solid color-mix(in srgb, var(--tt-primary-500) 18%, transparent)",
             }}
           >
             Pembayaran berhasil! Premium kamu sudah aktif.
@@ -166,9 +167,10 @@ export default function SubscriptionClient({
           <div
             className="rounded-[16px] px-5 py-4 text-[14px] font-semibold"
             style={{
-              background: "#FFF8F0",
-              color: "#B4722A",
-              border: "1px solid rgba(209,136,61,0.28)",
+              background: "var(--tt-warning-bg)",
+              color: "var(--tt-warning-text)",
+              border:
+                "1px solid color-mix(in srgb, var(--tt-warning-text) 28%, transparent)",
             }}
           >
             Pembayaran sedang diproses. Status akan diperbarui otomatis.
@@ -179,9 +181,10 @@ export default function SubscriptionClient({
           <div
             className="rounded-[16px] px-5 py-4 text-[14px] font-semibold"
             style={{
-              background: "#FFF8F0",
-              color: "#B4722A",
-              border: "1px solid rgba(209,136,61,0.28)",
+              background: "var(--tt-warning-bg)",
+              color: "var(--tt-warning-text)",
+              border:
+                "1px solid color-mix(in srgb, var(--tt-warning-text) 28%, transparent)",
             }}
           >
             Ada pembayaran {pendingPayment.durationMonths} bulan yang masih
@@ -279,7 +282,7 @@ export default function SubscriptionClient({
                 <div
                   className="flex h-12 items-center justify-center rounded-[16px] text-[13px] font-semibold"
                   style={{
-                    background: "#FFFFFF",
+                    background: "var(--tt-surface)",
                     color: "var(--tt-dashboard-text-3)",
                     border: "1px solid var(--tt-dashboard-card-border)",
                   }}
@@ -321,15 +324,15 @@ export default function SubscriptionClient({
                         style={{
                           background:
                             checkoutDuration === opt.months
-                              ? "rgba(26,150,136,0.14)"
-                              : "rgba(26,150,136,0.04)",
+                              ? "color-mix(in srgb, var(--tt-primary-500) 14%, transparent)"
+                              : "color-mix(in srgb, var(--tt-primary-500) 4%, transparent)",
                           color:
                             checkoutDuration === opt.months
                               ? "var(--tt-dashboard-brand)"
                               : "var(--tt-dashboard-text-2)",
                           border:
                             checkoutDuration === opt.months
-                              ? "1.5px solid rgba(26,150,136,0.3)"
+                              ? "1.5px solid color-mix(in srgb, var(--tt-primary-500) 30%, transparent)"
                               : "1.5px solid transparent",
                         }}
                       >
@@ -356,8 +359,9 @@ export default function SubscriptionClient({
                       label="Lanjutkan Pembayaran Tertunda"
                       className="h-12 w-full rounded-[16px] text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-[1px] hover:opacity-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{
-                        background: "#F59E0B",
-                        boxShadow: "0 12px 26px rgba(245,158,11,0.18)",
+                        background: "var(--tt-warning-text)",
+                        boxShadow:
+                          "0 12px 26px color-mix(in srgb, var(--tt-warning-text) 18%, transparent)",
                       }}
                     />
 
@@ -367,8 +371,9 @@ export default function SubscriptionClient({
                       disabled={cancelLoading}
                       className="h-12 w-full cursor-pointer rounded-[16px] bg-white text-[14px] font-semibold transition-all duration-200 hover:-translate-y-[1px] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
                       style={{
-                        color: "#B45309",
-                        border: "1px solid rgba(245,158,11,0.3)",
+                        color: "var(--tt-warning-text)",
+                        border:
+                          "1px solid color-mix(in srgb, var(--tt-warning-text) 30%, transparent)",
                       }}
                     >
                       {cancelLoading ? "Membatalkan..." : "Batalkan Pembayaran"}
@@ -393,7 +398,8 @@ export default function SubscriptionClient({
                     className="h-12 w-full rounded-[16px] text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-[1px] hover:opacity-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
                       background: "var(--gradient-brand-btn)",
-                      boxShadow: "0 12px 26px rgba(26,150,136,0.18)",
+                      boxShadow:
+                        "0 12px 26px color-mix(in srgb, var(--tt-primary-500) 18%, transparent)",
                     }}
                   />
                 )}
@@ -432,9 +438,11 @@ function PlanCard({
         featured
           ? {
               background:
-                "linear-gradient(160deg, rgba(237,249,247,0.98) 0%, rgba(255,255,255,1) 60%, rgba(244,251,250,1) 100%)",
-              border: "1px solid rgba(26,150,136,0.18)",
-              boxShadow: "0 20px 46px rgba(26,150,136,0.12)",
+                "linear-gradient(160deg, color-mix(in srgb, var(--tt-gray-50) 98%, transparent) 0%, rgba(255,255,255,1) 60%, color-mix(in srgb, var(--tt-gray-50) 100%, transparent) 100%)",
+              border:
+                "1px solid color-mix(in srgb, var(--tt-primary-500) 18%, transparent)",
+              boxShadow:
+                "0 20px 46px color-mix(in srgb, var(--tt-primary-500) 12%, transparent)",
             }
           : subdued
             ? {
@@ -447,11 +455,17 @@ function PlanCard({
         <>
           <div
             className="pointer-events-none absolute inset-0 rounded-[28px]"
-            style={{ border: "1px solid rgba(78,207,195,0.28)" }}
+            style={{
+              border:
+                "1px solid color-mix(in srgb, var(--tt-primary-300) 28%, transparent)",
+            }}
           />
           <div
             className="pointer-events-none absolute -right-14 -top-16 h-52 w-52 rounded-full blur-3xl"
-            style={{ background: "rgba(26,150,136,0.10)" }}
+            style={{
+              background:
+                "color-mix(in srgb, var(--tt-primary-500) 10%, transparent)",
+            }}
           />
         </>
       ) : null}
@@ -483,7 +497,7 @@ function PlanCard({
               className="rounded-full px-2.5 py-1 text-[12px] font-bold"
               style={{
                 background: featured
-                  ? "rgba(26,150,136,0.12)"
+                  ? "color-mix(in srgb, var(--tt-primary-500) 12%, transparent)"
                   : "var(--tt-dashboard-chip-bg)",
                 color: "var(--tt-dashboard-brand)",
               }}
@@ -514,13 +528,13 @@ function FeatureRow({
 }) {
   return (
     <div
-      className="flex items-center gap-3 rounded-[16px] px-3.5 py-3 transition-all duration-200 hover:scale-[1.01] hover:shadow-[0_6px_16px_rgba(26,150,136,0.08)]"
+      className="flex items-center gap-3 rounded-[16px] px-3.5 py-3 transition-all duration-200 hover:scale-[1.01] hover:shadow-[0_6px_16px_color-mix(in srgb, var(--tt-primary-500) 8%, transparent)]"
       style={{
         background: featured
-          ? "rgba(26,150,136,0.07)"
-          : "rgba(26,150,136,0.04)",
+          ? "color-mix(in srgb, var(--tt-primary-500) 7%, transparent)"
+          : "color-mix(in srgb, var(--tt-primary-500) 4%, transparent)",
         border: featured
-          ? "1px solid rgba(26,150,136,0.10)"
+          ? "1px solid color-mix(in srgb, var(--tt-primary-500) 10%, transparent)"
           : "1px solid transparent",
       }}
     >
@@ -528,8 +542,8 @@ function FeatureRow({
         className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
         style={{
           background: featured
-            ? "rgba(26,150,136,0.14)"
-            : "rgba(26,150,136,0.08)",
+            ? "color-mix(in srgb, var(--tt-primary-500) 14%, transparent)"
+            : "color-mix(in srgb, var(--tt-primary-500) 8%, transparent)",
           color: "var(--tt-dashboard-brand)",
         }}
       >
@@ -641,7 +655,7 @@ function SubscriptionProfileDropdown({
           <Link
             href="/profile"
             onClick={() => setOpen(false)}
-            className="flex cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[rgba(26,150,136,0.06)]"
+            className="flex cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[color-mix(in_srgb,_var(--tt-primary-500)_6%,_transparent)]"
             style={{ color: "var(--tt-dashboard-text)" }}
           >
             <User size={15} style={{ color: "var(--tt-dashboard-brand)" }} />

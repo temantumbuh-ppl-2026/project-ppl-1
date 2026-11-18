@@ -107,7 +107,7 @@ export function WeekFilterBar({
             collisionPadding={12}
             className="z-[9999] w-auto rounded-2xl border p-3 shadow-xl"
             style={{
-              background: "#FEFCF8",
+              background: "var(--tt-gray-50)",
               borderColor: "var(--tt-dashboard-card-border)",
             }}
           >

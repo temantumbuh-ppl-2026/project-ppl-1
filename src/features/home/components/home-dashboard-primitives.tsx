@@ -10,7 +10,7 @@ export function SkeletonBox({ h = 120 }: { h?: number }) {
       style={{
         minHeight: h,
         background:
-          "linear-gradient(110deg, rgba(196,224,220,0.45) 8%, rgba(255,255,255,0.75) 18%, rgba(196,224,220,0.45) 33%)",
+          "linear-gradient(110deg, color-mix(in srgb, var(--tt-gray-200) 45%, transparent) 8%, rgba(255,255,255,0.75) 18%, color-mix(in srgb, var(--tt-gray-200) 45%, transparent) 33%)",
         backgroundSize: "200% 100%",
         animation: "tt-skeleton 1.35s linear infinite",
         border: "1px solid rgba(255,255,255,0.72)",
@@ -43,7 +43,7 @@ export function MotionCard({
       whileHover={{
         ...(liftOnHover ? hoverCard : {}),
         boxShadow:
-          "0 12px 36px rgba(26,150,136,0.13), 0 1.5px 0px rgba(255,255,255,0.95) inset",
+          "0 12px 36px color-mix(in srgb, var(--tt-primary-500) 13%, transparent), 0 1.5px 0px rgba(255,255,255,0.95) inset",
       }}
       whileTap={liftOnHover ? tapCard : undefined}
       className={className}

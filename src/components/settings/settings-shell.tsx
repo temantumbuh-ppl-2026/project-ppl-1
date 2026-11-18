@@ -122,13 +122,13 @@ export function SettingsShell({ children }: SettingsShellProps) {
         <div className="mb-5 sm:mb-6">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl md:text-[2.15rem]">
+              <h1 className="text-2xl font-extrabold tracking-tight text-tt-gray-900 sm:text-3xl md:text-[2.15rem]">
                 Pengaturan
               </h1>
             </div>
 
             {isFetching ? (
-              <span className="text-xs text-slate-400 sm:pt-1">
+              <span className="text-xs text-tt-gray-400 sm:pt-1">
                 Menyegarkan data...
               </span>
             ) : null}

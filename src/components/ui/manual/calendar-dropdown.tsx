@@ -10,13 +10,13 @@ import {
 } from "@/components/ui/popover";
 
 const brand = {
-  ink: "#1B6B6B",
-  inkDark: "#0D4646",
-  paper: "#FEFCF8",
-  white: "#FFFFFF",
-  border: "#E2F0F0",
-  muted: "#4A7070",
-  soft: "#EEF9F8",
+  ink: "var(--tt-primary-700)",
+  inkDark: "var(--tt-primary-900)",
+  paper: "var(--tt-gray-50)",
+  white: "var(--tt-surface)",
+  border: "var(--tt-gray-100)",
+  muted: "var(--tt-gray-600)",
+  soft: "var(--tt-primary-50)",
 };
 
 type Props = {
@@ -72,7 +72,8 @@ export function CalendarDropdown({ date, monthLabel, onChange }: Props) {
               "var(--font-plus-jakarta), 'Plus Jakarta Sans', sans-serif",
             fontSize: 12,
             fontWeight: 700,
-            boxShadow: "0 2px 8px rgba(13,70,70,0.04)",
+            boxShadow:
+              "0 2px 8px color-mix(in srgb, var(--tt-primary-900) 4%, transparent)",
             position: "relative",
             zIndex: 1,
           }}
@@ -102,7 +103,8 @@ export function CalendarDropdown({ date, monthLabel, onChange }: Props) {
           border: `1px solid ${brand.border}`,
           background: brand.paper,
           overflow: "hidden",
-          boxShadow: "0 16px 40px rgba(13,70,70,0.12)",
+          boxShadow:
+            "0 16px 40px color-mix(in srgb, var(--tt-primary-900) 12%, transparent)",
           zIndex: 9999,
           pointerEvents: "auto",
         }}
@@ -139,28 +141,29 @@ export function CalendarDropdown({ date, monthLabel, onChange }: Props) {
               caption_label: "hidden",
               nav: "flex items-center gap-1",
               nav_button:
-                "h-7 w-7 bg-white border border-[#E2F0F0] rounded-md hover:bg-[#EEF9F8] text-[#1B6B6B]",
+                "h-7 w-7 bg-white border border-tt-gray-100 rounded-md hover:bg-tt-primary-50 text-tt-primary-700",
               nav_button_previous: "absolute left-1",
               nav_button_next: "absolute right-1",
               table: "w-full border-collapse space-y-1",
               head_row: "flex",
               head_cell:
-                "text-[#8AADAD] rounded-md w-8 font-semibold text-[12px]",
+                "text-tt-gray-400 rounded-md w-8 font-semibold text-[12px]",
               row: "flex w-full mt-1",
-              cell: "h-8 w-8 text-center text-[12px] p-0 relative [&:has([aria-selected])]:bg-[#E2F5F3] first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-              day: "h-8 w-8 p-0 font-medium rounded-md text-[#0D4646] hover:bg-[#EEF9F8]",
+              cell: "h-8 w-8 text-center text-[12px] p-0 relative [&:has([aria-selected])]:bg-tt-primary-100 first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+              day: "h-8 w-8 p-0 font-medium rounded-md text-tt-primary-900 hover:bg-tt-primary-50",
               day_selected:
-                "bg-[#1A9688] text-white hover:bg-[#1A9688] hover:text-white focus:bg-[#1A9688] focus:text-white",
-              day_today: "border border-[#1A9688] text-[#0D4646] bg-[#EEF9F8]",
-              day_outside: "text-[#8AADAD] opacity-50",
-              day_disabled: "text-[#8AADAD] opacity-40",
+                "bg-tt-button-primary text-white hover:bg-tt-button-primary hover:text-white focus:bg-tt-button-primary focus:text-white",
+              day_today:
+                "border border-tt-primary-500 text-tt-primary-900 bg-tt-primary-50",
+              day_outside: "text-tt-gray-400 opacity-50",
+              day_disabled: "text-tt-gray-400 opacity-40",
               day_hidden: "invisible",
               dropdown:
-                "h-8 rounded-md border border-[#E2F0F0] bg-white px-2 text-[12px] font-semibold text-[#0D4646]",
+                "h-8 rounded-md border border-tt-gray-100 bg-white px-2 text-[12px] font-semibold text-tt-primary-900",
               dropdown_month:
-                "h-8 rounded-md border border-[#E2F0F0] bg-white px-2 text-[12px] font-semibold text-[#0D4646]",
+                "h-8 rounded-md border border-tt-gray-100 bg-white px-2 text-[12px] font-semibold text-tt-primary-900",
               dropdown_year:
-                "h-8 rounded-md border border-[#E2F0F0] bg-white px-2 text-[12px] font-semibold text-[#0D4646]",
+                "h-8 rounded-md border border-tt-gray-100 bg-white px-2 text-[12px] font-semibold text-tt-primary-900",
             }}
           />
         </div>

@@ -94,13 +94,14 @@ function Initials({ name, size = 34 }: { name: string; size?: number }) {
         width: size,
         height: size,
         borderRadius: size * 0.3,
-        background: "linear-gradient(135deg, #1a9688 0%, #0f7a6e 100%)",
+        background:
+          "linear-gradient(135deg, var(--tt-button-primary) 0%, var(--tt-primary-700) 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         fontWeight: 800,
         fontSize: size * 0.37,
-        color: "#fff",
+        color: "var(--tt-surface)",
         flexShrink: 0,
         letterSpacing: "-0.02em",
       }}
@@ -302,7 +303,7 @@ function Sidebar({
                     ? "var(--tt-dashboard-active-text)"
                     : "var(--tt-dashboard-text-2)",
                   boxShadow: isActive
-                    ? "0 4px 14px rgba(26,150,136,0.22)"
+                    ? "0 4px 14px color-mix(in srgb, var(--tt-primary-500) 22%, transparent)"
                     : "none",
                   transition: "all 0.15s ease",
                   justifyContent: showLabel ? "flex-start" : "center",
@@ -592,7 +593,8 @@ export function AdminShell({
             flex: 1,
             overflowY: "auto",
             scrollbarWidth: "thin",
-            scrollbarColor: "rgba(167,210,205,0.5) transparent",
+            scrollbarColor:
+              "color-mix(in srgb, var(--tt-gray-200) 50%, transparent) transparent",
           }}
         >
           {children}

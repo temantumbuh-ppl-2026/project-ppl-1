@@ -63,13 +63,15 @@ function SidebarNavItem({
       href={targetHref}
       prefetch
       onClick={onClick}
-      className="flex cursor-pointer items-center gap-3 rounded-[0.95rem] px-3.5 py-3 transition-all hover:bg-[rgba(26,150,136,0.06)]"
+      className="flex cursor-pointer items-center gap-3 rounded-[0.95rem] px-3.5 py-3 transition-all hover:bg-[color-mix(in_srgb,_var(--tt-primary-500)_6%,_transparent)]"
       style={{
         background: active ? "var(--tt-dashboard-active-bg)" : "transparent",
         color: active
           ? "var(--tt-dashboard-active-text)"
           : "var(--tt-dashboard-text)",
-        boxShadow: active ? "0 8px 18px rgba(26,150,136,0.14)" : "none",
+        boxShadow: active
+          ? "0 8px 18px color-mix(in srgb, var(--tt-primary-500) 14%, transparent)"
+          : "none",
       }}
       aria-current={active ? "page" : undefined}
     >
@@ -134,7 +136,7 @@ function MobileSidebar({
         style={{
           borderColor: "var(--tt-dashboard-shell-border)",
           background:
-            "linear-gradient(180deg, rgba(246,250,249,0.98) 0%, rgba(241,247,246,0.98) 100%)",
+            "linear-gradient(180deg, color-mix(in srgb, var(--tt-gray-50) 98%, transparent) 0%, color-mix(in srgb, var(--tt-gray-50) 98%, transparent) 100%)",
         }}
       >
         {/* Header: brand + close */}
@@ -550,7 +552,7 @@ function MobileProfileDropdown({
           <Link
             href="/profile"
             onClick={() => setOpen(false)}
-            className="flex cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[rgba(26,150,136,0.06)]"
+            className="flex cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[color-mix(in_srgb,_var(--tt-primary-500)_6%,_transparent)]"
             style={{ color: "var(--tt-dashboard-text)" }}
           >
             <User size={15} style={{ color: "var(--tt-dashboard-brand)" }} />
