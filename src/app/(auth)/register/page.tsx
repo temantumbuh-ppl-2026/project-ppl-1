@@ -790,7 +790,7 @@ function RegisterPageContent() {
       setVerificationEmail(email);
       setRegisterError(null);
       setResendMessage("");
-      toast.success("Silakan periksa email Anda untuk verifikasi.");
+      toast.success("Silakan periksa emailmu untuk verifikasi.");
     },
 
     onError: (error, variables) => {

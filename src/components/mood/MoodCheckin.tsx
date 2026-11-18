@@ -228,7 +228,8 @@ export function MoodCheckin({
       if (!response.ok) {
         throw {
           status: response.status,
-          message: result.error || "Something went wrong",
+          message:
+            result.error || "Terjadi kesalahan. Coba lagi beberapa saat.",
         };
       }
 

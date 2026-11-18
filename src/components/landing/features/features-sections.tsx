@@ -81,8 +81,8 @@ export function FeaturesBraveChoice() {
             coba dulu, refleksikan kemudian
           </div>
           <p className="demo-note">
-            Brave Choice Quiz ada di halaman diary. Akun gratis punya batas
-            latihan harian, Premium membuka akses tanpa batas.
+            Brave Choice ada di halaman diary. Akun gratis punya batas latihan
+            harian, Premium membuka akses tanpa batas.
           </p>
           <div className="feature-cta-row">
             <Link className="button" href="/diary">

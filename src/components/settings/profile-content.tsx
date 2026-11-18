@@ -247,7 +247,7 @@ export function ProfileContent({
             <div className={leftColClass}>
               <p className="text-sm font-bold text-slate-900">Tahun Lahir</p>
               <p className="mt-1 text-[12px] leading-relaxed text-slate-500 sm:text-xs">
-                Pilih tahun lahir Anda.
+                Pilih tahun lahirmu.
               </p>
             </div>
 

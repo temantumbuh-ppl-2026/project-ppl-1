@@ -27,7 +27,7 @@ export const basicPlan = {
   features: [
     `${FREE_DIARY_LIMIT_PER_MONTH} sesi diary per bulan`,
     "Mood check-in harian",
-    `Brave Choice Quiz: ${FREE_QUIZ_LIMIT_PER_DAY} soal per hari`,
+    `Brave Choice: ${FREE_QUIZ_LIMIT_PER_DAY} latihan per hari`,
   ],
   singleOnly: ["Insight Dashboard", "Rekomendasi dukungan"],
 };
@@ -42,7 +42,7 @@ export const singlePlan = {
     "Untuk kamu yang ingin bercerita lebih leluasa dan melihat ringkasan pola emosimu.",
   features: [
     "Sesi diary tanpa batas",
-    "Brave Choice Quiz tanpa batas",
+    "Brave Choice tanpa batas",
     "Insight Dashboard",
     "Tren Mood bulanan dan Ringkasan Mood",
     "Refleksi AI harian dan rekomendasi dukungan",
