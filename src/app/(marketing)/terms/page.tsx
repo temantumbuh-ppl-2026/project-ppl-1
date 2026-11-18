@@ -141,17 +141,6 @@ const sections: LegalSection[] = [
     ),
   },
   {
-    id: "orang-tua",
-    title: "Laporan orang tua/wali",
-    content: (
-      <p>
-        Kamu dapat menambahkan email orang tua atau wali secara opsional.
-        Laporan mingguan hanya dikirim setelah orang tua/wali memberikan
-        persetujuan, dan tidak menyertakan isi diary.
-      </p>
-    ),
-  },
-  {
     id: "penangguhan",
     title: "Penangguhan akun",
     content: (

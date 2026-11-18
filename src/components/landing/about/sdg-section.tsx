@@ -47,7 +47,7 @@ export function AboutSdgSection() {
               </h3>
               <p>
                 Fitur kami dirancang untuk mendukung kesadaran diri, edukasi
-                keputusan aman, dan komunikasi keluarga—bukan sebagai bukti
+                keputusan aman, dan dukungan keselamatan—bukan sebagai bukti
                 pencapaian indikator SDG.
               </p>
             </div>

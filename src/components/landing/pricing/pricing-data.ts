@@ -27,7 +27,6 @@ export const basicPlan = {
   features: [
     `${FREE_DIARY_LIMIT_PER_MONTH} sesi diary per bulan`,
     "Mood check-in harian",
-    "Laporan email mingguan ke orang tua",
     `Brave Choice Quiz: ${FREE_QUIZ_LIMIT_PER_DAY} soal per hari`,
   ],
   singleOnly: ["Insight Dashboard", "Rekomendasi dukungan"],
@@ -47,7 +46,6 @@ export const singlePlan = {
     "Insight Dashboard",
     "Tren Mood bulanan dan Ringkasan Mood",
     "Refleksi AI harian dan rekomendasi dukungan",
-    "Laporan orang tua versi lengkap (PDF dengan insight)",
   ],
 };
 
@@ -69,7 +67,7 @@ export const pricingFaqs: PricingFaq[] = [
   {
     question: "Apakah isi diary saya aman dan privat?",
     answer:
-      "Isi diary disimpan dalam bentuk terenkripsi. Orang tua hanya menerima laporan umum non-personal, tanpa isi diary.",
+      "Isi diary disimpan dalam bentuk terenkripsi dan tidak ditampilkan ke pengguna lain.",
   },
   {
     question: "Bisakah saya upgrade atau downgrade kapan saja?",
