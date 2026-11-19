@@ -3,7 +3,10 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedUserIdFromRequest } from "@/lib/auth";
 import snap from "@/lib/midtrans";
 import prisma from "@/lib/prisma";
-import { ALLOWED_DURATIONS, PRICE_PER_MONTH } from "@/lib/subscription/plans";
+import {
+  ALLOWED_DURATIONS,
+  getDurationPricing,
+} from "@/lib/subscription/plans";
 import { getLatestPendingPayment } from "@/lib/subscription/service";
 
 /**
@@ -62,7 +65,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const grossAmount = PRICE_PER_MONTH * durationMonths;
+    // Harga sama dengan yang ditampilkan di halaman langganan (termasuk potongan).
+    const grossAmount = getDurationPricing(durationMonths).price;
     const orderId = `TT-${userId.slice(0, 8)}-${Date.now()}`;
 
     // Create payment record in DB
@@ -85,8 +89,9 @@ export async function POST(request: Request) {
       item_details: [
         {
           id: "premium-subscription",
-          price: PRICE_PER_MONTH,
-          quantity: durationMonths,
+          // Satu item agar jumlah item_details selalu sama dengan gross_amount.
+          price: grossAmount,
+          quantity: 1,
           name: `Premium ${durationMonths} Bulan`,
         },
       ],

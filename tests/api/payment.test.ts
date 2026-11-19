@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { POST } from "@/app/api/payment/create/route";
 import { getAuthenticatedUserIdFromRequest } from "@/lib/auth";
+import { getDurationPricing } from "@/lib/subscription/plans";
 
 vi.mock("@/lib/auth", () => ({
   getAuthenticatedUserIdFromRequest: vi.fn(),
@@ -94,6 +95,52 @@ describe("Payment API Routes (/api/payment/create)", () => {
       const json = await res.json();
       expect(json.success).toBe(true);
       expect(json.token).toBe("snap-token-123");
+    });
+
+    it("Harus menagih harga hemat sesuai durasi, sama dengan tampilan", async () => {
+      mockGetAuthId.mockResolvedValue("user1");
+      mockUserFindUnique.mockResolvedValue({
+        id: "user1",
+        name: "Test User",
+        email: "test@example.com",
+      } as never);
+      mockPaymentCreate.mockResolvedValue({
+        id: "pay1",
+        orderId: "TT-user1-123",
+        durationMonths: 3,
+      } as never);
+      mockPaymentUpdate.mockResolvedValue({} as never);
+      mockCreateTransaction.mockResolvedValue({
+        token: "snap-token-123",
+        redirect_url: "https://app.sandbox.midtrans.com/snap/v2/xxx",
+      } as never);
+
+      const req = new Request("http://localhost/api/payment/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ durationMonths: 3 }),
+      });
+      const res = await POST(req);
+
+      expect(res.status).toBe(200);
+      expect(mockPaymentCreate).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          grossAmount: getDurationPricing(3).price,
+          durationMonths: 3,
+        }),
+      });
+
+      const param = mockCreateTransaction.mock.calls[0][0] as {
+        transaction_details: { gross_amount: number };
+        item_details: Array<{ price: number; quantity: number }>;
+      };
+      expect(param.transaction_details.gross_amount).toBe(159000);
+      // Midtrans mensyaratkan jumlah item sama dengan gross_amount.
+      const itemTotal = param.item_details.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0,
+      );
+      expect(itemTotal).toBe(param.transaction_details.gross_amount);
     });
 
     it("Harus return 404 jika user tidak ditemukan", async () => {

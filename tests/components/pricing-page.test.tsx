@@ -55,6 +55,13 @@ describe("pricing content comes from the shared subscription rules", () => {
     );
   });
 
+  it("explains the duration discounts in the payment FAQ", () => {
+    const answer = pricingFaqs[0].answer;
+    expect(answer).toContain("3 bulan hemat 10%");
+    expect(answer).toContain("6 bulan hemat 15,5%");
+    expect(answer).toContain("12 bulan hemat 22,5%");
+  });
+
   it("keeps all four existing FAQ questions", () => {
     expect(pricingFaqs.map((faq) => faq.question)).toEqual([
       "Bagaimana sistem pembayarannya?",
