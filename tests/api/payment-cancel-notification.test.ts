@@ -1,3 +1,4 @@
+import type { Prisma } from "@/app/generated/prisma/client";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { POST as POST_CANCEL } from "@/app/api/payment/cancel/route";
 import { POST as POST_NOTIFICATION } from "@/app/api/payment/notification/route";
@@ -9,6 +10,7 @@ import {
 } from "@/lib/subscription/service";
 import prisma from "@/lib/prisma";
 import crypto from "crypto";
+import { getVerifiedMidtransPayment } from "@/lib/midtrans-status";
 
 vi.mock("@/lib/auth", () => ({
   getAuthenticatedUserIdFromRequest: vi.fn(),
@@ -16,6 +18,8 @@ vi.mock("@/lib/auth", () => ({
 
 vi.mock("@/lib/prisma", () => ({
   default: {
+    $transaction: vi.fn(),
+    $queryRaw: vi.fn(),
     payment: {
       findUnique: vi.fn(),
       update: vi.fn(),
@@ -49,9 +53,90 @@ function makeMidtransSignature(
     .digest("hex");
 }
 
+describe("Midtrans status verification", () => {
+  beforeEach(() => {
+    vi.stubEnv("MIDTRANS_SERVER_KEY", "test-server-key");
+    vi.stubEnv("MIDTRANS_IS_PRODUCTION", "false");
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+  });
+  const status = (patch: Record<string, unknown> = {}) => ({
+    order_id: "TT-verified",
+    gross_amount: "59000.00",
+    status_code: "200",
+    transaction_status: "settlement",
+    fraud_status: "accept",
+    payment_type: "bank_transfer",
+    currency: "IDR",
+    ...patch,
+  });
+  const respond = (body: unknown) =>
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response(JSON.stringify(body))),
+    );
+
+  it("memverifikasi status dan nominal melalui endpoint server Midtrans", async () => {
+    respond(status());
+    expect(await getVerifiedMidtransPayment("TT-verified", 59000)).toEqual({
+      paymentType: "bank_transfer",
+      vaNumber: null,
+    });
+    expect(fetch).toHaveBeenCalledWith(
+      "https://api.sandbox.midtrans.com/v2/TT-verified/status",
+      expect.objectContaining({
+        cache: "no-store",
+        headers: expect.objectContaining({
+          Authorization:
+            "Basic " + Buffer.from("test-server-key:").toString("base64"),
+        }),
+      }),
+    );
+  });
+  it.each([
+    { transaction_status: "pending", status_code: "201" },
+    { transaction_status: "capture", fraud_status: "challenge" },
+    { transaction_status: "deny" },
+  ])(
+    "tidak menganggap status non-final sebagai pembayaran berhasil",
+    async (patch) => {
+      respond(status(patch));
+      expect(await getVerifiedMidtransPayment("TT-verified", 59000)).toBeNull();
+    },
+  );
+  it.each([
+    { order_id: "another-order" },
+    { gross_amount: "1.00" },
+    { currency: "USD" },
+  ])(
+    "menolak bukti pembayaran yang tidak cocok dengan transaksi lokal",
+    async (patch) => {
+      respond(status(patch));
+      await expect(
+        getVerifiedMidtransPayment("TT-verified", 59000),
+      ).rejects.toThrow("MIDTRANS_STATUS_MISMATCH");
+    },
+  );
+  it("gagal aman saat provider tidak tersedia", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(new Response("Unavailable", { status: 503 })),
+    );
+    await expect(
+      getVerifiedMidtransPayment("TT-verified", 59000),
+    ).rejects.toThrow("MIDTRANS_STATUS_UNAVAILABLE");
+  });
+});
+
 describe("Payment API Routes", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.$transaction).mockImplementation(async (fn) =>
+      fn(prisma as unknown as Prisma.TransactionClient),
+    );
+    vi.mocked(prisma.$queryRaw).mockResolvedValue([]);
     mockPaymentUpdate.mockResolvedValue({} as never);
   });
 
@@ -185,6 +270,8 @@ describe("Payment API Routes", () => {
   // POST /api/payment/notification
   // --------------------------------
   describe("POST /api/payment/notification", () => {
+    beforeEach(() => vi.stubEnv("MIDTRANS_SERVER_KEY", "test-server-key"));
+    afterEach(() => vi.unstubAllEnvs());
     const orderId = "TT-user1-001";
     const statusCode = "200";
     const grossAmount = "59000.00";
@@ -192,7 +279,7 @@ describe("Payment API Routes", () => {
       orderId,
       statusCode,
       grossAmount,
-      "",
+      "test-server-key",
     );
 
     const basePayment = {
@@ -200,9 +287,82 @@ describe("Payment API Routes", () => {
       userId: "user1",
       orderId,
       durationMonths: 1,
+      grossAmount: Number(grossAmount),
+      paidAt: null,
       status: "pending",
       expiredAt: null,
     };
+
+    const settledRequest = (overrides: Record<string, unknown> = {}) =>
+      new Request("http://localhost/api/payment/notification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_id: orderId,
+          status_code: statusCode,
+          gross_amount: grossAmount,
+          signature_key: validSignature,
+          transaction_status: "settlement",
+          fraud_status: "accept",
+          ...overrides,
+        }),
+      });
+
+    it("memproses ulang settlement lama yang belum membentuk subscription", async () => {
+      const paidAt = new Date("2026-11-19T10:00:00Z");
+      mockPaymentFindUnique.mockResolvedValue({
+        ...basePayment,
+        status: "settlement",
+        paidAt,
+      } as never);
+      expect((await POST_NOTIFICATION(settledRequest())).status).toBe(200);
+      expect(mockActivateSubscription).toHaveBeenCalledWith(
+        { userId: "user1", paymentId: "pay-1", durationMonths: 1, paidAt },
+        expect.objectContaining({ payment: expect.any(Object) }),
+      );
+      expect(mockPaymentUpdate).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ paidAt }) }),
+      );
+    });
+
+    it("tidak melaporkan sukses jika aktivasi gagal dalam transaksi pembayaran", async () => {
+      mockPaymentFindUnique.mockResolvedValue({ ...basePayment } as never);
+      mockActivateSubscription.mockRejectedValueOnce(
+        new Error("Activation failed"),
+      );
+      const log = vi.spyOn(console, "error").mockImplementation(() => {});
+      expect((await POST_NOTIFICATION(settledRequest())).status).toBe(500);
+      expect(prisma.$transaction).toHaveBeenCalledOnce();
+      log.mockRestore();
+    });
+
+    it("menolak nominal yang berbeda meskipun signature valid", async () => {
+      mockPaymentFindUnique.mockResolvedValue({ ...basePayment } as never);
+      const amount = "1.00";
+      expect(
+        (
+          await POST_NOTIFICATION(
+            settledRequest({
+              gross_amount: amount,
+              signature_key: makeMidtransSignature(
+                orderId,
+                statusCode,
+                amount,
+                "test-server-key",
+              ),
+            }),
+          )
+        ).status,
+      ).toBe(400);
+      expect(mockPaymentUpdate).not.toHaveBeenCalled();
+      expect(mockActivateSubscription).not.toHaveBeenCalled();
+    });
+
+    it("gagal aman jika server key tidak dikonfigurasi", async () => {
+      vi.stubEnv("MIDTRANS_SERVER_KEY", "");
+      expect((await POST_NOTIFICATION(settledRequest())).status).toBe(503);
+      expect(prisma.$transaction).not.toHaveBeenCalled();
+    });
 
     it("Harus return 403 jika signature tidak valid", async () => {
       const req = new Request("http://localhost/api/payment/notification", {
@@ -273,11 +433,15 @@ describe("Payment API Routes", () => {
           data: expect.objectContaining({ status: "settlement" }),
         }),
       );
-      expect(mockActivateSubscription).toHaveBeenCalledWith({
-        userId: "user1",
-        paymentId: "pay-1",
-        durationMonths: 1,
-      });
+      expect(mockActivateSubscription).toHaveBeenCalledWith(
+        {
+          userId: "user1",
+          paymentId: "pay-1",
+          durationMonths: 1,
+          paidAt: expect.any(Date),
+        },
+        expect.objectContaining({ payment: expect.any(Object) }),
+      );
     });
 
     it("Harus aktivasi subscription jika transaction_status = capture dan fraud_status = accept", async () => {
@@ -354,7 +518,10 @@ describe("Payment API Routes", () => {
           data: expect.objectContaining({ status: "cancel" }),
         }),
       );
-      expect(mockSyncUserPremiumStatus).toHaveBeenCalledWith("user1");
+      expect(mockSyncUserPremiumStatus).toHaveBeenCalledWith(
+        "user1",
+        expect.objectContaining({ payment: expect.any(Object) }),
+      );
     });
 
     it("Harus update status expire dan sync premium jika transaction_status = expire", async () => {
@@ -384,7 +551,10 @@ describe("Payment API Routes", () => {
           }),
         }),
       );
-      expect(mockSyncUserPremiumStatus).toHaveBeenCalledWith("user1");
+      expect(mockSyncUserPremiumStatus).toHaveBeenCalledWith(
+        "user1",
+        expect.objectContaining({ payment: expect.any(Object) }),
+      );
     });
 
     it("Harus update status pending jika transaction_status = pending", async () => {

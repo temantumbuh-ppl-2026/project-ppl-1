@@ -1,3 +1,4 @@
+import type { Prisma } from "@/app/generated/prisma/client";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   getLatestPendingPayment,
@@ -6,11 +7,17 @@ import {
   getSubscriptionStatus,
 } from "@/lib/subscription/service";
 import prisma from "@/lib/prisma";
+import { getVerifiedMidtransPayment } from "@/lib/midtrans-status";
+
+vi.mock("@/lib/midtrans-status", () => ({
+  getVerifiedMidtransPayment: vi.fn(),
+}));
 
 vi.mock("@/lib/prisma", () => ({
   default: {
     payment: {
       findFirst: vi.fn(),
+      findMany: vi.fn(),
     },
     $transaction: vi.fn(),
   },
@@ -19,9 +26,20 @@ vi.mock("@/lib/prisma", () => ({
 const mockPaymentFindFirst = vi.mocked(prisma.payment.findFirst);
 const mockTransaction = vi.mocked(prisma.$transaction);
 
+function runTransaction(
+  callback: (tx: Prisma.TransactionClient) => Promise<unknown>,
+  tx: object,
+) {
+  return callback({
+    $queryRaw: vi.fn().mockResolvedValue([{ id: "user1" }]),
+    ...tx,
+  } as unknown as Prisma.TransactionClient);
+}
+
 describe("lib/subscription/service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(prisma.payment.findMany).mockResolvedValue([]);
   });
 
   // ─────────────────────────────────────
@@ -67,6 +85,84 @@ describe("lib/subscription/service", () => {
   // activateSubscription
   // ─────────────────────────────────────
   describe("activateSubscription", () => {
+    it("tidak mengaktifkan ulang paket historis yang sudah melewati durasinya", async () => {
+      const tx = {
+        $queryRaw: vi.fn().mockResolvedValue([{ id: "user1" }]),
+        subscription: {
+          findFirst: vi.fn().mockResolvedValue(null),
+          create: vi.fn().mockResolvedValue({ id: "historical" }),
+          updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+        },
+        user: { update: vi.fn().mockResolvedValue({}) },
+      };
+      await activateSubscription(
+        {
+          userId: "user1",
+          paymentId: "old-payment",
+          durationMonths: 1,
+          paidAt: new Date("2020-01-01T00:00:00Z"),
+        },
+        tx as unknown as Prisma.TransactionClient,
+      );
+      expect(tx.subscription.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          startedAt: new Date("2020-01-01T00:00:00Z"),
+          expiresAt: new Date("2020-02-01T00:00:00Z"),
+          isActive: false,
+        }),
+      });
+      expect(tx.user.update).toHaveBeenCalledWith({
+        where: { id: "user1" },
+        data: { isPremium: false },
+      });
+    });
+    it("retry pembayaran yang sama tidak membuat atau memperpanjang subscription lagi", async () => {
+      const existing = {
+        id: "sub-existing",
+        userId: "user1",
+        paymentId: "pay-1",
+        isActive: false,
+      };
+      const tx = {
+        $queryRaw: vi.fn().mockResolvedValue([{ id: "user1" }]),
+        subscription: {
+          findFirst: vi.fn().mockResolvedValue(existing),
+          create: vi.fn(),
+          updateMany: vi.fn(),
+        },
+        user: { update: vi.fn() },
+      };
+      const result = await activateSubscription(
+        { userId: "user1", paymentId: "pay-1", durationMonths: 1 },
+        tx as unknown as Prisma.TransactionClient,
+      );
+      expect(result).toBe(existing);
+      expect(tx.subscription.create).not.toHaveBeenCalled();
+      expect(tx.user.update).not.toHaveBeenCalled();
+      expect(mockTransaction).not.toHaveBeenCalled();
+    });
+
+    it("memakai transaksi caller untuk menyimpan subscription dan premium", async () => {
+      const tx = {
+        $queryRaw: vi.fn().mockResolvedValue([{ id: "user1" }]),
+        subscription: {
+          findFirst: vi.fn().mockResolvedValue(null),
+          create: vi.fn().mockResolvedValue({ id: "sub-1" }),
+          updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+        },
+        user: { update: vi.fn().mockResolvedValue({}) },
+      };
+      await activateSubscription(
+        { userId: "user1", paymentId: "pay-1", durationMonths: 1 },
+        tx as unknown as Prisma.TransactionClient,
+      );
+      expect(tx.subscription.create).toHaveBeenCalledOnce();
+      expect(tx.user.update).toHaveBeenCalledWith({
+        where: { id: "user1" },
+        data: { isPremium: true },
+      });
+      expect(mockTransaction).not.toHaveBeenCalled();
+    });
     it("Harus buat subscription baru mulai dari sekarang jika tidak ada active sub", async () => {
       const mockSub = { id: "sub-1", isActive: true };
 
@@ -81,7 +177,7 @@ describe("lib/subscription/service", () => {
             update: vi.fn().mockResolvedValue({}),
           },
         };
-        return fn(tx);
+        return runTransaction(fn, tx);
       });
 
       const result = await activateSubscription({
@@ -101,14 +197,17 @@ describe("lib/subscription/service", () => {
         const tx = {
           subscription: {
             updateMany: vi.fn().mockResolvedValue({ count: 0 }),
-            findFirst: vi.fn().mockResolvedValue({ expiresAt: futureExpiry }), // ada active sub
+            findFirst: vi
+              .fn()
+              .mockResolvedValueOnce(null)
+              .mockResolvedValue({ expiresAt: futureExpiry }), // ada active sub
             create: vi.fn().mockResolvedValue(mockSub),
           },
           user: {
             update: vi.fn().mockResolvedValue({}),
           },
         };
-        return fn(tx);
+        return runTransaction(fn, tx);
       });
 
       const result = await activateSubscription({
@@ -132,7 +231,7 @@ describe("lib/subscription/service", () => {
           },
           user: { update: mockUserUpdate },
         };
-        return fn(tx);
+        return runTransaction(fn, tx);
       });
 
       await activateSubscription({
@@ -154,6 +253,107 @@ describe("lib/subscription/service", () => {
   // syncUserPremiumStatus
   // ─────────────────────────────────────
   describe("syncUserPremiumStatus", () => {
+    it("memulihkan pembayaran terverifikasi sebelum menentukan akses premium", async () => {
+      const payment = {
+        id: "paid-1",
+        orderId: "TT-paid-1",
+        userId: "user1",
+        grossAmount: 59000,
+        status: "settlement",
+        durationMonths: 1,
+        paidAt: new Date(),
+        paymentType: null,
+        vaNumber: null,
+      };
+      vi.mocked(prisma.payment.findMany).mockResolvedValue([payment] as never);
+      vi.mocked(getVerifiedMidtransPayment).mockResolvedValue({
+        paymentType: "bank_transfer",
+        vaNumber: null,
+      });
+      let created = false;
+      const tx = {
+        $queryRaw: vi.fn().mockResolvedValue([]),
+        payment: {
+          findUnique: vi.fn().mockResolvedValue(payment),
+          update: vi.fn().mockResolvedValue(payment),
+        },
+        subscription: {
+          updateMany: vi.fn().mockResolvedValue({ count: 0 }),
+          findFirst: vi.fn().mockResolvedValue(null),
+          create: vi.fn().mockImplementation(async () => {
+            created = true;
+            return { id: "sub-recovered" };
+          }),
+          findMany: vi.fn().mockImplementation(async () =>
+            created
+              ? [
+                  {
+                    id: "sub-recovered",
+                    isActive: true,
+                    startedAt: new Date(Date.now() - 1000),
+                    expiresAt: new Date(Date.now() + 86400000),
+                  },
+                ]
+              : [],
+          ),
+        },
+        user: { update: vi.fn().mockResolvedValue({}) },
+      };
+      mockTransaction.mockImplementation(async (fn) => runTransaction(fn, tx));
+      expect((await syncUserPremiumStatus("user1")).isPremium).toBe(true);
+      expect(getVerifiedMidtransPayment).toHaveBeenCalledWith(
+        payment.orderId,
+        59000,
+      );
+      expect(tx.subscription.create).toHaveBeenCalledOnce();
+    });
+
+    it("tidak memberi premium hanya karena ada checkout yang belum dibayar", async () => {
+      vi.mocked(prisma.payment.findMany).mockResolvedValue([
+        { id: "pending-1", orderId: "TT-pending", grossAmount: 59000 },
+      ] as never);
+      vi.mocked(getVerifiedMidtransPayment).mockResolvedValue(null);
+      const create = vi.fn();
+      mockTransaction.mockImplementation(async (fn) =>
+        runTransaction(fn, {
+          subscription: {
+            updateMany: vi.fn(),
+            findMany: vi.fn().mockResolvedValue([]),
+            create,
+          },
+          user: { update: vi.fn() },
+        }),
+      );
+      expect((await syncUserPremiumStatus("user1")).isPremium).toBe(false);
+      expect(create).not.toHaveBeenCalled();
+    });
+
+    it("gangguan verifikasi tidak menghilangkan akses premium yang masih aktif", async () => {
+      vi.mocked(prisma.payment.findMany).mockResolvedValue([
+        { id: "pending-1", orderId: "TT-pending", grossAmount: 59000 },
+      ] as never);
+      vi.mocked(getVerifiedMidtransPayment).mockRejectedValue(
+        new Error("Provider unavailable"),
+      );
+      const log = vi.spyOn(console, "warn").mockImplementation(() => {});
+      mockTransaction.mockImplementation(async (fn) =>
+        runTransaction(fn, {
+          subscription: {
+            updateMany: vi.fn(),
+            findMany: vi.fn().mockResolvedValue([
+              {
+                id: "active",
+                startedAt: new Date(Date.now() - 1000),
+                expiresAt: new Date(Date.now() + 86400000),
+              },
+            ]),
+          },
+          user: { update: vi.fn() },
+        }),
+      );
+      expect((await syncUserPremiumStatus("user1")).isPremium).toBe(true);
+      log.mockRestore();
+    });
     it("Harus return isPremium: true jika ada active subscription", async () => {
       const now = new Date();
       const activeSub = {
@@ -171,7 +371,7 @@ describe("lib/subscription/service", () => {
           },
           user: { update: vi.fn().mockResolvedValue({}) },
         };
-        return fn(tx);
+        return runTransaction(fn, tx);
       });
 
       const result = await syncUserPremiumStatus("user1");
@@ -190,7 +390,7 @@ describe("lib/subscription/service", () => {
           },
           user: { update: vi.fn().mockResolvedValue({}) },
         };
-        return fn(tx);
+        return runTransaction(fn, tx);
       });
 
       const result = await syncUserPremiumStatus("user1");
@@ -212,7 +412,7 @@ describe("lib/subscription/service", () => {
           },
           user: { update: mockUserUpdate },
         };
-        return fn(tx);
+        return runTransaction(fn, tx);
       });
 
       await syncUserPremiumStatus("user1");
@@ -235,7 +435,7 @@ describe("lib/subscription/service", () => {
           },
           user: { update: vi.fn().mockResolvedValue({}) },
         };
-        return fn(tx);
+        return runTransaction(fn, tx);
       });
 
       await syncUserPremiumStatus("user1");
@@ -273,7 +473,7 @@ describe("lib/subscription/service", () => {
           },
           user: { update: vi.fn().mockResolvedValue({}) },
         };
-        return fn(tx);
+        return runTransaction(fn, tx);
       });
       mockPaymentFindFirst.mockResolvedValue(null); // tidak ada pending
 
@@ -294,7 +494,7 @@ describe("lib/subscription/service", () => {
           },
           user: { update: vi.fn().mockResolvedValue({}) },
         };
-        return fn(tx);
+        return runTransaction(fn, tx);
       });
       mockPaymentFindFirst.mockResolvedValue({
         id: "pay-1",
@@ -317,7 +517,7 @@ describe("lib/subscription/service", () => {
           },
           user: { update: vi.fn().mockResolvedValue({}) },
         };
-        return fn(tx);
+        return runTransaction(fn, tx);
       });
       mockPaymentFindFirst.mockResolvedValue(null);
 
