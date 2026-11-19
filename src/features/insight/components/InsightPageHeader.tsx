@@ -115,258 +115,185 @@ export function InsightPageHeader({
 
   return (
     <>
-      <div
-        className="mb-5 flex flex-col gap-4"
-        style={{
-          fontFamily: "var(--font-plus-jakarta), system-ui, sans-serif",
-        }}
-      >
-        {/* Row 1: Title left, actions + profile right — always same row */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <h1
-              className="text-[24px] font-bold leading-tight tracking-[-0.02em] sm:text-[32px] md:text-[38px]"
-              style={{ color: "var(--tt-dashboard-text)" }}
-            >
-              Insight Harian
-            </h1>
-            <p
-              className="mt-1 text-[12px] leading-5 sm:text-sm"
-              style={{ color: "var(--tt-dashboard-text-2)" }}
-            >
-              Ringkasan mood, pola, dan saran harianmu.
-            </p>
-          </div>
-
-          {/* Right: Insight button + info + profile */}
-          <div className="flex shrink-0 items-center gap-2">
-            {isToday && (
-              <>
-                <button
-                  type="button"
-                  onClick={handleInsightClick}
-                  disabled={disabled}
-                  className={`inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[12px] font-semibold transition-all sm:px-4 sm:text-[12px] ${disabled ? "cursor-not-allowed opacity-70" : "hover:translate-y-[-1px]"}`}
-                  style={{
-                    background: disabled
-                      ? "var(--tt-gray-100)"
-                      : "var(--gradient-brand-btn)",
-                    color: disabled
-                      ? "var(--tt-dashboard-text-2)"
-                      : "var(--tt-surface)",
-                    boxShadow: disabled
-                      ? "none"
-                      : "0 8px 18px color-mix(in srgb, var(--tt-primary-500) 20%, transparent)",
-                  }}
-                >
-                  {isGenerating ? (
-                    <Loader2 size={13} className="animate-spin" />
-                  ) : (
-                    <Sparkles size={13} />
-                  )}
-                  <span className="hidden sm:inline">
-                    {hasInsight ? "Tersedia" : "Tampilkan Insight"}
-                  </span>
-                  <span className="sm:hidden">
-                    {hasInsight ? "Tersedia" : "Insight"}
-                  </span>
-                </button>
-
-                {/* Info tooltip */}
-                <InfoTooltip />
-              </>
-            )}
-
-            {/* Profile dropdown — desktop */}
-            {userName && (
-              <div ref={profileRef} className="relative hidden lg:block">
-                <button
-                  type="button"
-                  onClick={() => setProfileOpen((p) => !p)}
-                  className="flex cursor-pointer items-center gap-2 rounded-xl px-2.5 py-1.5 transition-colors"
-                  style={{ background: "var(--tt-dashboard-chip-bg)" }}
-                >
-                  <div
-                    className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg text-[12px] font-black text-white"
-                    style={{ background: "var(--tt-dashboard-brand)" }}
-                  >
-                    {userImage ? (
-                      <Image
-                        src={userImage}
-                        alt={userName}
-                        width={28}
-                        height={28}
-                        className="h-full w-full object-cover"
-                        referrerPolicy="no-referrer"
-                      />
-                    ) : (
-                      userInitials
-                    )}
-                  </div>
-                  <span
-                    className="text-[12px] font-bold"
-                    style={{ color: "var(--tt-dashboard-text)" }}
-                  >
-                    {userName}
-                  </span>
-                  <ChevronDown
-                    size={13}
-                    style={{
-                      color: "var(--tt-dashboard-text-2)",
-                      transform: profileOpen ? "rotate(180deg)" : "rotate(0)",
-                      transition: "transform 0.2s",
-                    }}
-                  />
-                </button>
-
-                {profileOpen && (
-                  <div
-                    className="absolute right-0 top-full z-50 mt-2 w-44 overflow-hidden rounded-xl border shadow-lg"
-                    style={{
-                      background: "rgba(255,255,255,0.98)",
-                      borderColor: "var(--tt-dashboard-card-border)",
-                    }}
-                  >
-                    <Link
-                      href="/profile"
-                      onClick={() => setProfileOpen(false)}
-                      className="flex cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[color-mix(in_srgb,_var(--tt-primary-500)_6%,_transparent)]"
-                      style={{ color: "var(--tt-dashboard-text)" }}
-                    >
-                      <User
-                        size={15}
-                        style={{ color: "var(--tt-dashboard-brand)" }}
-                      />{" "}
-                      Lihat Profil
-                    </Link>
-                    <div
-                      className="mx-3 h-px"
-                      style={{ background: "var(--tt-dashboard-card-border)" }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setProfileOpen(false);
-                        void handleLogout();
-                      }}
-                      disabled={isLoggingOut}
-                      className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-tt-attention-bg disabled:cursor-not-allowed disabled:opacity-60"
-                      style={{ color: "var(--tt-attention-text)" }}
-                    >
-                      <LogOut size={15} /> Keluar
-                    </button>
-                  </div>
+      {/* Profil — hanya desktop */}
+      {(isToday || userName) && (
+        <div className="ins-topbar">
+          {isToday && (
+            <div className="ins-actions">
+              <button
+                type="button"
+                onClick={handleInsightClick}
+                disabled={disabled}
+                aria-busy={isGenerating}
+                className="ins-generate"
+              >
+                {isGenerating ? (
+                  <Loader2 size={16} className="ins-spin" aria-hidden="true" />
+                ) : (
+                  <Sparkles size={16} aria-hidden="true" />
                 )}
-              </div>
-            )}
+                {hasInsight ? "Tersedia" : "Tampilkan Insight"}
+              </button>
+
+              <InfoTooltip />
+            </div>
+          )}
+
+          {userName && (
+            <div ref={profileRef} className="ins-profile hidden lg:block">
+              <button
+                type="button"
+                onClick={() => setProfileOpen((p) => !p)}
+                aria-expanded={profileOpen}
+                aria-haspopup="menu"
+                className="ins-profile-btn"
+              >
+                <span className="ins-avatar">
+                  {userImage ? (
+                    <Image
+                      src={userImage}
+                      alt={userName}
+                      width={34}
+                      height={34}
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    userInitials
+                  )}
+                </span>
+                <span>{userName}</span>
+                <ChevronDown
+                  size={15}
+                  aria-hidden="true"
+                  style={{
+                    transform: profileOpen ? "rotate(180deg)" : "rotate(0)",
+                    transition: "transform 0.2s",
+                  }}
+                />
+              </button>
+
+              {profileOpen && (
+                <div className="ins-menu" role="menu">
+                  <Link
+                    href="/profile"
+                    role="menuitem"
+                    onClick={() => setProfileOpen(false)}
+                  >
+                    <User size={16} aria-hidden="true" /> Lihat Profil
+                  </Link>
+                  <hr />
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setProfileOpen(false);
+                      void handleLogout();
+                    }}
+                    disabled={isLoggingOut}
+                  >
+                    <LogOut size={16} aria-hidden="true" /> Keluar
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      <header className="ins-hero">
+        <span className="ins-premium">
+          <Sparkles size={13} aria-hidden="true" /> Premium aktif
+        </span>
+        <div className="ins-hero-copy">
+          <span className="ins-kicker block">Ruang refleksi</span>
+          <h1>
+            <span className="sr-only">Insight Harian: </span>
+            Pahami pola, <em>pelan-pelan.</em>
+          </h1>
+          <p>
+            Ringkasan mood, pola, dan saran harianmu untuk membantu melihat hari
+            dengan lebih jernih.
+          </p>
+        </div>
+
+        <div className="ins-hero-side">
+          <div
+            className="ins-date"
+            role="group"
+            aria-label="Navigasi tanggal insight"
+          >
+            <IconButton
+              onClick={onPrevDate}
+              disabled={currentIndex <= 0}
+              ariaLabel="Hari sebelumnya"
+            >
+              <ChevronLeft size={18} aria-hidden="true" />
+            </IconButton>
+
+            <PillButton active>
+              {getRelativeLabel(effectiveDate, availableDates)}
+            </PillButton>
+
+            <DateButton
+              label={formatDateID(effectiveDate)}
+              onClick={() =>
+                dateInputRef.current?.showPicker?.() ??
+                dateInputRef.current?.click()
+              }
+            />
+
+            <input
+              ref={dateInputRef}
+              type="date"
+              value={effectiveDate}
+              onChange={(e) => onDateChange(e.target.value)}
+              className="sr-only"
+              aria-label="Pilih tanggal insight"
+            />
+
+            <IconButton
+              onClick={onNextDate}
+              disabled={currentIndex >= availableDates.length - 1}
+              ariaLabel="Hari berikutnya"
+            >
+              <ChevronRight size={18} aria-hidden="true" />
+            </IconButton>
           </div>
         </div>
+      </header>
 
-        {/* Row 2: Date navigation — right aligned */}
-        <div className="flex items-center justify-end gap-2">
-          <IconButton
-            onClick={onPrevDate}
-            disabled={currentIndex <= 0}
-            ariaLabel="Hari sebelumnya"
-          >
-            <ChevronLeft size={16} />
-          </IconButton>
-
-          <PillButton active>
-            {getRelativeLabel(effectiveDate, availableDates)}
-          </PillButton>
-
-          <DateButton
-            label={formatDateID(effectiveDate)}
-            onClick={() =>
-              dateInputRef.current?.showPicker?.() ??
-              dateInputRef.current?.click()
-            }
-          />
-
-          <input
-            ref={dateInputRef}
-            type="date"
-            value={effectiveDate}
-            onChange={(e) => onDateChange(e.target.value)}
-            className="sr-only"
-          />
-
-          <IconButton
-            onClick={onNextDate}
-            disabled={currentIndex >= availableDates.length - 1}
-            ariaLabel="Hari berikutnya"
-          >
-            <ChevronRight size={16} />
-          </IconButton>
-        </div>
-      </div>
-
-      {/* Confirmation popup */}
+      {/* Dialog konfirmasi */}
       {showConfirm && (
         <div
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/30 px-4"
-          style={{ backdropFilter: "blur(4px)" }}
+          className="ins-overlay"
           onClick={() => setShowConfirm(false)}
+          role="presentation"
         >
           <div
-            className="w-full max-w-sm rounded-2xl border bg-white p-6 shadow-2xl"
-            style={{ borderColor: "rgba(25,39,44,0.08)" }}
+            className="ins-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="ins-confirm-title"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-3 mb-4">
-              <div
-                className="flex h-10 w-10 items-center justify-center rounded-full"
-                style={{
-                  background:
-                    "color-mix(in srgb, var(--tt-primary-500) 12%, transparent)",
-                }}
-              >
-                <Sparkles
-                  size={18}
-                  style={{ color: "var(--tt-dashboard-brand)" }}
-                />
-              </div>
-              <h3
-                className="text-[16px] font-bold"
-                style={{ color: "var(--tt-dashboard-text)" }}
-              >
-                Tampilkan Insight?
-              </h3>
+            <div className="ins-dialog-head">
+              <span className="ins-dialog-icon">
+                <Sparkles size={19} aria-hidden="true" />
+              </span>
+              <h3 id="ins-confirm-title">Tampilkan Insight?</h3>
             </div>
 
-            <p
-              className="text-[13px] leading-6 mb-5"
-              style={{ color: "var(--tt-dashboard-text-2)" }}
-            >
+            <p>
               Insight hanya bisa ditampilkan <strong>1 kali per hari</strong>.
               Pastikan kamu sudah selesai bercerita di TemanCerita agar hasilnya
               lebih akurat.
             </p>
 
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={handleConfirmGenerate}
-                className="flex-1 h-11 cursor-pointer rounded-xl text-[13px] font-semibold text-white transition-all hover:translate-y-[-1px]"
-                style={{
-                  background: "var(--gradient-brand-btn)",
-                  boxShadow:
-                    "0 8px 18px color-mix(in srgb, var(--tt-primary-500) 20%, transparent)",
-                }}
-              >
+            <div className="ins-dialog-actions">
+              <button type="button" onClick={handleConfirmGenerate}>
                 Ya, Tampilkan
               </button>
-              <Link
-                href="/diary"
-                className="flex flex-1 h-11 cursor-pointer items-center justify-center rounded-xl border text-[13px] font-semibold transition-all hover:translate-y-[-1px]"
-                style={{
-                  borderColor: "rgba(25,39,44,0.10)",
-                  color: "var(--tt-dashboard-text)",
-                }}
-              >
-                Masih Mau Cerita
-              </Link>
+              <Link href="/diary">Masih Mau Cerita</Link>
             </div>
           </div>
         </div>
@@ -391,31 +318,22 @@ function InfoTooltip() {
   }, []);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="ins-info">
       <button
         type="button"
         onClick={() => setOpen((p) => !p)}
-        className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-full transition-colors hover:bg-[rgba(25,39,44,0.08)]"
-        style={{ color: "var(--tt-dashboard-text-2)" }}
+        className="ins-info-btn"
         aria-label="Info"
+        aria-expanded={open}
       >
-        <Info size={14} />
+        <span>
+          <Info size={16} aria-hidden="true" />
+        </span>
       </button>
       {open && (
-        <div
-          className="absolute right-0 top-full z-[9999] mt-2 w-72 rounded-xl border bg-white p-4 shadow-xl"
-          style={{ borderColor: "rgba(25,39,44,0.08)" }}
-        >
-          <p
-            className="text-[13px] font-semibold mb-2"
-            style={{ color: "var(--tt-dashboard-text)" }}
-          >
-            Tentang Insight
-          </p>
-          <ul
-            className="list-disc space-y-1.5 pl-4 text-[12px] leading-5"
-            style={{ color: "var(--tt-dashboard-text-2)" }}
-          >
+        <div className="ins-pop" role="note">
+          <strong>Tentang Insight</strong>
+          <ul>
             <li>
               Insight hanya bisa ditampilkan <strong>1 kali per hari</strong>.
             </li>

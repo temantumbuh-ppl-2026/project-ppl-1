@@ -1,0 +1,1117 @@
+/* Redesign halaman Insight (/insight). Semua selector di-scope ke .tt-insight agar
+   shell sidebar dan halaman (main) lain tidak ikut berubah. Nilai bentuk, warna,
+   dan komposisi mengikuti desain "Redesign TemanTumbuh"; ukuran teks yang di desain
+   di bawah 12px dinaikkan ke 12px (aturan proyek), dan target sentuh minimal 44px. */
+.tt-insight {
+  --navy: #13263e;
+  --teal: #10a89a;
+  --teal-dark: #087f76;
+  --mint: #dff7ee;
+  --mint-light: #f0fbf7;
+  --yellow: #ffdc72;
+  --peach: #ffc5ad;
+  --serif:
+    var(--font-fraunces-display), var(--font-fraunces), "Fraunces", Georgia,
+    serif;
+  --hand: var(--font-caveat), "Caveat", cursive;
+}
+
+/* Deklarasi dasar dipisah dari aturan bersarang agar tidak dibuang kompiler. */
+.tt-insight {
+  height: 100%;
+  container-type: inline-size;
+  container-name: insight;
+  color: var(--navy);
+  background: #f3f8f7;
+  font-family: var(--font-plus-jakarta), "Plus Jakarta Sans", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.tt-insight {
+  & *,
+  & *::before,
+  & *::after {
+    box-sizing: border-box;
+  }
+  & h1,
+  & h2,
+  & h3 {
+    margin: 0;
+    font-family: var(--serif);
+    font-weight: 700;
+    letter-spacing: -0.035em;
+  }
+  & h1 em,
+  & h2 em {
+    color: var(--teal);
+    font-family: var(--hand);
+    font-style: normal;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  & p {
+    margin: 0;
+  }
+  & a,
+  & button {
+    font: inherit;
+  }
+  & a {
+    color: inherit;
+    text-decoration: none;
+  }
+  & button:focus-visible,
+  & a:focus-visible,
+  & input:focus-visible,
+  & [role="button"]:focus-visible {
+    outline: 3px solid var(--teal-dark);
+    outline-offset: 3px;
+  }
+
+  .ins-scroll {
+    height: 100%;
+    overflow-y: auto;
+    padding: 28px 34px 70px;
+  }
+  .ins-page {
+    display: grid;
+    max-width: 1370px;
+    margin: 0 auto;
+    gap: 18px;
+  }
+  .ins-topbar {
+    position: relative;
+    z-index: 40;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .ins-kicker {
+    color: var(--teal-dark);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+  }
+
+  /* ─── Hero ─────────────────────────────────────────────────── */
+  .ins-hero {
+    position: relative;
+    display: flex;
+    min-height: 165px;
+    padding: 28px 31px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 22px 30px;
+    overflow: hidden;
+    border: 1px solid #c4ded8;
+    border-radius: 25px 7px 25px 7px;
+    background: linear-gradient(118deg, white 0 62%, #e3f6f1 100%);
+  }
+  .ins-hero::after {
+    content: "";
+    position: absolute;
+    right: -55px;
+    bottom: -85px;
+    width: 185px;
+    height: 185px;
+    border: 36px solid rgba(255, 220, 114, 0.55);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .ins-hero-copy {
+    position: relative;
+    z-index: 2;
+    min-width: 0;
+  }
+  .ins-hero h1 {
+    margin: 7px 0 7px;
+    font-size: clamp(34px, 3.3vw, 49px);
+    line-height: 1.03;
+  }
+  .ins-hero-copy p {
+    max-width: 480px;
+    color: #61717d;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+  .ins-premium {
+    position: absolute;
+    z-index: 3;
+    top: 14px;
+    right: 18px;
+    display: inline-flex;
+    padding: 6px 11px;
+    align-items: center;
+    gap: 5px;
+    border-radius: 20px;
+    color: #725700;
+    background: var(--yellow);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transform: rotate(2deg);
+  }
+  .ins-hero-side {
+    position: relative;
+    z-index: 3;
+    display: grid;
+    margin-top: 22px;
+    justify-items: end;
+  }
+  .ins-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  /* ─── Kontrol tanggal ──────────────────────────────────────── */
+  .ins-date {
+    display: flex;
+    padding: 5px;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    border: 1px solid #d5e3e0;
+    border-radius: 16px;
+    background: white;
+    box-shadow: 0 10px 25px rgba(19, 38, 62, 0.06);
+  }
+  .ins-date-btn {
+    display: grid;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 12px;
+    place-items: center;
+    border: 0;
+    border-radius: 11px;
+    color: var(--teal-dark);
+    background: var(--mint-light);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .ins-date-btn.is-today {
+    padding: 0 14px;
+    color: white;
+    background: var(--teal-dark);
+  }
+  .ins-date-btn:disabled {
+    color: #6f7c85;
+    background: #f3f6f5;
+    cursor: not-allowed;
+  }
+  .ins-date-label {
+    display: flex;
+    min-width: 176px;
+    min-height: 44px;
+    padding: 0 12px;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 0;
+    border-radius: 11px;
+    color: #566975;
+    background: transparent;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .ins-date-label:hover {
+    background: var(--mint-light);
+  }
+
+  /* ─── Tombol ───────────────────────────────────────────────── */
+  .ins-generate {
+    display: inline-flex;
+    min-height: 44px;
+    padding: 0 18px;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 0;
+    border-radius: 12px;
+    color: white;
+    background: var(--teal-dark);
+    box-shadow: 4px 5px 0 var(--mint);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 800;
+    transition:
+      transform 0.15s,
+      background 0.15s;
+  }
+  .ins-generate:hover:not(:disabled) {
+    background: #066a63;
+    transform: translateY(-1px);
+  }
+  .ins-generate:disabled {
+    color: #6f7c85;
+    background: #edf2f1;
+    box-shadow: none;
+    cursor: not-allowed;
+  }
+  .ins-cta {
+    display: flex;
+    width: 100%;
+    min-height: 52px;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    border: 0;
+    border-radius: 16px 6px 16px 6px;
+    color: white;
+    background: var(--teal-dark);
+    box-shadow: 7px 8px 0 var(--mint);
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 800;
+    transition: transform 0.15s;
+  }
+  .ins-cta:hover {
+    background: #066a63;
+    transform: translateY(-1px);
+  }
+  .ins-spin {
+    animation: ins-spin 0.9s linear infinite;
+  }
+  @keyframes ins-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* ─── Profil dan info ──────────────────────────────────────── */
+  .ins-profile {
+    position: relative;
+  }
+  .ins-profile-btn {
+    display: inline-flex;
+    min-height: 44px;
+    padding: 4px 12px 4px 6px;
+    align-items: center;
+    gap: 9px;
+    border: 1px solid #d5e3e0;
+    border-radius: 14px;
+    color: var(--navy);
+    background: white;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .ins-avatar {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 10px;
+    color: white;
+    background: var(--teal-dark);
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .ins-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .ins-menu {
+    position: absolute;
+    z-index: 50;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 200px;
+    overflow: hidden;
+    border: 1px solid #d5e3e0;
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 14px 32px rgba(19, 38, 62, 0.14);
+  }
+  .ins-menu a,
+  .ins-menu button {
+    display: flex;
+    width: 100%;
+    min-height: 44px;
+    padding: 0 15px;
+    align-items: center;
+    gap: 10px;
+    border: 0;
+    color: var(--navy);
+    background: transparent;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: left;
+  }
+  .ins-menu a:hover {
+    background: var(--mint-light);
+  }
+  .ins-menu button {
+    color: var(--tt-attention-text);
+  }
+  .ins-menu button:hover:not(:disabled) {
+    background: var(--tt-attention-bg);
+  }
+  .ins-menu button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  .ins-menu hr {
+    height: 1px;
+    margin: 0 12px;
+    border: 0;
+    background: #e2ecea;
+  }
+  .ins-info {
+    position: relative;
+  }
+  .ins-info-btn {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    place-items: center;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+  .ins-info-btn > span {
+    display: grid;
+    width: 28px;
+    height: 28px;
+    place-items: center;
+    border-radius: 50%;
+    color: #516771;
+    background: #e5edeb;
+  }
+  .ins-pop {
+    position: absolute;
+    z-index: 60;
+    top: calc(100% + 4px);
+    right: 0;
+    width: 290px;
+    padding: 16px 18px;
+    border: 1px solid #ccded9;
+    border-radius: 16px 5px 16px 5px;
+    background: white;
+    box-shadow: 0 14px 32px rgba(19, 38, 62, 0.16);
+  }
+  .ins-pop strong {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+  }
+  .ins-pop ul {
+    display: grid;
+    margin: 0;
+    padding-left: 18px;
+    gap: 6px;
+    color: #526570;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  /* ─── Dialog konfirmasi ────────────────────────────────────── */
+  .ins-overlay {
+    position: fixed;
+    z-index: 9999;
+    inset: 0;
+    display: grid;
+    padding: 16px;
+    place-items: center;
+    background: rgba(19, 38, 62, 0.4);
+    backdrop-filter: blur(4px);
+  }
+  .ins-dialog {
+    width: min(100%, 420px);
+    padding: 26px;
+    border: 1px solid #ccded9;
+    border-radius: 22px 7px 22px 7px;
+    background: white;
+    box-shadow: 9px 10px 0 var(--mint);
+  }
+  .ins-dialog-head {
+    display: flex;
+    margin-bottom: 14px;
+    align-items: center;
+    gap: 12px;
+  }
+  .ins-dialog-icon {
+    display: grid;
+    width: 42px;
+    height: 42px;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--teal-dark);
+    background: var(--mint);
+  }
+  .ins-dialog h3 {
+    font-size: 21px;
+  }
+  .ins-dialog p {
+    margin-bottom: 20px;
+    color: #61717d;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+  .ins-dialog-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .ins-dialog-actions > * {
+    display: inline-flex;
+    flex: 1;
+    min-height: 48px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 800;
+    text-align: center;
+  }
+  .ins-dialog-actions button {
+    border: 0;
+    color: white;
+    background: var(--teal-dark);
+  }
+  .ins-dialog-actions button:hover {
+    background: #066a63;
+  }
+  .ins-dialog-actions a {
+    border: 1px solid #d5e3e0;
+    color: var(--navy);
+    background: white;
+  }
+  .ins-dialog-actions a:hover {
+    background: var(--mint-light);
+  }
+
+  /* ─── Kartu umum ───────────────────────────────────────────── */
+  .ins-card {
+    min-width: 0;
+    padding: 26px;
+    border: 1px solid #ccded9;
+    border-radius: 20px 6px 20px 6px;
+    background: white;
+    box-shadow: 0 8px 23px rgba(19, 38, 62, 0.05);
+  }
+  .ins-card-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 25px;
+  }
+  .ins-card-head h2 {
+    margin: 6px 0 5px;
+    font-size: 25px;
+  }
+  .ins-card-head p {
+    color: #71808a;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  /* ─── Ringkasan mood ───────────────────────────────────────── */
+  .ins-overview {
+    padding: 25px;
+    border: 1px solid #d0dfdc;
+    border-radius: 18px;
+    background: white;
+    box-shadow: 0 7px 20px rgba(19, 38, 62, 0.04);
+  }
+  .ins-overview-copy {
+    padding: 7px 4px 20px;
+  }
+  .ins-overview-copy h2 {
+    margin: 8px 0;
+    font-size: 25px;
+    line-height: 1.1;
+  }
+  .ins-overview-copy p {
+    color: #74818a;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .ins-stats {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .ins-stat {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    min-height: 125px;
+    padding: 16px;
+    flex-direction: column;
+    justify-content: center;
+    border: 1px solid #dce6e3;
+    border-radius: 15px;
+    background: #f9fbfa;
+  }
+  .ins-stat::after {
+    content: "";
+    position: absolute;
+    right: -19px;
+    bottom: -26px;
+    width: 70px;
+    height: 70px;
+    border: 15px solid rgba(255, 255, 255, 0.45);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .ins-stat.tone-mint {
+    background: #f2fbf8;
+  }
+  .ins-stat.tone-peach {
+    background: #ffe6da;
+  }
+  .ins-stat.tone-sky {
+    background: #f0f7ff;
+  }
+  .ins-stat.tone-lilac {
+    background: #f5f2ff;
+  }
+  .ins-stat-main {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .ins-stat-main p {
+    display: grid;
+    gap: 2px;
+  }
+  .ins-stat-main strong {
+    font-family: var(--serif);
+    font-size: 27px;
+    line-height: 1;
+  }
+  .ins-stat-main small {
+    color: #526570;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .ins-stat-sym {
+    display: grid;
+    flex: 0 0 45px;
+    height: 45px;
+    place-items: center;
+    border-radius: 50%;
+    color: #7d3cff;
+    background: #eee7ff;
+    font-size: 24px;
+  }
+  .ins-stat-label {
+    position: relative;
+    z-index: 4;
+    display: flex;
+    margin-top: 16px;
+    align-items: center;
+    gap: 7px;
+    color: #334c58;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .ins-tip {
+    position: relative;
+    display: inline-flex;
+  }
+  .ins-tip-btn {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    margin: -14px -14px -14px -9px;
+    place-items: center;
+    border: 0;
+    background: transparent;
+    cursor: help;
+  }
+  .ins-tip-btn > span {
+    display: grid;
+    width: 20px;
+    height: 20px;
+    place-items: center;
+    border-radius: 50%;
+    color: #516771;
+    background: #e5edeb;
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .ins-tip-pop {
+    position: absolute;
+    z-index: 20;
+    top: 36px;
+    left: 50%;
+    width: 205px;
+    padding: 11px 13px;
+    border-radius: 12px;
+    color: white;
+    background: #21343a;
+    box-shadow: 0 10px 25px rgba(19, 38, 62, 0.2);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.45;
+    transform: translateX(-50%);
+  }
+  .ins-stat:nth-child(even) .ins-tip-pop {
+    right: 0;
+    left: auto;
+    transform: none;
+  }
+  .ins-stat:nth-child(even) .ins-tip-pop::before {
+    right: 12px;
+    left: auto;
+  }
+  .ins-tip-pop::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    left: calc(50% - 6px);
+    width: 12px;
+    height: 12px;
+    background: #21343a;
+    transform: rotate(45deg);
+  }
+  .ins-legend {
+    margin: 22px -25px -25px;
+    padding: 20px 25px;
+    border-top: 1px solid #e2e9e7;
+  }
+  .ins-legend > span {
+    color: #4a646d;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .ins-legend > div {
+    display: flex;
+    margin-top: 13px;
+    flex-wrap: wrap;
+    gap: 11px 25px;
+  }
+  .ins-legend p {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #516771;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  /* ─── Grafik tren ──────────────────────────────────────────── */
+  .ins-chart {
+    margin-top: 22px;
+    padding: 16px 22px 12px 14px;
+    border-radius: 16px;
+    background: #f8fbfa;
+  }
+  .ins-chart-plot {
+    height: 260px;
+  }
+  .ins-chart-empty {
+    display: grid;
+    margin-top: 22px;
+    min-height: 240px;
+    padding: 24px;
+    place-items: center;
+    border-radius: 16px;
+    color: #71808a;
+    background: #f8fbfa;
+    font-size: 14px;
+    text-align: center;
+  }
+  .ins-chart-tip {
+    padding: 9px 13px;
+    border: 1px solid #ccded9;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 10px 24px rgba(19, 38, 62, 0.12);
+  }
+  .ins-chart-tip strong {
+    display: block;
+    font-size: 13px;
+  }
+  .ins-chart-tip span {
+    color: var(--teal-dark);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  /* ─── Refleksi ─────────────────────────────────────────────── */
+  .ins-reflect-grid {
+    display: grid;
+    grid-template-columns: 1.35fr 0.65fr;
+    gap: 18px;
+    align-items: stretch;
+  }
+  .ins-reflect-title {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  .ins-reflect-title h2 {
+    margin: 6px 0 0;
+    font-size: 27px;
+  }
+  .ins-reflect-title p {
+    margin-top: 5px;
+    color: #71808a;
+    font-size: 13px;
+  }
+  .ins-status {
+    display: inline-flex;
+    margin-top: 10px;
+    min-height: 26px;
+    padding: 3px 11px;
+    align-items: center;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .ins-score {
+    display: flex;
+    flex: 0 0 auto;
+    width: 72px;
+    height: 64px;
+    align-items: baseline;
+    justify-content: center;
+    padding-top: 9px;
+    border: 1px solid #cfe0dc;
+    border-radius: 17px 5px 17px 5px;
+    background: var(--mint-light);
+  }
+  .ins-score strong {
+    font-family: var(--serif);
+    font-size: 36px;
+    line-height: 1;
+  }
+  .ins-score span {
+    color: #687983;
+    font-size: 13px;
+    font-weight: 800;
+  }
+  .ins-lined {
+    position: relative;
+    min-height: 122px;
+    margin-top: 18px;
+    padding: 8px 25px 8px 78px;
+    border: 1px solid #d7e2df;
+    border-radius: 15px;
+    background: repeating-linear-gradient(white 0 37px, #cfe1dd 37px 38px);
+  }
+  .ins-lined::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 48px;
+    width: 1px;
+    background: #e7b9a5;
+  }
+  .ins-lined p {
+    font-family: var(--hand);
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 38px;
+    white-space: pre-line;
+  }
+  .ins-pattern {
+    margin-top: 14px;
+    padding: 16px 17px;
+    border-left: 4px solid var(--teal);
+    border-radius: 4px 13px 13px 4px;
+    background: var(--mint-light);
+  }
+  .ins-pattern span {
+    color: var(--teal-dark);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .ins-pattern p {
+    margin-top: 7px;
+    color: #596c77;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .ins-reminder {
+    position: relative;
+    display: flex;
+    min-width: 0;
+    padding: 29px 27px 61px;
+    flex-direction: column;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 6px 24px 6px 24px;
+    color: white;
+    background: var(--teal-dark);
+    box-shadow: 9px 10px 0 var(--mint);
+  }
+  .ins-reminder::after {
+    content: "";
+    position: absolute;
+    right: -55px;
+    bottom: -75px;
+    width: 165px;
+    height: 165px;
+    border: 31px solid rgba(255, 255, 255, 0.07);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .ins-reminder .hand {
+    position: relative;
+    z-index: 2;
+    top: -18px;
+    color: var(--yellow);
+    font-family: var(--hand);
+    font-size: clamp(27px, 2.2vw, 32px);
+    font-weight: 700;
+    line-height: 1.05;
+  }
+  .ins-reminder b {
+    height: 52px;
+    color: #82d8cd;
+    font-family: var(--serif);
+    font-size: 75px;
+    line-height: 1;
+  }
+  .ins-reminder blockquote {
+    position: relative;
+    z-index: 2;
+    margin: 0;
+    font-size: clamp(20px, 1.6vw, 25px);
+    font-weight: 700;
+    line-height: 1.45;
+  }
+  .ins-reminder svg {
+    position: relative;
+    z-index: 2;
+    width: 130px;
+    margin-top: 22px;
+    fill: none;
+    stroke: var(--yellow);
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+
+  /* ─── Rekomendasi ──────────────────────────────────────────── */
+  .ins-reco {
+    display: grid;
+    margin-top: 21px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .ins-reco-item {
+    display: grid;
+    min-height: 130px;
+    padding: 17px;
+    grid-template-columns: 38px 1fr;
+    gap: 13px;
+    align-items: center;
+    border: 1px solid #d8e4e1;
+    border-radius: 14px;
+    background: #f2fbf8;
+  }
+  .ins-reco-item.tone-peach {
+    background: #fff8f4;
+  }
+  .ins-reco-item.tone-yellow {
+    background: #fffaf0;
+  }
+  .ins-reco-num {
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border-radius: 50%;
+    color: white;
+    background: var(--teal-dark);
+    font-family: var(--serif);
+    font-size: 14px;
+    font-weight: 800;
+  }
+  .ins-reco-item.tone-peach .ins-reco-num {
+    background: var(--tt-attention-text);
+  }
+  .ins-reco-item.tone-yellow .ins-reco-num {
+    color: var(--navy);
+    background: var(--yellow);
+  }
+  .ins-reco-body {
+    min-width: 0;
+  }
+  .ins-reco-body strong {
+    display: block;
+    font-family: var(--serif);
+    font-size: 15px;
+    line-height: 1.25;
+  }
+  .ins-reco-body p {
+    margin-top: 6px;
+    color: #64747f;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .ins-badge {
+    display: inline-flex;
+    margin-top: 6px;
+    min-height: 24px;
+    padding: 2px 10px;
+    align-items: center;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* ─── Placeholder dan skeleton ─────────────────────────────── */
+  .ins-ghost {
+    margin-top: 18px;
+    padding: 18px 20px;
+    border: 1px dashed #c4ded8;
+    border-radius: 14px;
+    background: #fbfdfc;
+  }
+  .ins-ghost > span {
+    color: #4a646d;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .ins-ghost i,
+  .ins-bar {
+    display: block;
+    height: 13px;
+    margin-top: 11px;
+    border-radius: 99px;
+    background: #e3ecea;
+  }
+  .ins-empty-note {
+    margin-top: 16px;
+    color: #61717d;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+  .ins-shimmer {
+    background: linear-gradient(90deg, #e8f2f0 25%, #d3e8e4 50%, #e8f2f0 75%);
+    background-size: 200% 100%;
+    animation: ins-shimmer 1.5s ease-in-out infinite;
+  }
+  @keyframes ins-shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+}
+
+/* ─── Responsif ─────────────────────────────────────────────── */
+@container insight (max-width: 1180px) {
+  .tt-insight .ins-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .tt-insight .ins-reflect-grid {
+    grid-template-columns: 1fr;
+  }
+  .tt-insight .ins-reco {
+    grid-template-columns: 1fr;
+  }
+  .tt-insight .ins-reco-item {
+    min-height: 104px;
+  }
+}
+@container insight (max-width: 980px) {
+  .tt-insight .ins-hero {
+    align-items: flex-start;
+  }
+  .tt-insight .ins-hero-side {
+    width: 100%;
+    justify-items: start;
+    margin-top: 0;
+  }
+  .tt-insight .ins-actions {
+    justify-content: flex-start;
+  }
+}
+@container insight (max-width: 640px) {
+  .tt-insight .ins-scroll {
+    padding: 16px 14px 34px;
+  }
+  .tt-insight .ins-hero {
+    padding: 22px 20px;
+  }
+  .tt-insight .ins-premium {
+    position: static;
+    margin-bottom: 10px;
+    transform: rotate(-1.5deg);
+  }
+  .tt-insight .ins-card,
+  .tt-insight .ins-overview {
+    padding: 20px 18px;
+  }
+  .tt-insight .ins-legend {
+    margin: 20px -18px -20px;
+    padding: 18px;
+  }
+  .tt-insight .ins-card-head,
+  .tt-insight .ins-reflect-title {
+    flex-direction: column;
+    gap: 14px;
+  }
+  .tt-insight .ins-chart {
+    padding: 14px 10px 10px 4px;
+  }
+  .tt-insight .ins-chart-plot {
+    height: 220px;
+  }
+  .tt-insight .ins-lined {
+    padding-left: 56px;
+  }
+  .tt-insight .ins-lined::before {
+    left: 36px;
+  }
+  .tt-insight .ins-date-label {
+    min-width: 0;
+  }
+}
+@container insight (max-width: 390px) {
+  .tt-insight .ins-stats {
+    grid-template-columns: 1fr;
+  }
+  .tt-insight .ins-date {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .tt-insight .ins-dialog-actions {
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tt-insight .ins-spin,
+  .tt-insight .ins-shimmer {
+    animation-duration: 2.4s;
+  }
+  .tt-insight .ins-generate,
+  .tt-insight .ins-cta {
+    transition: none;
+  }
+}

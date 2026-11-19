@@ -9,8 +9,9 @@ import { InsightPageHeader } from "./InsightPageHeader";
 import { InsightRecommendationSection } from "./InsightRecommendationSection";
 import { InsightReflectionSection } from "./InsightReflectionSection";
 import { InsightTrendSection } from "./InsightTrendSection";
-import { SurfaceCard } from "./insight-primitives";
+import { SurfaceCard, TopCardHeader } from "./insight-primitives";
 import { PageLoader } from "@/components/ui/manual/page-loader";
+import "./insight-redesign.css";
 import {
   getDateKeyInTimeZone,
   getTodayDateString,
@@ -170,15 +171,9 @@ export default function InsightPageContent() {
   }
 
   return (
-    <main
-      className="h-full min-h-0 overflow-hidden"
-      style={{
-        background: "var(--tt-dashboard-page-bg)",
-        fontFamily: "var(--font-plus-jakarta), system-ui, sans-serif",
-      }}
-    >
-      <div className="tt-dashboard-scroll-y h-full overflow-y-auto px-4 py-4 md:px-6 md:py-5">
-        <div className="pb-6">
+    <main className="tt-insight">
+      <div className="ins-scroll tt-dashboard-scroll-y">
+        <div className="ins-page">
           <InsightPageHeader
             effectiveDate={effectiveDate}
             availableDates={availableDates}
@@ -193,45 +188,38 @@ export default function InsightPageContent() {
             onDateChange={handleDateChange}
           />
 
-          <div className="flex flex-col gap-5 mt-4">
-            <InsightTrendSection
-              selectedMonth={selectedMonth}
-              hasTrendData={hasTrendData}
-              trendData={trendData}
-              peakMood={peakMood}
-              lowMood={lowMood}
-              avgMood={avgMood}
-              stableDays={stableDays}
+          <InsightTrendSection
+            selectedMonth={selectedMonth}
+            hasTrendData={hasTrendData}
+            trendData={trendData}
+            peakMood={peakMood}
+            lowMood={lowMood}
+            avgMood={avgMood}
+            stableDays={stableDays}
+          />
+
+          {/* Tombol sekunder "Tampilkan Insight" agar mudah ditemukan */}
+          {isToday && !hasInsight && !isGenerating && (
+            <button
+              type="button"
+              onClick={handleGenerateTodayInsight}
+              className="ins-cta"
+            >
+              <Sparkles size={18} aria-hidden="true" />
+              Tampilkan Insight Hari Ini
+            </button>
+          )}
+
+          {isGenerating ? (
+            <InsightSkeletonTyping />
+          ) : (
+            <InsightReflectionSection
+              effectiveDate={effectiveDate}
+              availableDates={availableDates}
+              isToday={isToday}
+              selectedInsight={selectedInsight}
             />
-
-            {/* Secondary "Tampilkan Insight" button — visible and prominent */}
-            {isToday && !hasInsight && !isGenerating && (
-              <button
-                type="button"
-                onClick={handleGenerateTodayInsight}
-                className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-2xl text-[14px] font-semibold text-white transition-all hover:translate-y-[-1px] sm:h-14 sm:text-[15px]"
-                style={{
-                  background: "var(--gradient-brand-btn)",
-                  boxShadow:
-                    "0 12px 28px color-mix(in srgb, var(--tt-primary-500) 20%, transparent)",
-                }}
-              >
-                <Sparkles size={18} />
-                Tampilkan Insight Hari Ini
-              </button>
-            )}
-
-            {isGenerating ? (
-              <InsightSkeletonTyping />
-            ) : (
-              <InsightReflectionSection
-                effectiveDate={effectiveDate}
-                availableDates={availableDates}
-                isToday={isToday}
-                selectedInsight={selectedInsight}
-              />
-            )}
-          </div>
+          )}
 
           {isGenerating ? null : (
             <InsightRecommendationSection selectedInsight={selectedInsight} />
@@ -242,69 +230,25 @@ export default function InsightPageContent() {
   );
 }
 
-// ─── Skeleton Typing Animation ────────────────────────────────────────────────
+// ─── Skeleton Typing Animation ───────────────────────────────────────────────
 
 function InsightSkeletonTyping() {
+  const widths = ["92%", "78%", "85%", "63%", "72%", "58%", "45%"];
+
   return (
-    <SurfaceCard className="overflow-hidden">
-      <style>{`
-        @keyframes insightShimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        .insight-shimmer {
-          background: linear-gradient(90deg, color-mix(in srgb, var(--tt-primary-500) 8%, transparent) 25%, color-mix(in srgb, var(--tt-primary-500) 16%, transparent) 50%, color-mix(in srgb, var(--tt-primary-500) 8%, transparent) 75%);
-          background-size: 200% 100%;
-          animation: insightShimmer 1.5s ease-in-out infinite;
-        }
-      `}</style>
-      <div
-        className="border-b px-6 py-5"
-        style={{ borderColor: "rgba(25,39,44,0.06)" }}
-      >
-        <p
-          className="text-[17px] font-bold"
-          style={{ color: "var(--tt-dashboard-brand-deep)" }}
-        >
-          Refleksi AI Harian
-        </p>
-        <p
-          className="mt-1 text-sm"
-          style={{ color: "var(--tt-dashboard-text-2)" }}
-        >
-          Sedang menganalisis data harianmu...
-        </p>
-      </div>
-      <div className="space-y-4 px-6 py-6">
-        <div className="space-y-3">
-          <div className="insight-shimmer h-4 w-[92%] rounded-full" />
+    <SurfaceCard>
+      <TopCardHeader
+        title="Refleksi AI Harian"
+        subtitle="Sedang menganalisis data harianmu..."
+      />
+      <div role="status" aria-live="polite" aria-busy="true">
+        {widths.map((width, index) => (
           <div
-            className="insight-shimmer h-4 w-[78%] rounded-full"
-            style={{ animationDelay: "0.2s" }}
+            key={`${width}-${index}`}
+            className="ins-bar ins-shimmer"
+            style={{ width, animationDelay: `${index * 0.2}s` }}
           />
-          <div
-            className="insight-shimmer h-4 w-[85%] rounded-full"
-            style={{ animationDelay: "0.4s" }}
-          />
-          <div
-            className="insight-shimmer h-4 w-[63%] rounded-full"
-            style={{ animationDelay: "0.6s" }}
-          />
-        </div>
-        <div className="mt-6 space-y-3">
-          <div
-            className="insight-shimmer h-4 w-[72%] rounded-full"
-            style={{ animationDelay: "0.8s" }}
-          />
-          <div
-            className="insight-shimmer h-4 w-[58%] rounded-full"
-            style={{ animationDelay: "1.0s" }}
-          />
-          <div
-            className="insight-shimmer h-4 w-[45%] rounded-full"
-            style={{ animationDelay: "1.2s" }}
-          />
-        </div>
+        ))}
       </div>
     </SurfaceCard>
   );
