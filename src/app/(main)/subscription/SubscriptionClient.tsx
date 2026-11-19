@@ -4,14 +4,22 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronDown, LogOut, User } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronDown,
+  LogOut,
+  ShieldCheck,
+  User,
+} from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
 import SnapPayButton from "@/components/payment/SnapPayButton";
 import {
   PRICE_PER_MONTH,
   SUBSCRIPTION_DURATIONS,
+  getDurationPricing,
 } from "@/lib/subscription/plans";
+import "./subscription-redesign.css";
 
 const DURATION_OPTIONS = SUBSCRIPTION_DURATIONS;
 
@@ -23,6 +31,8 @@ const premiumFeatures = [
   "Rekomendasi personal",
   "Akses premium",
 ];
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 type SubscriptionInfo = {
   startedAt: string;
@@ -39,6 +49,18 @@ type PendingPaymentInfo = {
   status: string;
   createdAt: string;
 } | null;
+
+function formatLongDate(iso: string) {
+  return new Date(iso).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function formatRupiah(amount: number) {
+  return `Rp ${amount.toLocaleString("id-ID")}`;
+}
 
 export default function SubscriptionClient({
   isPremium,
@@ -62,6 +84,12 @@ export default function SubscriptionClient({
   const [userName, setUserName] = useState("");
   const [userImage, setUserImage] = useState<string | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  // Diisi setelah mount agar render server dan klien tidak berbeda.
+  const [now, setNow] = useState<number | null>(null);
+
+  useEffect(() => {
+    setNow(Date.now());
+  }, []);
 
   useEffect(() => {
     const fetchSession = async () => {
@@ -104,9 +132,15 @@ export default function SubscriptionClient({
   }, [router, status]);
 
   const checkoutDuration = pendingPayment?.durationMonths ?? selectedDuration;
+  // Harga dihitung dari aturan paket yang sama dengan tagihan di server.
+  const selectedPricing = getDurationPricing(selectedDuration);
   const totalPrice = pendingPayment
     ? Number(pendingPayment.grossAmount)
-    : PRICE_PER_MONTH * selectedDuration;
+    : selectedPricing.price;
+  const totalNormalPrice = pendingPayment
+    ? PRICE_PER_MONTH * pendingPayment.durationMonths
+    : selectedPricing.normalPrice;
+  const totalSavings = Math.max(0, totalNormalPrice - totalPrice);
 
   const handleCancelPending = useCallback(async () => {
     setCancelLoading(true);
@@ -130,261 +164,258 @@ export default function SubscriptionClient({
     }
   }, [router]);
 
+  // Progres masa aktif (hanya bila data langganan dan waktu klien tersedia).
+  let progressPercent = 0;
+  let daysLeft: number | null = null;
+  if (isPremium && subscription && now !== null) {
+    const start = new Date(subscription.startedAt).getTime();
+    const end = new Date(subscription.expiresAt).getTime();
+    const total = Math.max(end - start, 1);
+    progressPercent = Math.min(100, Math.max(0, ((now - start) / total) * 100));
+    daysLeft = Math.max(0, Math.ceil((end - now) / DAY_MS));
+  }
+
   return (
-    <main
-      className="tt-dashboard-scroll-y h-full min-h-0 px-3 py-4 md:px-5 md:py-5"
-      style={{ background: "var(--tt-dashboard-page-bg)" }}
-    >
-      {/* Desktop profile header */}
-      {userName && (
-        <div className="mx-auto mb-4 hidden w-full max-w-6xl items-center justify-end lg:flex">
-          <SubscriptionProfileDropdown
-            userName={userName}
-            userImage={userImage}
-            isLoggingOut={isLoggingOut}
-            onLogout={() => void handleLogout()}
-          />
-        </div>
-      )}
+    <main className="tt-sub">
+      <div className="sub-scroll tt-dashboard-scroll-y">
+        <div className="sub-page">
+          {/* Profil — hanya desktop */}
+          {userName && (
+            <div className="sub-topbar hidden lg:flex">
+              <SubscriptionProfileDropdown
+                userName={userName}
+                userImage={userImage}
+                isLoggingOut={isLoggingOut}
+                onLogout={() => void handleLogout()}
+              />
+            </div>
+          )}
 
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 pb-4">
-        {/* Status message */}
-        {status === "success" && (
-          <div
-            className="rounded-[16px] px-5 py-4 text-[14px] font-semibold"
-            style={{
-              background: "var(--tt-dashboard-success-soft)",
-              color: "var(--tt-dashboard-success)",
-              border:
-                "1px solid color-mix(in srgb, var(--tt-primary-500) 18%, transparent)",
-            }}
-          >
-            Pembayaran berhasil! Premium kamu sudah aktif.
-          </div>
-        )}
+          {/* Pesan status */}
+          {status === "success" && (
+            <p className="sub-banner is-success" role="status">
+              Pembayaran berhasil! Premium kamu sudah aktif.
+            </p>
+          )}
 
-        {status === "pending" && (
-          <div
-            className="rounded-[16px] px-5 py-4 text-[14px] font-semibold"
-            style={{
-              background: "var(--tt-warning-bg)",
-              color: "var(--tt-warning-text)",
-              border:
-                "1px solid color-mix(in srgb, var(--tt-warning-text) 28%, transparent)",
-            }}
-          >
-            Pembayaran sedang diproses. Status akan diperbarui otomatis.
-          </div>
-        )}
+          {status === "pending" && (
+            <p className="sub-banner is-warning" role="status">
+              Pembayaran sedang diproses. Status akan diperbarui otomatis.
+            </p>
+          )}
 
-        {pendingPayment && (
-          <div
-            className="rounded-[16px] px-5 py-4 text-[14px] font-semibold"
-            style={{
-              background: "var(--tt-warning-bg)",
-              color: "var(--tt-warning-text)",
-              border:
-                "1px solid color-mix(in srgb, var(--tt-warning-text) 28%, transparent)",
-            }}
-          >
-            Ada pembayaran {pendingPayment.durationMonths} bulan yang masih
-            tertunda. Selesaikan atau batalkan pembayaran ini sebelum memilih
-            durasi lain.
-          </div>
-        )}
+          {pendingPayment && (
+            <p className="sub-banner is-warning" role="status">
+              Ada pembayaran {pendingPayment.durationMonths} bulan yang masih
+              tertunda. Selesaikan atau batalkan pembayaran ini sebelum memilih
+              durasi lain.
+            </p>
+          )}
 
-        {/* Header */}
-        <section className="tt-dashboard-card rounded-[28px] px-5 py-6 md:px-7 md:py-7">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div className="min-w-0">
-              <p
-                className="text-[12px] font-extrabold uppercase tracking-[0.16em]"
-                style={{ color: "var(--tt-dashboard-text-3)" }}
-              >
-                Subscription
-              </p>
-
-              <h1
-                className="mt-2 text-[28px] font-extrabold leading-tight md:text-[38px]"
-                style={{ color: "var(--tt-dashboard-text)" }}
-              >
-                {isPremium ? "Premium aktif" : "Upgrade ke Premium!"}
+          {/* Hero */}
+          <section className="sub-hero">
+            <div className="sub-hero-copy">
+              <span className="sub-kicker">Langgananmu</span>
+              <h1>
+                <span className="sr-only">
+                  {isPremium ? "Premium aktif. " : "Upgrade ke Premium! "}
+                </span>
+                {isPremium ? (
+                  <>
+                    Ruang tumbuhmu sedang <em>aktif.</em>
+                  </>
+                ) : (
+                  <>
+                    Buka ruang tumbuh yang <em>lebih lengkap.</em>
+                  </>
+                )}
               </h1>
-
-              <p
-                className="mt-2 max-w-[640px] text-[13px] leading-6 md:text-[14px]"
-                style={{ color: "var(--tt-dashboard-text-2)" }}
-              >
+              <p>
                 {isPremium
                   ? "Semua fitur utama sudah terbuka."
                   : "Buka pengalaman yang lebih lengkap untuk refleksi harianmu."}
               </p>
-
               {isPremium && subscription && (
-                <p
-                  className="mt-3 text-[13px] font-medium"
-                  style={{ color: "var(--tt-dashboard-text-2)" }}
-                >
+                <p style={{ marginTop: 6 }}>
                   Aktif hingga:{" "}
-                  <span
-                    className="font-bold"
-                    style={{ color: "var(--tt-dashboard-brand)" }}
-                  >
-                    {new Date(subscription.expiresAt).toLocaleDateString(
-                      "id-ID",
-                      {
-                        day: "numeric",
-                        month: "long",
-                        year: "numeric",
-                      },
-                    )}
-                  </span>
+                  <strong>{formatLongDate(subscription.expiresAt)}</strong>
                 </p>
               )}
             </div>
 
-            <div
-              className="inline-flex h-fit items-center rounded-full px-3 py-1.5 text-[12px] font-bold"
-              style={{
-                background: isPremium
-                  ? "var(--tt-dashboard-success-soft)"
-                  : "var(--tt-dashboard-brand-soft)",
-                color: isPremium
-                  ? "var(--tt-dashboard-success)"
-                  : "var(--tt-dashboard-brand)",
-              }}
-            >
-              {isPremium ? "Premium Aktif" : "Direkomendasikan"}
+            <div className="sub-stamp">
+              <ShieldCheck size={22} aria-hidden="true" />
+              <span>
+                <strong>{isPremium ? "Premium" : "Basic"}</strong>
+                {isPremium ? "Aktif sekarang" : "Paket saat ini"}
+              </span>
             </div>
-          </div>
-        </section>
 
-        <section className="grid gap-4 xl:grid-cols-[0.92fr_1.08fr]">
-          <PlanCard
-            title="Basic"
-            subtitle="Pakai gratis"
-            active={!isPremium}
-            subdued
-            features={basicFeatures}
-            footer={
-              !isPremium ? (
-                <div
-                  className="flex h-12 items-center justify-center rounded-[16px] text-[13px] font-semibold"
-                  style={{
-                    background: "var(--tt-dashboard-brand-soft)",
-                    color: "var(--tt-dashboard-text-2)",
-                    border: "1px solid var(--tt-dashboard-card-border)",
-                  }}
-                >
-                  Paket saat ini
-                </div>
-              ) : (
-                <div
-                  className="flex h-12 items-center justify-center rounded-[16px] text-[13px] font-semibold"
-                  style={{
-                    background: "var(--tt-surface)",
-                    color: "var(--tt-dashboard-text-3)",
-                    border: "1px solid var(--tt-dashboard-card-border)",
-                  }}
-                >
-                  Paket dasar
-                </div>
-              )
-            }
-          />
+            <svg className="sub-doodle" viewBox="0 0 105 65" aria-hidden="true">
+              <path d="M4 47c19-36 39 12 59-14 10-13 20-12 36-5M85 18l15 10-13 9" />
+            </svg>
+          </section>
 
-          <PlanCard
-            title="Premium"
-            subtitle="Lebih lengkap"
-            active={isPremium}
-            featured
-            features={premiumFeatures}
-            footer={
-              <div className="space-y-4">
-                {/* Duration selector */}
-                <div>
-                  <p
-                    className="mb-2 text-[12px] font-bold uppercase tracking-wider"
-                    style={{ color: "var(--tt-dashboard-text-3)" }}
-                  >
-                    {isPremium ? "Perpanjang Durasi" : "Pilih Durasi"}
-                  </p>
-                  <div className="grid grid-cols-4 gap-2">
-                    {DURATION_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.months}
-                        type="button"
-                        onClick={() => {
-                          if (!pendingPayment) {
-                            setSelectedDuration(opt.months);
-                          }
-                        }}
-                        disabled={pendingPayment !== null}
-                        className="cursor-pointer rounded-[12px] px-2 py-2.5 text-[12px] font-bold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-55"
-                        style={{
-                          background:
-                            checkoutDuration === opt.months
-                              ? "color-mix(in srgb, var(--tt-primary-500) 14%, transparent)"
-                              : "color-mix(in srgb, var(--tt-primary-500) 4%, transparent)",
-                          color:
-                            checkoutDuration === opt.months
-                              ? "var(--tt-dashboard-brand)"
-                              : "var(--tt-dashboard-text-2)",
-                          border:
-                            checkoutDuration === opt.months
-                              ? "1.5px solid color-mix(in srgb, var(--tt-primary-500) 30%, transparent)"
-                              : "1.5px solid transparent",
-                        }}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
+          {/* Masa aktif */}
+          {isPremium && subscription && daysLeft !== null && (
+            <section className="sub-progress" aria-label="Masa aktif langganan">
+              <div>
+                <small>Mulai</small>
+                <strong>{formatLongDate(subscription.startedAt)}</strong>
+              </div>
+              <div
+                className="sub-track"
+                role="progressbar"
+                aria-label="Masa aktif terpakai"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(progressPercent)}
+              >
+                <span style={{ width: `${progressPercent}%` }} />
+              </div>
+              <div>
+                <small>Berakhir</small>
+                <strong>{formatLongDate(subscription.expiresAt)}</strong>
+              </div>
+              <p>
+                <b>{daysLeft} hari tersisa</b>
+              </p>
+            </section>
+          )}
 
-                  <p
-                    className="mt-2 text-[13px] font-semibold"
-                    style={{ color: "var(--tt-dashboard-text)" }}
-                  >
-                    Total: Rp {totalPrice.toLocaleString("id-ID")}
-                  </p>
-                </div>
+          <div className="sub-layout">
+            {/* Paket saat ini */}
+            <article className="sub-current">
+              <span className="sub-kicker">Paket saat ini</span>
+              <h2>{isPremium ? "Premium" : "Basic"}</h2>
+              <p className="sub-lead">
+                {isPremium
+                  ? "Dukungan lebih lengkap untuk menemani perjalanan refleksimu."
+                  : "Cukup untuk mulai mencatat cerita dan mengenali perasaanmu."}
+              </p>
+              <ul className="sub-features">
+                {(isPremium ? premiumFeatures : basicFeatures).map(
+                  (feature) => (
+                    <li key={feature}>
+                      <span aria-hidden="true">✓</span>
+                      {feature}
+                    </li>
+                  ),
+                )}
+              </ul>
+              {isPremium ? (
+                <>
+                  <Link href="/insight" className="sub-link">
+                    Lihat insight-mu <ArrowRight size={17} aria-hidden="true" />
+                  </Link>
+                  <span className="sub-sticker">semua sudah terbuka!</span>
+                </>
+              ) : null}
+            </article>
 
+            {/* Upgrade / perpanjang */}
+            <article className="sub-renew">
+              <span className="sub-kicker">
+                {isPremium ? "Lanjutkan perjalanan" : "Naik level"}
+              </span>
+              <h2>{isPremium ? "Perpanjang Premium" : "Upgrade ke Premium"}</h2>
+              <p className="sub-lead">
+                Pilih durasi yang paling nyaman. Pembayaran diproses lewat
+                Midtrans.
+              </p>
+
+              {!isPremium ? (
+                <ul className="sub-features">
+                  {premiumFeatures.map((feature) => (
+                    <li key={feature}>
+                      <span aria-hidden="true">✓</span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+
+              <p className="sub-duration-label" id="sub-duration-label">
+                {isPremium ? "Perpanjang Durasi" : "Pilih Durasi"}
+              </p>
+              <div
+                className="sub-durations"
+                role="group"
+                aria-labelledby="sub-duration-label"
+              >
+                {DURATION_OPTIONS.map((opt) => {
+                  const pricing = getDurationPricing(opt.months);
+
+                  return (
+                    <button
+                      key={opt.months}
+                      type="button"
+                      aria-pressed={checkoutDuration === opt.months}
+                      onClick={() => {
+                        if (!pendingPayment) {
+                          setSelectedDuration(opt.months);
+                        }
+                      }}
+                      disabled={pendingPayment !== null}
+                      className="sub-duration"
+                    >
+                      <span>{opt.label}</span>
+                      <div className="sub-prices">
+                        {pricing.savings > 0 && (
+                          <del>{formatRupiah(pricing.normalPrice)}</del>
+                        )}
+                        <strong>{formatRupiah(pricing.price)}</strong>
+                      </div>
+                      {pricing.savings > 0 && (
+                        <em className="sub-save">
+                          Hemat {formatRupiah(pricing.savings)}
+                        </em>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="sub-total">
+                <span>Total</span>
+                {totalSavings > 0 && (
+                  <del>{formatRupiah(totalNormalPrice)}</del>
+                )}
+                <strong>{formatRupiah(totalPrice)}</strong>
+                <small>
+                  {totalSavings > 0
+                    ? `Hemat ${formatRupiah(totalSavings)}`
+                    : `untuk ${checkoutDuration} bulan`}
+                </small>
+              </div>
+
+              <div className="sub-actions">
                 {pendingPayment ? (
-                  <div className="space-y-2">
+                  <>
                     <SnapPayButton
                       durationMonths={pendingPayment.durationMonths}
                       pendingToken={pendingPayment.token}
                       clientKey={midtransClientKey}
                       isProduction={midtransIsProduction}
                       label="Lanjutkan Pembayaran Tertunda"
-                      className="h-12 w-full rounded-[16px] text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-[1px] hover:opacity-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{
-                        background: "var(--tt-warning-text)",
-                        boxShadow:
-                          "0 12px 26px color-mix(in srgb, var(--tt-warning-text) 18%, transparent)",
-                      }}
+                      className="sub-pay is-warning"
                     />
 
                     <button
                       type="button"
                       onClick={handleCancelPending}
                       disabled={cancelLoading}
-                      className="h-12 w-full cursor-pointer rounded-[16px] bg-white text-[14px] font-semibold transition-all duration-200 hover:-translate-y-[1px] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
-                      style={{
-                        color: "var(--tt-warning-text)",
-                        border:
-                          "1px solid color-mix(in srgb, var(--tt-warning-text) 30%, transparent)",
-                      }}
+                      className="sub-cancel"
                     >
                       {cancelLoading ? "Membatalkan..." : "Batalkan Pembayaran"}
                     </button>
 
                     {cancelError && (
-                      <p className="text-center text-xs font-medium text-tt-attention-text">
+                      <p className="sub-error" role="alert">
                         {cancelError}
                       </p>
                     )}
-                  </div>
+                  </>
                 ) : (
                   <SnapPayButton
                     durationMonths={selectedDuration}
@@ -395,172 +426,31 @@ export default function SubscriptionClient({
                         ? `Perpanjang ${selectedDuration} Bulan`
                         : `Upgrade Premium ${selectedDuration} Bulan`
                     }
-                    className="h-12 w-full rounded-[16px] text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-[1px] hover:opacity-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{
-                      background: "var(--gradient-brand-btn)",
-                      boxShadow:
-                        "0 12px 26px color-mix(in srgb, var(--tt-primary-500) 18%, transparent)",
-                    }}
+                    className="sub-pay"
                   />
                 )}
               </div>
-            }
-          />
-        </section>
-      </div>
-    </main>
-  );
-}
-
-function PlanCard({
-  title,
-  subtitle,
-  active,
-  features,
-  footer,
-  featured = false,
-  subdued = false,
-}: {
-  title: string;
-  subtitle: string;
-  active?: boolean;
-  features: string[];
-  footer: React.ReactNode;
-  featured?: boolean;
-  subdued?: boolean;
-}) {
-  return (
-    <section
-      className={`relative overflow-hidden rounded-[28px] p-5 transition-all duration-200 hover:-translate-y-[2px] md:p-6 ${
-        featured ? "" : "tt-dashboard-card"
-      }`}
-      style={
-        featured
-          ? {
-              background:
-                "linear-gradient(160deg, color-mix(in srgb, var(--tt-gray-50) 98%, transparent) 0%, rgba(255,255,255,1) 60%, color-mix(in srgb, var(--tt-gray-50) 100%, transparent) 100%)",
-              border:
-                "1px solid color-mix(in srgb, var(--tt-primary-500) 18%, transparent)",
-              boxShadow:
-                "0 20px 46px color-mix(in srgb, var(--tt-primary-500) 12%, transparent)",
-            }
-          : subdued
-            ? {
-                opacity: 0.98,
-              }
-            : undefined
-      }
-    >
-      {featured ? (
-        <>
-          <div
-            className="pointer-events-none absolute inset-0 rounded-[28px]"
-            style={{
-              border:
-                "1px solid color-mix(in srgb, var(--tt-primary-300) 28%, transparent)",
-            }}
-          />
-          <div
-            className="pointer-events-none absolute -right-14 -top-16 h-52 w-52 rounded-full blur-3xl"
-            style={{
-              background:
-                "color-mix(in srgb, var(--tt-primary-500) 10%, transparent)",
-            }}
-          />
-        </>
-      ) : null}
-
-      <div className="relative z-10">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p
-              className="text-[12px] font-extrabold uppercase tracking-[0.14em]"
-              style={{
-                color: featured
-                  ? "var(--tt-dashboard-brand)"
-                  : "var(--tt-dashboard-text-3)",
-              }}
-            >
-              {subtitle}
-            </p>
-
-            <h2
-              className="mt-2 text-[28px] font-extrabold leading-none md:text-[34px]"
-              style={{ color: "var(--tt-dashboard-text)" }}
-            >
-              {title}
-            </h2>
+            </article>
           </div>
 
-          {active ? (
-            <span
-              className="rounded-full px-2.5 py-1 text-[12px] font-bold"
-              style={{
-                background: featured
-                  ? "color-mix(in srgb, var(--tt-primary-500) 12%, transparent)"
-                  : "var(--tt-dashboard-chip-bg)",
-                color: "var(--tt-dashboard-brand)",
-              }}
-            >
-              Aktif
+          <section className="sub-note">
+            <span className="sub-note-icon" aria-hidden="true">
+              <ShieldCheck size={22} />
             </span>
-          ) : null}
+            <div>
+              <strong>Tetap dalam kendalimu.</strong>
+              <p>
+                Pembayaran diproses lewat Midtrans, dan pembayaran yang belum
+                selesai bisa kamu batalkan dari halaman ini.
+              </p>
+            </div>
+            <Link href="/pricing" className="sub-link">
+              Lihat perbandingan paket
+            </Link>
+          </section>
         </div>
-
-        <div className="mt-6 space-y-2.5">
-          {features.map((feature) => (
-            <FeatureRow key={feature} text={feature} featured={featured} />
-          ))}
-        </div>
-
-        <div className="mt-6">{footer}</div>
       </div>
-    </section>
-  );
-}
-
-function FeatureRow({
-  text,
-  featured = false,
-}: {
-  text: string;
-  featured?: boolean;
-}) {
-  return (
-    <div
-      className="flex items-center gap-3 rounded-[16px] px-3.5 py-3 transition-all duration-200 hover:scale-[1.01] hover:shadow-[0_6px_16px_color-mix(in srgb, var(--tt-primary-500) 8%, transparent)]"
-      style={{
-        background: featured
-          ? "color-mix(in srgb, var(--tt-primary-500) 7%, transparent)"
-          : "color-mix(in srgb, var(--tt-primary-500) 4%, transparent)",
-        border: featured
-          ? "1px solid color-mix(in srgb, var(--tt-primary-500) 10%, transparent)"
-          : "1px solid transparent",
-      }}
-    >
-      <div
-        className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
-        style={{
-          background: featured
-            ? "color-mix(in srgb, var(--tt-primary-500) 14%, transparent)"
-            : "color-mix(in srgb, var(--tt-primary-500) 8%, transparent)",
-          color: "var(--tt-dashboard-brand)",
-        }}
-      >
-        <span className="text-[12px] font-bold">✓</span>
-      </div>
-
-      <p
-        className="text-[13px] font-medium"
-        style={{
-          color: featured
-            ? "var(--tt-dashboard-text)"
-            : "var(--tt-dashboard-text-2)",
-        }}
-      >
-        {text}
-      </p>
-    </div>
+    </main>
   );
 }
 
@@ -603,40 +493,32 @@ function SubscriptionProfileDropdown({
   }, []);
 
   return (
-    <div ref={dropdownRef} className="relative">
+    <div ref={dropdownRef} className="sub-profile">
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="flex cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2 transition-colors duration-200"
-        style={{ background: "var(--tt-dashboard-chip-bg)" }}
+        aria-expanded={open}
+        aria-haspopup="menu"
+        className="sub-profile-btn"
       >
-        <div
-          className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg text-[12px] font-black text-white"
-          style={{ background: "var(--tt-dashboard-brand)" }}
-        >
+        <span className="sub-avatar">
           {userImage ? (
             <Image
               src={userImage}
               alt={userName}
-              width={32}
-              height={32}
-              className="h-full w-full object-cover"
+              width={34}
+              height={34}
               referrerPolicy="no-referrer"
             />
           ) : (
             userInitials
           )}
-        </div>
-        <span
-          className="text-[13px] font-bold"
-          style={{ color: "var(--tt-dashboard-text)" }}
-        >
-          {userName}
         </span>
+        <span>{userName}</span>
         <ChevronDown
-          size={14}
+          size={15}
+          aria-hidden="true"
           style={{
-            color: "var(--tt-dashboard-text-2)",
             transform: open ? "rotate(180deg)" : "rotate(0deg)",
             transition: "transform 0.2s",
           }}
@@ -644,40 +526,24 @@ function SubscriptionProfileDropdown({
       </button>
 
       {open && (
-        <div
-          className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl border shadow-lg"
-          style={{
-            background: "rgba(255,255,255,0.98)",
-            borderColor: "var(--tt-dashboard-card-border)",
-            backdropFilter: "blur(12px)",
-          }}
-        >
-          <Link
-            href="/profile"
-            onClick={() => setOpen(false)}
-            className="flex cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[color-mix(in_srgb,_var(--tt-primary-500)_6%,_transparent)]"
-            style={{ color: "var(--tt-dashboard-text)" }}
-          >
-            <User size={15} style={{ color: "var(--tt-dashboard-brand)" }} />
+        <div className="sub-menu" role="menu">
+          <Link href="/profile" role="menuitem" onClick={() => setOpen(false)}>
+            <User size={16} aria-hidden="true" />
             Lihat Profil
           </Link>
 
-          <div
-            className="mx-3 h-px"
-            style={{ background: "var(--tt-dashboard-card-border)" }}
-          />
+          <hr />
 
           <button
             type="button"
+            role="menuitem"
             onClick={() => {
               setOpen(false);
               onLogout();
             }}
             disabled={isLoggingOut}
-            className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-tt-attention-bg disabled:cursor-not-allowed disabled:opacity-60"
-            style={{ color: "var(--tt-attention-text)" }}
           >
-            <LogOut size={15} />
+            <LogOut size={16} aria-hidden="true" />
             Keluar
           </button>
         </div>
