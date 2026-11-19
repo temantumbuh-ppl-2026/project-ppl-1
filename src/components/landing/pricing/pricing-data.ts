@@ -1,5 +1,6 @@
 import {
   ALLOWED_DURATIONS,
+  DURATION_DISCOUNT_PERCENT,
   FREE_DIARY_LIMIT_PER_MONTH,
   FREE_QUIZ_LIMIT_PER_DAY,
   PRICE_PER_MONTH,
@@ -15,6 +16,16 @@ export function formatRupiah(amount: number) {
 const durationText = ALLOWED_DURATIONS.slice(0, -1).join(", ");
 const lastDuration = ALLOWED_DURATIONS[ALLOWED_DURATIONS.length - 1];
 export const durationSummary = `${durationText}, atau ${lastDuration} bulan`;
+
+// Ringkasan potongan per durasi, mis. "3 bulan hemat 10%, 6 bulan hemat 15,5%".
+const discountSummary = ALLOWED_DURATIONS.filter(
+  (months) => (DURATION_DISCOUNT_PERCENT[months] ?? 0) > 0,
+)
+  .map(
+    (months) =>
+      `${months} bulan hemat ${String(DURATION_DISCOUNT_PERCENT[months]).replace(".", ",")}%`,
+  )
+  .join(", ");
 
 export const basicPlan = {
   name: "Basic",
@@ -61,7 +72,7 @@ export type PricingFaq = {
 export const pricingFaqs: PricingFaq[] = [
   {
     question: "Bagaimana sistem pembayarannya?",
-    answer: `Pembayaran dilakukan di awal lewat Midtrans untuk durasi yang kamu pilih (${durationSummary}). Total dihitung ${formatRupiah(PRICE_PER_MONTH)} × jumlah bulan, dan semua fitur Single langsung terbuka setelah pembayaran berhasil. Pembayaran yang belum selesai bisa dilanjutkan atau dibatalkan dari halaman langganan.`,
+    answer: `Pembayaran dilakukan di awal lewat Midtrans untuk durasi yang kamu pilih (${durationSummary}). Harga dasarnya ${formatRupiah(PRICE_PER_MONTH)} per bulan${discountSummary ? `, dan durasi yang lebih panjang lebih hemat: ${discountSummary}` : ""}. Semua fitur Single langsung terbuka setelah pembayaran berhasil. Pembayaran yang belum selesai bisa dilanjutkan atau dibatalkan dari halaman langganan.`,
     link: { href: "/subscription", label: "Buka halaman langganan" },
   },
   {
