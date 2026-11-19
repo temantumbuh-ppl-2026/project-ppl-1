@@ -31,7 +31,6 @@ export default defineConfig({
         "src/app/api/diary/**/*.ts",
         "src/app/api/insight/**/*.ts",
         "src/app/api/mood/**/*.ts",
-        "src/app/api/parent*/**/*.ts",
         "src/app/api/payment/**/*.ts",
         "src/app/api/profile/security-state/route.ts",
         "src/app/api/subscription/status/route.ts",

@@ -39,9 +39,6 @@ export async function GET(request: Request) {
           gender: true,
           profileFilled: true,
           currentStreak: true,
-          parent: {
-            select: { email: true, status: true },
-          },
         },
         orderBy: [{ createdAt: "desc" }, { id: "asc" }],
         ...(limit > 0 ? { skip: (page - 1) * limit, take: limit } : {}),
@@ -49,14 +46,9 @@ export async function GET(request: Request) {
       prisma.user.count({ where }),
     ]);
 
-    const mappedUsers = users.map(({ parent, ...u }) => ({
-      ...u,
-      parentEmail: parent?.email ?? null,
-    }));
-
     return NextResponse.json({
       data: {
-        users: mappedUsers,
+        users,
         total,
         page,
         limit,

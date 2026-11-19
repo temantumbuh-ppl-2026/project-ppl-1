@@ -1,6 +1,6 @@
 # TemanTumbuh
 
-TemanTumbuh adalah aplikasi web pendamping kesehatan mental dan keamanan anak/remaja. Aplikasi ini membantu pengguna mencatat suasana hati, bercerita lewat diary berbantuan AI, mengenali pilihan aman melalui kuis BraveChoice, mendapatkan insight harian untuk akun premium, serta mengirim ringkasan laporan kepada orang tua.
+TemanTumbuh adalah aplikasi web pendamping kesehatan mental dan keamanan anak/remaja. Aplikasi ini membantu pengguna mencatat suasana hati, bercerita lewat diary berbantuan AI, mengenali pilihan aman melalui kuis BraveChoice, serta mendapatkan insight harian untuk akun premium.
 
 Project ini dibangun sebagai aplikasi **Next.js App Router** dengan **Prisma + PostgreSQL**, autentikasi **better-auth**, integrasi AI untuk TemanCerita/Insight, pembayaran premium via **Midtrans**, dan automated test memakai **Vitest** serta **Playwright**.
 
@@ -12,7 +12,6 @@ Project ini dibangun sebagai aplikasi **Next.js App Router** dengan **Prisma + P
 - **TemanCerita**: diary berbasis chat dengan AI, penyimpanan pesan, dan enkripsi konten sensitif.
 - **Brave Choice**: kuis pilihan aman untuk edukasi pencegahan kekerasan/bullying dengan kuota harian untuk user gratis.
 - **Insight premium**: ringkasan pola mood dan rekomendasi aksi berdasarkan data mood serta diary.
-- **Parent consent dan report**: pengelolaan email orang tua, verifikasi persetujuan, dan laporan mingguan.
 - **Subscription dan payment**: pembelian premium, status langganan, pembatalan pembayaran pending, dan webhook Midtrans.
 - **Admin dashboard**: ringkasan platform, daftar user, dan manajemen pertanyaan BraveChoice.
 
@@ -35,7 +34,7 @@ Project ini dibangun sebagai aplikasi **Next.js App Router** dengan **Prisma + P
 | `src/app` | Next.js routes, layouts, pages, API routes, dan generated Prisma client. |
 | `src/components` | Komponen UI umum, layout, auth, admin, mood, settings, dan landing page. |
 | `src/features` | Modul fitur berbasis domain seperti diary, home dashboard, dan insight. |
-| `src/lib` | Service layer, validasi, auth helper, encryption, payment, email, dan PDF report. |
+| `src/lib` | Service layer, validasi, auth helper, encryption, payment, dan email. |
 | `src/models` | Model ONNX untuk baseline inference. |
 | `prisma` | Schema, migration, dan seed database. |
 | `tests` | Unit, API/integration-style, NFR, dan Playwright E2E tests. |
@@ -91,6 +90,14 @@ corepack pnpm dev
 
 Aplikasi akan berjalan di `http://localhost:3000`.
 
+## Migration Penghapusan Fitur Orang Tua
+
+Migration `20261119000000_remove_parent_features` menghapus tabel `parent`, kolom `user.parentEmail`, dan enum khusus consent/report. API, server action, serta cron laporan orang tua sudah dihapus. Email verifikasi akun dan reset password tetap digunakan.
+
+Sebelum menerapkan migration pada database existing, hentikan deployment lama dan scheduler yang masih mengakses fitur tersebut, buat backup database di lokasi privat di luar repository, lalu verifikasi backup dapat direstore ke database percobaan. Jangan mengandalkan rollback migration untuk mengembalikan data yang dihapus.
+
+Setelah backup terverifikasi, terapkan migration melalui `corepack pnpm prisma migrate deploy` dengan `DIRECT_URL` menunjuk database tujuan, lalu jalankan versi aplikasi yang sesuai. Proses update kode atau `prisma generate` saja tidak menerapkan migration ke database. Riwayat migration lama dipertahankan.
+
 ## Environment Variable
 
 | Variable | Keterangan |
@@ -104,7 +111,6 @@ Aplikasi akan berjalan di `http://localhost:3000`.
 | `API_KEY`, `BASE_URL` | Credential dan base URL provider LLM OpenAI-compatible. |
 | `ENCRYPTION_KEY` | Key enkripsi untuk konten TemanCerita. |
 | `MIDTRANS_SERVER_KEY`, `MIDTRANS_CLIENT_KEY`, `MIDTRANS_IS_PRODUCTION` | Konfigurasi Midtrans Snap. |
-| `CRON_SECRET` | Secret untuk endpoint cron laporan mingguan. |
 
 ## Script Penting
 

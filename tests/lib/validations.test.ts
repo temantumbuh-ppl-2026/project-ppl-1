@@ -10,8 +10,6 @@ import {
   moodCheckInSchema,
   diaryMessageSchema,
   profileUpdateSchema,
-  parentConsentTokenQuerySchema,
-  parentConsentDecisionSchema,
 } from "@/lib/validations";
 
 describe("lib/validations", () => {
@@ -397,59 +395,6 @@ describe("lib/validations", () => {
 
     it("Harus gagal jika nama kurang dari 2 karakter", () => {
       const result = profileUpdateSchema.safeParse({ name: "A" });
-      expect(result.success).toBe(false);
-    });
-  });
-
-  // ─────────────────────────────────────
-  // parentConsentTokenQuerySchema
-  // ─────────────────────────────────────
-  describe("parentConsentTokenQuerySchema", () => {
-    it("Harus valid jika token >= 20 karakter", () => {
-      const result = parentConsentTokenQuerySchema.safeParse({
-        token: "a".repeat(20),
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it("Harus gagal jika token kurang dari 20 karakter", () => {
-      const result = parentConsentTokenQuerySchema.safeParse({
-        token: "pendek",
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it("Harus gagal jika token tidak ada", () => {
-      const result = parentConsentTokenQuerySchema.safeParse({});
-      expect(result.success).toBe(false);
-    });
-  });
-
-  // ─────────────────────────────────────
-  // parentConsentDecisionSchema
-  // ─────────────────────────────────────
-  describe("parentConsentDecisionSchema", () => {
-    it("Harus valid jika decision = accept", () => {
-      const result = parentConsentDecisionSchema.safeParse({
-        token: "a".repeat(20),
-        decision: "accept",
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it("Harus valid jika decision = reject", () => {
-      const result = parentConsentDecisionSchema.safeParse({
-        token: "a".repeat(20),
-        decision: "reject",
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it("Harus gagal jika decision bukan accept atau reject", () => {
-      const result = parentConsentDecisionSchema.safeParse({
-        token: "a".repeat(20),
-        decision: "maybe",
-      });
       expect(result.success).toBe(false);
     });
   });

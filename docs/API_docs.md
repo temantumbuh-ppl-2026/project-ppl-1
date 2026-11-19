@@ -7,13 +7,11 @@ This document provides a comprehensive overview of the available API endpoints f
 2. Baseline API
 3. Diary API
 4. Mood API
-5. Parent Consent API
-6. Profile API
-7. Payment API
-8. Subscription API
-9. Insight API
-10. Admin API
-11. Cron API
+5. Profile API
+6. Payment API
+7. Subscription API
+8. Insight API
+9. Admin API
 
 ---
 
@@ -867,177 +865,9 @@ These endpoints handle the daily mood check-in tracking.
 
 ---
 
-## 5. Parent Consent API
+## 5. Profile API
 
-These endpoints handle parental consent flows and account linking.
-
-### 5.1 Get Parent Status
-- **Endpoint**: `GET /api/parent/status`
-- **Description**: Retrieves the current parental consent status for the user.
-- **Authentication**: Required
-
-**Response (200 OK):**
-```json
-{
-  "email": "parent@example.com",
-  "status": "pending",
-  "expiresAt": "2026-04-26T10:00:00Z",
-  "reason": null
-}
-```
-
-**Response (401 Unauthorized):**
-```json
-{
-  "error": "Unauthorized"
-}
-```
-
-**Response (500 Internal Server Error):**
-```json
-{
-  "error": "Terjadi kesalahan sistem"
-}
-```
-
-### 5.2 Verify Consent Token (GET)
-- **Endpoint**: `GET /api/parent-consent`
-- **Description**: Handles consent decision directly via URL link from email.
-- **Query Parameters**:
-  - `token` (Required): Consent verification token
-  - `decision` (Required): `accept` or `reject`
-
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "title": "Persetujuan Berhasil",
-  "description": "Email parent@example.com sekarang akan menerima laporan dari TemanTumbuh.",
-  "email": "parent@example.com",
-  "decision": "accept"
-}
-```
-
-**Response (400 Bad Request):**
-```json
-{
-  "success": false,
-  "title": "Link tidak valid",
-  "description": "Token atau parameter keputusan tidak valid."
-}
-```
-
-**Response (404 Not Found / Expired):**
-```json
-{
-  "success": false,
-  "title": "Link kedaluwarsa",
-  "description": "Link persetujuan sudah tidak valid atau sudah kedaluwarsa."
-}
-```
-
-**Response (500 Internal Server Error):**
-```json
-{
-  "success": false,
-  "title": "Terjadi kesalahan sistem",
-  "description": "Silakan coba lagi nanti."
-}
-```
-
-### 5.3 Verify Consent Token (POST)
-- **Endpoint**: `POST /api/parent-consent`
-- **Description**: Submits the consent decision programmatically.
-- **Request Body:**
-```json
-{
-  "token": "verification-token",
-  "decision": "accept"
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "decision": "accept"
-}
-```
-
-**Response (400 Bad Request):**
-```json
-{
-  "error": "Payload tidak valid"
-}
-```
-
-**Response (404 Not Found / Expired):**
-```json
-{
-  "error": "Link sudah tidak valid."
-}
-```
-
-**Response (500 Internal Server Error):**
-```json
-{
-  "error": "Terjadi kesalahan sistem"
-}
-```
-
-### 5.4 Send Weekly Parent Report (Manual)
-- **Endpoint**: `POST /api/parent-report/send`
-- **Description**: Manually triggers a weekly parent report for the logged-in user. If there is no mood data for the current period or the report was already sent, the endpoint still returns 200 with a descriptive message.
-- **Authentication**: Required
-
-**Request Body:**
-```json
-{
-  "timezone": "Asia/Jakarta"
-}
-```
-
-**Response (200 OK - Report Sent):**
-```json
-{
-  "success": true,
-  "message": "Laporan mingguan berhasil dikirim.",
-  "data": {
-    "skipped": false
-  }
-}
-```
-
-**Response (200 OK - No Data / Already Sent):**
-```json
-{
-  "success": true,
-  "message": "Belum ada data mood untuk periode ini, jadi laporan tidak dikirim.",
-  "data": {
-    "skipped": true,
-    "reason": "no_data"
-  }
-}
-```
-
-**Response (401 Unauthorized):**
-```json
-{
-  "error": "Unauthorized"
-}
-```
-
-**Response (500 Internal Server Error):**
-```json
-{
-  "error": "Terjadi kesalahan saat mengirim laporan mingguan."
-}
-```
-
----
-
-
-### 6.1 Get Security State
+### 5.1 Get Security State
 - **Endpoint**: `GET /api/profile/security-state`
 - **Description**: Retrieves the user's account security state (password existence, linked providers).
 - **Authentication**: Required
@@ -1068,11 +898,11 @@ These endpoints handle parental consent flows and account linking.
 
 ---
 
-## 7. Payment API
+## 6. Payment API
 
 These endpoints handle Midtrans Snap payment creation, cancellation, and webhook updates.
 
-### 7.1 Create Premium Payment
+### 6.1 Create Premium Payment
 - **Endpoint**: `POST /api/payment/create`
 - **Description**: Creates a Midtrans Snap transaction for a premium subscription.
 - **Authentication**: Required
@@ -1135,7 +965,7 @@ Allowed durations: `1`, `3`, `6`, `12`.
 }
 ```
 
-### 7.2 Cancel Pending Payment
+### 6.2 Cancel Pending Payment
 - **Endpoint**: `POST /api/payment/cancel`
 - **Description**: Cancels the logged-in user's latest pending payment in Midtrans and marks the local payment as `cancel`.
 - **Authentication**: Required
@@ -1172,7 +1002,7 @@ Allowed durations: `1`, `3`, `6`, `12`.
 }
 ```
 
-### 7.3 Midtrans Payment Notification
+### 6.3 Midtrans Payment Notification
 - **Endpoint**: `POST /api/payment/notification`
 - **Description**: Receives Midtrans webhook notifications, verifies the signature, updates payment status, activates premium on `settlement`/accepted `capture`, and resyncs `user.isPremium` when payments expire/cancel/deny.
 - **Authentication**: Midtrans signature (`signature_key`)
@@ -1219,9 +1049,9 @@ Allowed durations: `1`, `3`, `6`, `12`.
 
 ---
 
-## 8. Subscription API
+## 7. Subscription API
 
-### 8.1 Get Subscription Status
+### 7.1 Get Subscription Status
 - **Endpoint**: `GET /api/subscription/status`
 - **Description**: Returns the logged-in user's premium status, active subscription window, active subscription count, pending payment, and renewal availability. This endpoint also deactivates expired subscriptions and updates `user.isPremium` based on current subscription data.
 - **Authentication**: Required
@@ -1281,11 +1111,11 @@ Allowed durations: `1`, `3`, `6`, `12`.
 
 ---
 
-## 9. Insight API
+## 8. Insight API
 
 These endpoints handle premium daily insight summaries. Insight generation uses the user's timezone date key, mood check-ins, notes, and decrypted TemanCerita messages. Generated summaries must stay privacy-safe and avoid exposing diary details.
 
-### 9.1 Get Insight Map
+### 8.1 Get Insight Map
 - **Endpoint**: `GET /api/insight`
 - **Description**: Returns saved daily insights mapped by `YYYY-MM-DD`.
 - **Authentication**: Required
@@ -1328,7 +1158,7 @@ These endpoints handle premium daily insight summaries. Insight generation uses 
 }
 ```
 
-### 9.2 Generate Daily Insight
+### 8.2 Generate Daily Insight
 - **Endpoint**: `POST /api/insight/generate`
 - **Description**: Generates one daily insight for the requested local date. The date is interpreted with the submitted timezone.
 - **Authentication**: Required
@@ -1385,11 +1215,11 @@ These endpoints handle premium daily insight summaries. Insight generation uses 
 
 ---
 
-## 10. Admin API
+## 9. Admin API
 
 All Admin API endpoints require the authenticated user to have the `admin` role. Regular users will receive a `403 Forbidden` response.
 
-### 10.1 Get Admin Overview
+### 9.1 Get Admin Overview
 - **Endpoint**: `GET /api/admin/overview`
 - **Description**: Returns aggregated platform statistics for the admin dashboard, including user counts, premium status, quiz engagement, and age segment distribution.
 - **Authentication**: Required (Admin only)
@@ -1429,7 +1259,7 @@ All Admin API endpoints require the authenticated user to have the `admin` role.
 { "error": "Internal Server Error" }
 ```
 
-### 10.2 Get All Quiz Questions
+### 9.2 Get All Quiz Questions
 - **Endpoint**: `GET /api/admin/quiz`
 - **Description**: Returns all BraveChoice quiz questions (active and inactive), ordered by creation date descending.
 - **Authentication**: Required (Admin only)
@@ -1470,7 +1300,7 @@ All Admin API endpoints require the authenticated user to have the `admin` role.
 { "error": "Internal Server Error" }
 ```
 
-### 10.3 Get Users (Admin)
+### 9.3 Get Users (Admin)
 - **Endpoint**: `GET /api/admin/users`
 - **Description**: Returns a paginated, filterable, and searchable list of all non-admin users.
 - **Authentication**: Required (Admin only)
@@ -1495,8 +1325,7 @@ All Admin API endpoints require the authenticated user to have the `admin` role.
         "birthYear": 2008,
         "gender": "Laki-laki",
         "profileFilled": true,
-        "currentStreak": 7,
-        "parentEmail": "ibu.budi@example.com"
+        "currentStreak": 7
       }
     ],
     "total": 1240,
@@ -1521,37 +1350,4 @@ All Admin API endpoints require the authenticated user to have the `admin` role.
 **Response (500 Internal Server Error):**
 ```json
 { "error": "Internal Server Error" }
-```
-
----
-
-## 11. Cron API
-
-Cron endpoints are designed to be called by a scheduler (e.g., Vercel Cron). They require a secret token for authorization, **not** a user session.
-
-### 11.1 Send Weekly Parent Reports (Cron)
-- **Endpoint**: `GET /api/cron/weekly-parent-reports` or `POST /api/cron/weekly-parent-reports`
-- **Description**: Triggered automatically each week to send digest emails to parents. Requires `CRON_SECRET` in the `Authorization: Bearer <secret>` header or `x-cron-secret` header.
-- **Authentication**: `CRON_SECRET` bearer token
-- **Query Parameters**:
-  - `limit` (Optional): Max number of users to process per run, default `200`
-  - `timezone` (Optional): Timezone override, e.g., `Asia/Jakarta`
-
-**Response (200 OK):**
-```json
-{
-  "sent": 42,
-  "skipped": 8,
-  "errors": 0
-}
-```
-
-**Response (401 Unauthorized - Invalid or Missing Secret):**
-```json
-{ "error": "Unauthorized" }
-```
-
-**Response (500 Internal Server Error):**
-```json
-{ "error": "Terjadi kesalahan saat menjalankan cron laporan." }
 ```
