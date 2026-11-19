@@ -614,7 +614,6 @@ describe("Admin API Routes", () => {
           gender: "male",
           profileFilled: true,
           currentStreak: 5,
-          parent: { email: "ortu@example.com", status: "verified" },
         },
       ]);
       mockPrisma.user.count.mockResolvedValue(1);
@@ -631,7 +630,8 @@ describe("Admin API Routes", () => {
         users: [
           expect.objectContaining({
             id: "user-1",
-            parentEmail: "ortu@example.com",
+            name: "Budi",
+            email: "budi@example.com",
           }),
         ],
         total: 1,
@@ -640,6 +640,10 @@ describe("Admin API Routes", () => {
         currentSearch: "budi",
         currentFilter: "premium",
       });
+      expect(json.data.users[0]).not.toHaveProperty("parentEmail");
+      expect(
+        mockPrisma.user.findMany.mock.calls[0][0].select,
+      ).not.toHaveProperty("parent");
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           skip: 5,

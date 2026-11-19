@@ -4,7 +4,6 @@ import { APIError } from "better-auth/api";
 // If your Prisma file is located elsewhere, you can change the path
 
 import { sendEmail } from "./email";
-import { requestParentConsentEmail } from "./parent-consent";
 import prisma from "./prisma";
 import { openAPI } from "better-auth/plugins";
 
@@ -154,10 +153,6 @@ export const auth = betterAuth({
         type: "string",
         required: false,
       },
-      parentEmail: {
-        type: "string",
-        required: false,
-      },
       profileFilled: {
         type: "boolean",
         required: false,
@@ -186,91 +181,6 @@ export const auth = betterAuth({
     },
   },
   databaseHooks: {
-    user: {
-      update: {
-        before: async (data, ctx) => {
-          const incoming = { ...(data as Record<string, unknown>) };
-
-          if (!("parentEmail" in incoming)) {
-            return { data: incoming };
-          }
-
-          const rawParentEmail =
-            typeof incoming.parentEmail === "string"
-              ? incoming.parentEmail.trim().toLowerCase()
-              : "";
-          const normalizedIncomingParentEmail = rawParentEmail || null;
-          const userId = ctx?.context?.session?.user?.id;
-
-          if (!normalizedIncomingParentEmail) {
-            if (userId) {
-              await prisma.parent.deleteMany({
-                where: { userId },
-              });
-            }
-            return {
-              data: {
-                ...incoming,
-                parentEmail: null,
-              },
-            };
-          }
-
-          if (!userId) {
-            return { data: incoming };
-          }
-
-          const currentUser = await prisma.user.findUnique({
-            where: { id: userId },
-            select: {
-              name: true,
-              parentEmail: true,
-            },
-          });
-
-          if (!currentUser) {
-            return { data: incoming };
-          }
-
-          const normalizedCurrentParentEmail =
-            currentUser.parentEmail?.toLowerCase() || null;
-
-          if (normalizedCurrentParentEmail === normalizedIncomingParentEmail) {
-            return {
-              data: {
-                ...incoming,
-                parentEmail: normalizedIncomingParentEmail,
-              },
-            };
-          }
-
-          const appUrl =
-            process.env.BETTER_AUTH_URL || process.env.NEXT_PUBLIC_APP_URL;
-
-          if (!appUrl) {
-            throw new Error(
-              "BETTER_AUTH_URL atau NEXT_PUBLIC_APP_URL belum dikonfigurasi.",
-            );
-          }
-
-          await requestParentConsentEmail({
-            userId,
-            childName:
-              (typeof incoming.name === "string" && incoming.name.trim()) ||
-              currentUser.name,
-            parentEmail: normalizedIncomingParentEmail,
-            appUrl,
-          });
-
-          return {
-            data: {
-              ...incoming,
-              parentEmail: normalizedIncomingParentEmail,
-            },
-          };
-        },
-      },
-    },
     account: {
       create: {
         after: async (account) => {
@@ -464,19 +374,4 @@ export async function getUserSecurityState(userId: string) {
     isGoogleLinked,
     providerIds,
   };
-}
-
-/**
- * Updates the parent email field stored on Better Auth user table.
- */
-export async function setUserParentEmail(
-  userId: string,
-  parentEmail: string | null,
-) {
-  return prisma.user.update({
-    where: { id: userId },
-    data: {
-      parentEmail,
-    },
-  });
 }
