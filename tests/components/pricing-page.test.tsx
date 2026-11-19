@@ -51,7 +51,7 @@ describe("pricing content comes from the shared subscription rules", () => {
     expect(singlePlan.period).toContain("1, 3, 6, atau 12 bulan");
     expect(basicPlan.features[0]).toContain(`${FREE_DIARY_LIMIT_PER_MONTH}`);
     expect(basicPlan.features.join(" ")).toContain(
-      `${FREE_QUIZ_LIMIT_PER_DAY} soal per hari`,
+      `${FREE_QUIZ_LIMIT_PER_DAY} latihan per hari`,
     );
   });
 

@@ -1,12 +1,12 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { AlertCircle, Info, UsersRound } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 
-type IconType = "info" | "alert" | "parent";
+type IconType = "info" | "alert";
 
 interface AuthInfoCardProps {
   children: ReactNode;
@@ -18,8 +18,6 @@ function resolveIcon(icon: IconType) {
   switch (icon) {
     case "alert":
       return <AlertCircle className="h-4 w-4" />;
-    case "parent":
-      return <UsersRound className="h-4 w-4" />;
     default:
       return <Info className="h-4 w-4" />;
   }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BookOpen, Check, ShieldCheck, Users } from "lucide-react";
+import { ArrowRight, BookOpen, Check, ShieldCheck } from "lucide-react";
 
 import { DoodleArrow } from "@/components/landing/home/reused/doodles";
 
@@ -81,8 +81,8 @@ export function FeaturesBraveChoice() {
             coba dulu, refleksikan kemudian
           </div>
           <p className="demo-note">
-            Brave Choice Quiz ada di halaman diary. Akun gratis punya batas
-            latihan harian, Premium membuka akses tanpa batas.
+            Brave Choice ada di halaman diary. Akun gratis punya batas latihan
+            harian, Premium membuka akses tanpa batas.
           </p>
           <div className="feature-cta-row">
             <Link className="button" href="/diary">
@@ -180,44 +180,43 @@ export function FeaturesPrivacy() {
           <span className="kicker">Privasi &amp; dukungan</span>
           <h2>Privasi Terjaga, Kepercayaan Terbangun.</h2>
           <p>
-            Cerita pribadimu dan laporan untuk orang tua adalah dua hal yang
-            berbeda. Orang tua atau wali hanya menerima laporan mingguan yang
-            bersifat umum, dan hanya setelah mereka menyetujui permintaan yang
-            kamu kirim.
+            Cerita pribadimu adalah milikmu. Isi diary disimpan dalam bentuk
+            terenkripsi, dan kamu yang memutuskan apa yang ingin kamu tulis.
           </p>
           <div className="privacy-notes">
             <div>
               <BookOpen className="icon" size={21} />
               <p>
                 <strong>Isi cerita pribadi</strong>
-                Detail yang kamu tulis di diary tidak dikirim ke orang tua.
+                Detail yang kamu tulis di diary disimpan terenkripsi dan tidak
+                dibagikan ke pengguna lain.
               </p>
             </div>
             <div>
               <ShieldCheck className="icon" size={21} />
               <p>
-                <strong>Laporan mingguan</strong>
-                Gambaran umum mood dan perkembanganmu, dikirim ke email orang
-                tua/wali yang sudah terhubung.
+                <strong>Peringatan keselamatan</strong>
+                Jika ada sinyal yang berisiko tinggi, tim hanya meninjau
+                peringatannya, bukan isi percakapan lengkapmu.
               </p>
             </div>
           </div>
         </div>
         <div className="privacy-preview">
           <div className="demo-topline">
-            <span>Laporan mingguan orang tua</span>
-            <span className="demo-label">Contoh tampilan</span>
+            <span>Privasi diary</span>
+            <span className="demo-label">Ringkasan</span>
           </div>
-          <span className="summary-date">Setiap minggu</span>
-          <h3>Gambaran umum, bukan isi ceritamu.</h3>
+          <span className="summary-date">Selalu terenkripsi</span>
+          <h3>Ceritamu tetap milikmu.</h3>
           <p>
-            Orang tua menerima ringkasan umum tentang perkembangan moodmu agar
-            bisa mendampingi tanpa membaca diary pribadimu.
+            Kamu bisa bercerita dengan tenang karena isi diary tidak ditampilkan
+            ke pengguna lain.
           </p>
           <div className="share-preview">
             <span>
-              <Users className="icon" size={18} /> Yang tidak dikirim ke orang
-              tua
+              <ShieldCheck className="icon" size={18} /> Yang tidak dibagikan ke
+              pengguna lain
             </span>
             <ul className="not-sent-list">
               {notSharedItems.map((item) => (
@@ -225,11 +224,11 @@ export function FeaturesPrivacy() {
               ))}
             </ul>
             <p>
-              Kamu bisa mengatur atau memutus hubungan dengan orang tua kapan
-              saja dari pengaturan laporan.
+              Kamu bisa meminta salinan atau penghapusan datamu kapan saja lewat
+              kontak di Kebijakan Privasi.
             </p>
-            <Link className="text-link" href="/profile/parent-report">
-              Atur laporan orang tua <span>→</span>
+            <Link className="text-link" href="/privacy">
+              Baca Kebijakan Privasi <span>→</span>
             </Link>
           </div>
         </div>

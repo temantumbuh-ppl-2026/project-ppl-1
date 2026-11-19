@@ -142,7 +142,7 @@ test.describe("Redesign register", () => {
 
     await page.goto("/register");
     await expect(
-      page.getByRole("list", { name: /langkah 1 dari 3/i }),
+      page.getByRole("list", { name: /langkah 1 dari 2/i }),
     ).toBeVisible();
     await page.getByLabel("Email", { exact: true }).fill("Baru@Example.com");
     await page.getByLabel("Password", { exact: true }).fill("rahasia123");
@@ -163,7 +163,7 @@ test.describe("Redesign register", () => {
     });
     // Belum terverifikasi: stepper tetap di tahap Akun.
     await expect(
-      page.getByRole("list", { name: /langkah 1 dari 3/i }),
+      page.getByRole("list", { name: /langkah 1 dari 2/i }),
     ).toBeVisible();
 
     await page.getByRole("button", { name: "Kirim Ulang Verifikasi" }).click();
@@ -224,7 +224,7 @@ test.describe("Redesign register", () => {
     });
   });
 
-  test("completeProfile=1: data diri → laporan, kembali mempertahankan isian", async ({
+  test("completeProfile=1: data diri disimpan langsung di langkah terakhir", async ({
     page,
   }) => {
     await mockIncompleteProfileSession(page);
@@ -239,9 +239,9 @@ test.describe("Redesign register", () => {
 
     await page.goto("/register?completeProfile=1");
 
-    // Akun sudah dibuat/terverifikasi → tahap 2 aktif, tanpa jalan kembali ke Akun.
+    // Akun sudah dibuat/terverifikasi, jadi langkah 2 aktif tanpa jalan kembali ke Akun.
     await expect(
-      page.getByRole("list", { name: /langkah 2 dari 3/i }),
+      page.getByRole("list", { name: /langkah 2 dari 2/i }),
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: /kembali ke akun/i }),
@@ -251,37 +251,12 @@ test.describe("Redesign register", () => {
     ).toHaveCount(0);
     await expect(page.getByLabel("Nama Lengkap")).toHaveValue("Teman Uji");
     await expect(page.getByLabel(/password/i)).toHaveCount(0);
+    await expect(page.getByLabel(/email orang tua/i)).toHaveCount(0);
 
     await page.getByRole("combobox", { name: "Tahun Lahir" }).click();
     await page.getByRole("option", { name: "2008" }).click();
     await page.getByRole("combobox", { name: "Jenis Kelamin" }).click();
     await page.getByRole("option", { name: "Perempuan" }).click();
-    await page.getByRole("button", { name: "Lanjut", exact: true }).click();
-
-    await expect(
-      page.getByRole("list", { name: /langkah 3 dari 3/i }),
-    ).toBeVisible();
-    const parentEmail = page.getByLabel(/email orang tua/i);
-    await parentEmail.fill("bukan-email");
-    await page.getByRole("button", { name: "Selesai" }).click();
-    await expect(page.locator("#reg-parentEmail-error")).toBeVisible();
-
-    await parentEmail.fill("wali@example.com");
-    await page.getByRole("button", { name: "Kembali", exact: true }).click();
-    await expect(
-      page.getByRole("list", { name: /langkah 2 dari 3/i }),
-    ).toBeVisible();
-    await expect(page.getByLabel("Nama Lengkap")).toHaveValue("Teman Uji");
-    await expect(
-      page.getByRole("combobox", { name: "Tahun Lahir" }),
-    ).toHaveText(/2008/);
-
-    await page.getByRole("button", { name: "Lanjut", exact: true }).click();
-    await expect(page.getByLabel(/email orang tua/i)).toHaveValue(
-      "wali@example.com",
-    );
-    // Field opsional: dikosongkan tetap boleh selesai.
-    await page.getByLabel(/email orang tua/i).fill("");
     await page.getByRole("button", { name: "Selesai" }).click();
 
     await expect.poll(() => updatePayload).not.toBeNull();
@@ -289,11 +264,10 @@ test.describe("Redesign register", () => {
       name: "Teman Uji",
       birthYear: 2008,
       gender: "female",
-      parentEmail: null,
       profileFilled: true,
     });
+    expect(updatePayload).not.toHaveProperty("parentEmail");
   });
-
   test("completeProfile=1 tanpa sesi dikembalikan ke login", async ({
     page,
   }) => {

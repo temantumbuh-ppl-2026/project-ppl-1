@@ -152,7 +152,7 @@ export default function SnapPayButton({
       </button>
 
       {error && (
-        <p className="mt-2 text-center text-xs font-medium text-red-500">
+        <p className="mt-2 text-center text-xs font-medium text-tt-attention-text">
           {error}
         </p>
       )}

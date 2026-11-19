@@ -88,7 +88,7 @@ function HelperTooltip({ text }: { text: string }) {
           className="absolute left-1/2 top-full z-20 mt-2 w-[200px] -translate-x-1/2 rounded-xl px-3 py-2 text-[12px] font-medium leading-4 shadow-lg"
           style={{
             background: "rgba(25,39,44,0.95)",
-            color: "#FFFFFF",
+            color: "var(--tt-surface)",
             backdropFilter: "blur(8px)",
           }}
         >
@@ -123,7 +123,8 @@ function MoodStatBox({
       className="flex flex-col gap-3 rounded-[20px] border p-4 sm:p-5"
       style={{
         borderColor: "rgba(25,39,44,0.06)",
-        background: "linear-gradient(180deg, #FFFFFF 0%, #F9FCFB 100%)",
+        background:
+          "linear-gradient(180deg, var(--tt-surface) 0%, var(--tt-gray-50) 100%)",
       }}
     >
       <div className="flex items-center gap-3">
@@ -176,7 +177,8 @@ function PlainStatBox({
       className="flex flex-col gap-3 rounded-[20px] border p-4 sm:p-5"
       style={{
         borderColor: "rgba(25,39,44,0.06)",
-        background: "linear-gradient(180deg, #FFFFFF 0%, #F9FCFB 100%)",
+        background:
+          "linear-gradient(180deg, var(--tt-surface) 0%, var(--tt-gray-50) 100%)",
       }}
     >
       <div className="flex items-center gap-3">
@@ -269,7 +271,7 @@ export function InsightTrendSection({
           style={{
             borderColor: "rgba(25,39,44,0.06)",
             background:
-              "linear-gradient(135deg, rgba(26,150,136,0.04) 0%, rgba(78,207,195,0.02) 100%)",
+              "linear-gradient(135deg, color-mix(in srgb, var(--tt-primary-500) 4%, transparent) 0%, color-mix(in srgb, var(--tt-primary-300) 2%, transparent) 100%)",
           }}
         >
           <p
@@ -391,7 +393,8 @@ export function InsightTrendSection({
           <div
             className="flex flex-1 flex-col rounded-[20px] border p-3 sm:rounded-[24px] sm:p-5"
             style={{
-              background: "linear-gradient(180deg, #FFFFFF 0%, #F9FCFB 100%)",
+              background:
+                "linear-gradient(180deg, var(--tt-surface) 0%, var(--tt-gray-50) 100%)",
               borderColor: "rgba(25,39,44,0.06)",
             }}
           >
@@ -463,7 +466,8 @@ export function InsightTrendSection({
 
                   <Tooltip
                     cursor={{
-                      stroke: "rgba(26,150,136,0.16)",
+                      stroke:
+                        "color-mix(in srgb, var(--tt-primary-500) 16%, transparent)",
                       strokeWidth: 1,
                     }}
                     content={<ChartTooltip />}
@@ -484,7 +488,7 @@ export function InsightTrendSection({
                     dot={{
                       r: 4,
                       strokeWidth: 2,
-                      fill: "#FFFFFF",
+                      fill: "var(--tt-surface)",
                       stroke: "var(--tt-dashboard-brand)",
                     }}
                     activeDot={{

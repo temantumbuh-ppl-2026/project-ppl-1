@@ -96,8 +96,8 @@ export const homeValueItems: HomeValueItem[] = [
     icon: "shield",
   },
   {
-    title: "Dukungan keluarga",
-    text: "Jembatan komunikasi yang lebih sehat dan terbuka.",
+    title: "Dukungan yang tepat",
+    text: "Peringatan keselamatan ditinjau tanpa membuka isi ceritamu.",
     icon: "people",
   },
   {

@@ -228,7 +228,8 @@ export function MoodCheckin({
       if (!response.ok) {
         throw {
           status: response.status,
-          message: result.error || "Something went wrong",
+          message:
+            result.error || "Terjadi kesalahan. Coba lagi beberapa saat.",
         };
       }
 
@@ -404,9 +405,11 @@ export function MoodCheckin({
               <div
                 className="mt-4 rounded-2xl px-4 py-3 text-sm font-semibold"
                 style={{
-                  background: "rgba(26,150,136,0.10)",
+                  background:
+                    "color-mix(in srgb, var(--tt-primary-500) 10%, transparent)",
                   color: "var(--brand-primary)",
-                  border: "1px solid rgba(26,150,136,0.22)",
+                  border:
+                    "1px solid color-mix(in srgb, var(--tt-primary-500) 22%, transparent)",
                 }}
               >
                 Streak aktif kamu saat ini: {lastSubmittedStreak} hari
@@ -415,7 +418,10 @@ export function MoodCheckin({
 
             <div
               className="my-7 h-px w-full"
-              style={{ background: "rgba(26,150,136,0.15)" }}
+              style={{
+                background:
+                  "color-mix(in srgb, var(--tt-primary-500) 15%, transparent)",
+              }}
             />
 
             <div className="mb-3 flex items-center justify-between gap-3">

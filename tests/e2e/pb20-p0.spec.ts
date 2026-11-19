@@ -148,7 +148,7 @@ test("FE-02 profile dropdowns retain the shared keyboard ring and linked errors"
     path: testInfo.outputPath("register-profile-focus.png"),
     fullPage: true,
   });
-  await page.getByRole("button", { name: "Lanjut", exact: true }).click();
+  await page.getByRole("button", { name: "Selesai", exact: true }).click();
   await expect(year).toHaveAttribute("aria-describedby", "reg-birthYear-error");
   await expect(gender).toHaveAttribute("aria-describedby", "reg-gender-error");
   for (const id of ["reg-birthYear-error", "reg-gender-error"]) {

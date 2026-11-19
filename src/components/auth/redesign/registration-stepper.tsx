@@ -2,7 +2,7 @@
 
 import { Check } from "lucide-react";
 
-const DEFAULT_LABELS = ["Akun", "Data Diri", "Laporan"];
+const DEFAULT_LABELS = ["Akun", "Data Diri"];
 
 interface RegistrationStepperProps {
   /** Index tahap aktif (0-based), sama dengan state `step` di halaman register. */

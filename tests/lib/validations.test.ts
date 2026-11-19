@@ -3,7 +3,6 @@ import {
   registerSchema,
   registerStep1Schema,
   registerStep2Schema,
-  registerStep3Schema,
   loginSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
@@ -86,22 +85,6 @@ describe("lib/validations", () => {
         agreeToTerms: false,
       });
       expect(result.success).toBe(false);
-    });
-
-    it("Harus valid dengan parentEmail opsional", () => {
-      const result = registerSchema.safeParse({
-        ...validData,
-        parentEmail: "ortu@example.com",
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it("Harus valid jika parentEmail string kosong", () => {
-      const result = registerSchema.safeParse({
-        ...validData,
-        parentEmail: "",
-      });
-      expect(result.success).toBe(true);
     });
 
     it("Harus lowercase email otomatis", () => {
@@ -195,28 +178,6 @@ describe("lib/validations", () => {
         });
         expect(result.success).toBe(true);
       }
-    });
-  });
-
-  // ─────────────────────────────────────
-  // registerStep3Schema
-  // ─────────────────────────────────────
-  describe("registerStep3Schema", () => {
-    it("Harus valid jika parentEmail diisi dengan benar", () => {
-      const result = registerStep3Schema.safeParse({
-        parentEmail: "ortu@example.com",
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it("Harus valid jika parentEmail kosong", () => {
-      const result = registerStep3Schema.safeParse({ parentEmail: "" });
-      expect(result.success).toBe(true);
-    });
-
-    it("Harus valid jika parentEmail tidak diisi sama sekali", () => {
-      const result = registerStep3Schema.safeParse({});
-      expect(result.success).toBe(true);
     });
   });
 

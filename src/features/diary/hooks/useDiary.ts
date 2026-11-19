@@ -22,7 +22,6 @@ type InitialUserMeta = {
   name: string;
   plan: "free" | "premium";
   streakDays: number;
-  parentEmail?: string;
 };
 
 export function useDiary(entryId?: string, initialUserMeta?: InitialUserMeta) {

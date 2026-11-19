@@ -149,12 +149,14 @@ export function InsightPageHeader({
                   className={`inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[12px] font-semibold transition-all sm:px-4 sm:text-[12px] ${disabled ? "cursor-not-allowed opacity-70" : "hover:translate-y-[-1px]"}`}
                   style={{
                     background: disabled
-                      ? "#E8F2F0"
+                      ? "var(--tt-gray-100)"
                       : "var(--gradient-brand-btn)",
-                    color: disabled ? "var(--tt-dashboard-text-2)" : "#FFFFFF",
+                    color: disabled
+                      ? "var(--tt-dashboard-text-2)"
+                      : "var(--tt-surface)",
                     boxShadow: disabled
                       ? "none"
-                      : "0 8px 18px rgba(26,150,136,0.20)",
+                      : "0 8px 18px color-mix(in srgb, var(--tt-primary-500) 20%, transparent)",
                   }}
                 >
                   {isGenerating ? (
@@ -228,7 +230,7 @@ export function InsightPageHeader({
                     <Link
                       href="/profile"
                       onClick={() => setProfileOpen(false)}
-                      className="flex cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[rgba(26,150,136,0.06)]"
+                      className="flex cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[color-mix(in_srgb,_var(--tt-primary-500)_6%,_transparent)]"
                       style={{ color: "var(--tt-dashboard-text)" }}
                     >
                       <User
@@ -248,8 +250,8 @@ export function InsightPageHeader({
                         void handleLogout();
                       }}
                       disabled={isLoggingOut}
-                      className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[rgba(239,68,68,0.06)] disabled:cursor-not-allowed disabled:opacity-60"
-                      style={{ color: "#DC2626" }}
+                      className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-tt-attention-bg disabled:cursor-not-allowed disabled:opacity-60"
+                      style={{ color: "var(--tt-attention-text)" }}
                     >
                       <LogOut size={15} /> Keluar
                     </button>
@@ -315,7 +317,10 @@ export function InsightPageHeader({
             <div className="flex items-center gap-3 mb-4">
               <div
                 className="flex h-10 w-10 items-center justify-center rounded-full"
-                style={{ background: "rgba(26,150,136,0.12)" }}
+                style={{
+                  background:
+                    "color-mix(in srgb, var(--tt-primary-500) 12%, transparent)",
+                }}
               >
                 <Sparkles
                   size={18}
@@ -346,7 +351,8 @@ export function InsightPageHeader({
                 className="flex-1 h-11 cursor-pointer rounded-xl text-[13px] font-semibold text-white transition-all hover:translate-y-[-1px]"
                 style={{
                   background: "var(--gradient-brand-btn)",
-                  boxShadow: "0 8px 18px rgba(26,150,136,0.20)",
+                  boxShadow:
+                    "0 8px 18px color-mix(in srgb, var(--tt-primary-500) 20%, transparent)",
                 }}
               >
                 Ya, Tampilkan

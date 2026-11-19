@@ -124,19 +124,19 @@ const adminMenuItems: MenuItem[] = [
 ];
 
 const C = {
-  teal: "#1A9688",
-  tealMid: "#28B0A4",
-  tealLight: "#4ECFC3",
-  tealPale: "#A8E0DA",
-  tealGhost: "#DDF5F2",
-  textPrimary: "#1A2840",
-  textSecondary: "#3A5068",
-  textMuted: "#7090A8",
-  border: "#C8DCED",
-  bg0: "#FAFBFF",
-  white: "#FFFFFF",
-  goldBg: "#FEF3C7",
-  goldText: "#D97706",
+  teal: "var(--tt-button-primary)",
+  tealMid: "var(--tt-primary-500)",
+  tealLight: "var(--tt-primary-300)",
+  tealPale: "var(--tt-primary-200)",
+  tealGhost: "var(--tt-primary-100)",
+  textPrimary: "var(--tt-gray-900)",
+  textSecondary: "var(--tt-gray-600)",
+  textMuted: "var(--tt-gray-400)",
+  border: "var(--tt-gray-200)",
+  bg0: "var(--tt-gray-50)",
+  white: "var(--tt-surface)",
+  goldBg: "var(--tt-warning-bg)",
+  goldText: "var(--tt-warning-text)",
 };
 
 function useOutsideClick(cb: () => void) {
@@ -206,8 +206,8 @@ function Avatar({
         width: size,
         height: size,
         fontSize: size < 30 ? 11 : 12,
-        background: `linear-gradient(135deg, ${C.teal}, ${C.tealMid})`,
-        color: "#fff",
+        background: C.teal,
+        color: "var(--tt-surface)",
       }}
     >
       {image ? (
@@ -240,7 +240,7 @@ function NavLink({
   const content = (
     <>
       <span
-        className="text-sm font-medium transition-colors duration-150 group-hover:text-[#1A9688]"
+        className="text-sm font-medium transition-colors duration-150 group-hover:text-tt-primary-500"
         style={style}
       >
         {label}
@@ -306,7 +306,7 @@ function HomeDropdown({
       <div className="relative">
         <button
           onClick={handleHomeClick}
-          className="group relative flex cursor-pointer items-center gap-0.5 pb-0.5 text-sm font-medium outline-none transition-colors duration-150 hover:text-[#1A9688]"
+          className="group relative flex cursor-pointer items-center gap-0.5 pb-0.5 text-sm font-medium outline-none transition-colors duration-150 hover:text-tt-primary-500"
           style={{ color: isActive ? C.teal : C.textSecondary }}
           data-nav-item=""
           data-active={isActive}
@@ -332,7 +332,7 @@ function HomeDropdown({
       >
         <button
           onClick={handleHomeClick}
-          className="text-sm font-medium outline-none transition-colors duration-150 group-hover:text-[#1A9688]"
+          className="text-sm font-medium outline-none transition-colors duration-150 group-hover:text-tt-primary-500"
           style={{ color: isActive || open ? C.teal : C.textSecondary }}
           type="button"
         >
@@ -379,7 +379,7 @@ function HomeDropdown({
                     setOpen(false);
                     smoothScroll(item.sectionId, item.href);
                   }}
-                  className="group flex w-full cursor-pointer items-center rounded-xl px-3 py-2.5 text-left transition-colors duration-150 hover:bg-[#DDF5F2]"
+                  className="group flex w-full cursor-pointer items-center rounded-xl px-3 py-2.5 text-left transition-colors duration-150 hover:bg-tt-primary-100"
                   type="button"
                 >
                   <div className="min-w-0 flex-1">
@@ -446,8 +446,10 @@ function ProfileDropdown({ session }: { session: Session }) {
         onClick={() => setOpen((v) => !v)}
         className="flex cursor-pointer items-center gap-2 rounded-full px-3 py-1 outline-none transition-all duration-150 active:scale-[0.98]"
         style={{
-          background: open ? "rgba(26,150,136,0.08)" : "rgba(26,150,136,0.04)",
-          border: `1.5px solid ${open ? C.tealPale : "rgba(26,150,136,0.12)"}`,
+          background: open
+            ? "color-mix(in srgb, var(--tt-primary-500) 8%, transparent)"
+            : "color-mix(in srgb, var(--tt-primary-500) 4%, transparent)",
+          border: `1.5px solid ${open ? C.tealPale : "color-mix(in srgb, var(--tt-primary-500) 12%, transparent)"}`,
         }}
         aria-expanded={open}
         type="button"
@@ -566,7 +568,7 @@ function ProfileDropdown({ session }: { session: Session }) {
                   });
                 }}
                 className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition"
-                style={{ color: "#DC2626" }}
+                style={{ color: "var(--tt-attention-text)" }}
                 type="button"
               >
                 <LogOut size={16} />
@@ -636,7 +638,7 @@ function MobileMenu({
             {isUserHomepage ? (
               <button
                 onClick={handleHomeMobile}
-                className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors duration-150 hover:bg-[#DDF5F2]"
+                className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors duration-150 hover:bg-tt-primary-100"
                 style={{
                   color: pathname === "/home" ? C.teal : C.textSecondary,
                   background:
@@ -656,7 +658,7 @@ function MobileMenu({
               <>
                 <button
                   onClick={() => setBerandaOpen((v) => !v)}
-                  className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors duration-150 hover:bg-[#DDF5F2]"
+                  className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors duration-150 hover:bg-tt-primary-100"
                   style={{
                     color: pathname === "/" ? C.teal : C.textSecondary,
                     background: pathname === "/" ? C.tealGhost : "transparent",
@@ -691,7 +693,7 @@ function MobileMenu({
                           onClick={() =>
                             handleSection(item.sectionId, item.href)
                           }
-                          className="flex w-full cursor-pointer items-center rounded-xl px-3 py-2 text-left text-[13px] font-medium transition-colors duration-150 hover:bg-[#DDF5F2]"
+                          className="flex w-full cursor-pointer items-center rounded-xl px-3 py-2 text-left text-[13px] font-medium transition-colors duration-150 hover:bg-tt-primary-100"
                           style={{ color: C.textSecondary }}
                           type="button"
                         >
@@ -777,8 +779,9 @@ function MobileMenu({
                   onClick={onClose}
                   className="flex h-11 items-center justify-center rounded-xl text-sm font-semibold text-white"
                   style={{
-                    background: `linear-gradient(135deg, ${C.teal} 0%, ${C.tealMid} 100%)`,
-                    boxShadow: "0 2px 12px rgba(26,150,136,0.28)",
+                    background: C.teal,
+                    boxShadow:
+                      "0 2px 12px color-mix(in srgb, var(--tt-primary-500) 28%, transparent)",
                   }}
                 >
                   Daftar Gratis
@@ -846,7 +849,7 @@ function MobileMenu({
                     });
                   }}
                   className="mt-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium"
-                  style={{ color: "#EF4444" }}
+                  style={{ color: "var(--tt-attention-text)" }}
                   type="button"
                 >
                   <LogOut size={15} /> Keluar
@@ -874,7 +877,7 @@ function DesktopAuthActions({
     return (
       <div
         className="h-10 w-24 animate-pulse rounded-xl"
-        style={{ background: "#E4EEFA" }}
+        style={{ background: "var(--tt-info-bg)" }}
       />
     );
   }
@@ -884,7 +887,7 @@ function DesktopAuthActions({
       <>
         <Link
           href="/login"
-          className="relative inline-flex overflow-hidden rounded-xl px-4 py-2 text-sm font-semibold transition-colors duration-150 hover:bg-[#DDF5F2]"
+          className="relative inline-flex overflow-hidden rounded-xl px-4 py-2 text-sm font-semibold transition-colors duration-150 hover:bg-tt-primary-100"
           style={{
             color: C.teal,
             background: "transparent",
@@ -896,8 +899,9 @@ function DesktopAuthActions({
           href="/register"
           className="relative inline-flex rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-all active:scale-[0.97]"
           style={{
-            background: `linear-gradient(135deg, ${C.teal} 0%, ${C.tealMid} 100%)`,
-            boxShadow: "0 2px 14px rgba(26,150,136,0.32)",
+            background: C.teal,
+            boxShadow:
+              "0 2px 14px color-mix(in srgb, var(--tt-primary-500) 32%, transparent)",
           }}
         >
           Daftar Gratis
@@ -1035,11 +1039,11 @@ export function Navbar() {
       style={{
         background: isLandingPage
           ? scrolled
-            ? "rgba(251,250,246,0.97)"
-            : "#fbfaf6"
+            ? "color-mix(in srgb, var(--tt-gray-50) 97%, transparent)"
+            : "var(--tt-gray-50)"
           : scrolled
-            ? "rgba(250,251,255,0.97)"
-            : "rgba(250,251,255,0.92)",
+            ? "color-mix(in srgb, var(--tt-gray-50) 97%, transparent)"
+            : "color-mix(in srgb, var(--tt-gray-50) 92%, transparent)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
         borderBottom: `1px solid ${scrolled ? C.border : "transparent"}`,
@@ -1111,7 +1115,7 @@ export function Navbar() {
         </div>
 
         <button
-          className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors duration-150 hover:bg-[#DDF5F2] md:hidden"
+          className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors duration-150 hover:bg-tt-primary-100 md:hidden"
           onClick={() => setMobileOpen((v) => !v)}
           aria-label="Toggle menu"
           aria-expanded={mobileOpen}

@@ -21,7 +21,6 @@ type DiaryPageClientProps = {
     name: string;
     plan: "free" | "premium";
     streakDays: number;
-    parentEmail?: string;
   };
 };
 

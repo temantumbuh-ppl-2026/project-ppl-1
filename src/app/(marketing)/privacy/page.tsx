@@ -50,8 +50,7 @@ const sections: LegalSection[] = [
             Google-mu.
           </li>
           <li>
-            <strong>Data profil:</strong> tahun lahir, jenis kelamin, dan email
-            orang tua/wali (opsional).
+            <strong>Data profil:</strong> tahun lahir dan jenis kelamin.
           </li>
           <li>
             <strong>Konten yang kamu buat:</strong> check-in mood beserta
@@ -86,8 +85,7 @@ const sections: LegalSection[] = [
           Menyesuaikan pengalaman berdasarkan data profil dan jawaban awalmu.
         </li>
         <li>
-          Mengirim email penting, seperti verifikasi akun, reset password,
-          permintaan persetujuan orang tua, dan laporan mingguan.
+          Mengirim email penting, seperti verifikasi akun dan reset password.
         </li>
         <li>Memproses pembayaran dan mengelola status langganan.</li>
         <li>
@@ -125,25 +123,6 @@ const sections: LegalSection[] = [
         oleh admin TemanTumbuh. Tujuannya adalah membantu memastikan kamu
         mendapatkan dukungan yang tepat, bukan untuk menilai atau menghakimimu.
       </p>
-    ),
-  },
-  {
-    id: "orang-tua",
-    title: "Laporan untuk orang tua/wali",
-    content: (
-      <>
-        <p>
-          Menambahkan email orang tua atau wali bersifat opsional. Saat email
-          ditambahkan, kami mengirim permintaan persetujuan ke alamat tersebut.
-          Laporan hanya dikirim setelah orang tua/wali menyetujuinya.
-        </p>
-        <p>
-          Laporan berisi ringkasan emosi mingguan dan <strong>tidak</strong>{" "}
-          menyertakan isi diary. Kamu dapat mengubah atau menghapus email orang
-          tua/wali kapan saja melalui{" "}
-          <Link href="/profile/parent-report">pengaturan laporan</Link>.
-        </p>
-      </>
     ),
   },
   {
@@ -191,7 +170,6 @@ const sections: LegalSection[] = [
           <Link href="/profile">halaman profil</Link>.
         </li>
         <li>Mengubah password atau membuat password untuk akun Google.</li>
-        <li>Menambah, mengubah, atau menghapus email orang tua/wali.</li>
         <li>
           Meminta salinan atau penghapusan akun beserta datamu dengan
           menghubungi kami di{" "}
@@ -207,8 +185,7 @@ const sections: LegalSection[] = [
       <p>
         TemanTumbuh ditujukan untuk usia 10–29 tahun. Jika kamu berusia di bawah
         18 tahun, kami menganjurkan kamu menggunakan TemanTumbuh dengan
-        sepengetahuan orang tua atau wali. Fitur laporan orang tua tersedia
-        untuk mendukung hal ini tanpa membuka isi diary-mu.
+        sepengetahuan orang tua atau wali.
       </p>
     ),
   },

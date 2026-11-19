@@ -437,11 +437,6 @@
     border-color: var(--teal-dark);
     background: var(--mint-light);
   }
-  .auth-form-actions {
-    display: grid;
-    grid-template-columns: 0.8fr 1.2fr;
-    gap: 11px;
-  }
 
   .google-button:focus-visible,
   .auth-submit:focus-visible,
@@ -523,16 +518,6 @@
   .auth-note strong {
     color: var(--navy);
     overflow-wrap: anywhere;
-  }
-  .report-info {
-    margin: -6px 0 20px;
-  }
-  .later-note {
-    margin: 16px 0 0;
-    color: #5f6f7a;
-    font-size: 12px;
-    line-height: 1.55;
-    text-align: center;
   }
 
   /* Status menunggu verifikasi email. */
@@ -759,12 +744,6 @@
     .registration-stepper li:not(:last-child)::after {
       left: calc(50% + 18px);
       width: calc(100% - 36px);
-    }
-    .auth-form-actions {
-      grid-template-columns: 1fr;
-    }
-    .auth-form-actions .auth-secondary {
-      order: 2;
     }
   }
 

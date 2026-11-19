@@ -21,7 +21,6 @@ const sessionUser = {
   email: "cia@example.com",
   currentStreak: 2,
   isPremium: false,
-  parentEmail: null,
 };
 
 vi.mock("next/navigation", () => ({
@@ -92,16 +91,6 @@ function stubFetch(plan: FetchPlan = {}) {
     if (url.startsWith("/api/diary/count")) return json({ data: { count: 3 } });
     if (url.startsWith("/api/baseline"))
       return json({ success: true, baseline: null });
-    if (url.startsWith("/api/parent/status"))
-      return json({
-        email: null,
-        status: null,
-        expiresAt: null,
-        reason: null,
-        lastSentAt: null,
-        lastReportType: null,
-        lastReportStatus: null,
-      });
     if (url.startsWith("/api/diary/brave-choice/stats"))
       return json({
         data: { pct: 0, correct: 0, total: plan.braveTotal ?? 0 },
@@ -296,8 +285,6 @@ describe("Dashboard redesign — kartu & CTA", () => {
         .getByRole("link", { name: /mulai refleksi/i })
         .getAttribute("href"),
     ).toBe("/baseline");
-    // Kartu laporan orang tua tidak lagi tampil di dashboard.
-    expect(screen.queryByText("Laporan Orang Tua")).toBe(null);
     expect(screen.queryByText(/tulis diary/i)).toBe(null);
     expect(screen.getByText("TemanCerita")).toBeTruthy();
 

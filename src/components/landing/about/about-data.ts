@@ -25,8 +25,8 @@ export const missionValues = [
   },
   {
     icon: "shield",
-    title: "Jembatan Terpercaya",
-    text: "Menjembatani komunikasi antara anak dan orang tua dengan prinsip privasi ketat melalui laporan mingguan yang bersifat umum.",
+    title: "Ruang Aman Terpercaya",
+    text: "Menjaga privasi cerita remaja sambil memastikan sinyal keselamatan ditinjau dengan hati-hati, tanpa membuka isi diary.",
   },
 ] as const;
 
@@ -55,8 +55,8 @@ export const sdgPillars = [
     text: "Skenario interaktif membantu remaja pada tekanan sosial, manipulasi, dan situasi tidak sehat.",
   },
   {
-    title: "Dukungan Keluarga yang Seimbang",
-    text: "Orang tua menerima ringkasan perkembangan tanpa akses ke isi diary, sehingga kepercayaan remaja tetap terjaga.",
+    title: "Dukungan yang Menjaga Kepercayaan",
+    text: "Peringatan keselamatan ditinjau tanpa membaca isi diary, sehingga dukungan bisa diberikan tanpa mengorbankan kepercayaan remaja.",
   },
   {
     title: "Perbaikan Berbasis Data",

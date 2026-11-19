@@ -65,7 +65,7 @@ export function TopCardHeader({
       style={{
         borderColor: "rgba(25,39,44,0.06)",
         background: accent
-          ? "linear-gradient(135deg, rgba(26,150,136,0.04) 0%, rgba(78,207,195,0.02) 100%)"
+          ? "linear-gradient(135deg, color-mix(in srgb, var(--tt-primary-500) 4%, transparent) 0%, color-mix(in srgb, var(--tt-primary-300) 2%, transparent) 100%)"
           : "transparent",
       }}
     >
@@ -122,13 +122,17 @@ export function InsightActionButton({
       )}
       style={{
         background:
-          hasInsight || isGenerating ? "#E8F2F0" : "var(--gradient-brand-btn)",
+          hasInsight || isGenerating
+            ? "var(--tt-gray-100)"
+            : "var(--gradient-brand-btn)",
         color:
-          hasInsight || isGenerating ? "var(--tt-dashboard-text-2)" : "#FFFFFF",
+          hasInsight || isGenerating
+            ? "var(--tt-dashboard-text-2)"
+            : "var(--tt-surface)",
         boxShadow:
           hasInsight || isGenerating
             ? "none"
-            : "0 10px 22px rgba(26,150,136,0.22)",
+            : "0 10px 22px color-mix(in srgb, var(--tt-primary-500) 22%, transparent)",
         fontFamily: "var(--font-plus-jakarta), system-ui, sans-serif",
       }}
     >
@@ -161,12 +165,16 @@ export function PillButton({
       onClick={onClick}
       className="cursor-pointer inline-flex h-10 items-center justify-center rounded-full border px-4 text-sm font-semibold transition-all duration-200"
       style={{
-        background: active ? "var(--tt-dashboard-active-bg)" : "#FFFFFF",
+        background: active
+          ? "var(--tt-dashboard-active-bg)"
+          : "var(--tt-surface)",
         color: active
           ? "var(--tt-dashboard-active-text)"
           : "var(--tt-dashboard-text-2)",
         borderColor: active ? "transparent" : "rgba(25,39,44,0.08)",
-        boxShadow: active ? "0 8px 18px rgba(26,150,136,0.18)" : "none",
+        boxShadow: active
+          ? "0 8px 18px color-mix(in srgb, var(--tt-primary-500) 18%, transparent)"
+          : "none",
         fontFamily: "var(--font-plus-jakarta), system-ui, sans-serif",
       }}
     >
@@ -196,10 +204,10 @@ export function IconButton({
         "inline-flex h-10 w-10 items-center justify-center rounded-2xl border transition-all duration-200",
         disabled
           ? "cursor-not-allowed opacity-40"
-          : "cursor-pointer hover:bg-[#F8FCFB]",
+          : "cursor-pointer hover:bg-tt-gray-50",
       )}
       style={{
-        background: "#FFFFFF",
+        background: "var(--tt-surface)",
         borderColor: "rgba(25,39,44,0.08)",
         color: "var(--tt-dashboard-text)",
       }}
@@ -220,9 +228,9 @@ export function DateButton({
     <button
       type="button"
       onClick={onClick}
-      className="cursor-pointer inline-flex h-10 items-center gap-2 rounded-2xl border px-4 text-sm font-medium transition-all duration-200 hover:bg-[#F8FCFB]"
+      className="cursor-pointer inline-flex h-10 items-center gap-2 rounded-2xl border px-4 text-sm font-medium transition-all duration-200 hover:bg-tt-gray-50"
       style={{
-        background: "#FFFFFF",
+        background: "var(--tt-surface)",
         color: "var(--tt-dashboard-text-2)",
         borderColor: "rgba(25,39,44,0.08)",
         fontFamily: "var(--font-plus-jakarta), system-ui, sans-serif",
@@ -387,7 +395,7 @@ export function NotebookReflection({ text }: { text: string }) {
       className="relative overflow-hidden rounded-[28px] border"
       style={{
         borderColor: "rgba(25,39,44,0.08)",
-        background: "#FDFCF7",
+        background: "var(--tt-gray-50)",
         boxShadow:
           "inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 2px rgba(16,24,40,0.04)",
       }}
@@ -396,7 +404,7 @@ export function NotebookReflection({ text }: { text: string }) {
         className="pointer-events-none absolute inset-0 opacity-[0.35]"
         style={{
           backgroundImage:
-            "radial-gradient(circle at 25% 25%, rgba(180,160,90,0.08) 0%, transparent 40%), radial-gradient(circle at 75% 75%, rgba(180,160,90,0.06) 0%, transparent 40%)",
+            "radial-gradient(circle at 25% 25%, color-mix(in srgb, var(--tt-warning-text) 8%, transparent) 0%, transparent 40%), radial-gradient(circle at 75% 75%, color-mix(in srgb, var(--tt-warning-text) 6%, transparent) 0%, transparent 40%)",
         }}
       />
 
@@ -406,7 +414,7 @@ export function NotebookReflection({ text }: { text: string }) {
           backgroundImage: `repeating-linear-gradient(
             to bottom,
             transparent 0 ${lineGap - 1}px,
-            rgba(76,113,156,0.18) ${lineGap - 1}px ${lineGap}px
+            color-mix(in srgb, var(--tt-info-text) 18%, transparent) ${lineGap - 1}px ${lineGap}px
           )`,
           backgroundPosition: `0 ${topOffset}px`,
         }}
@@ -414,14 +422,17 @@ export function NotebookReflection({ text }: { text: string }) {
 
       <div
         className="pointer-events-none absolute left-[64px] top-0 h-full w-px"
-        style={{ background: "rgba(220,80,80,0.35)" }}
+        style={{
+          background:
+            "color-mix(in srgb, var(--tt-attention-text) 35%, transparent)",
+        }}
       />
 
       <div className="relative px-20 pb-8 pt-7">
         <p
           className="font-normal"
           style={{
-            color: "#2C3E50",
+            color: "var(--tt-gray-900)",
             lineHeight: `${lineGap}px`,
             fontSize: "15.5px",
             margin: 0,
@@ -455,7 +466,7 @@ export function QuoteBlock({ text }: { text: string }) {
         style={{
           fontFamily: "var(--tt-font-sans)",
           fontSize: "84px",
-          color: "rgba(26,150,136,0.32)",
+          color: "color-mix(in srgb, var(--tt-primary-500) 32%, transparent)",
           height: "44px",
           fontWeight: 700,
         }}
@@ -483,7 +494,7 @@ export function QuoteBlock({ text }: { text: string }) {
           style={{
             fontFamily: "var(--tt-font-sans)",
             fontSize: "60px",
-            color: "rgba(26,150,136,0.28)",
+            color: "color-mix(in srgb, var(--tt-primary-500) 28%, transparent)",
             height: "32px",
             fontWeight: 700,
           }}
@@ -508,7 +519,7 @@ export function InsightPlaceholderCard({ title }: { title: string }) {
     <div
       className="rounded-[28px] border px-5 py-5"
       style={{
-        background: "#FFFFFF",
+        background: "var(--tt-surface)",
         borderColor: "rgba(25,39,44,0.06)",
       }}
     >
@@ -535,7 +546,7 @@ export function EmptyReflectionState({ isToday }: { isToday: boolean }) {
     <div
       className="rounded-[28px] border px-6 py-7"
       style={{
-        background: "#FCFEFD",
+        background: "var(--tt-gray-50)",
         borderColor: "rgba(25,39,44,0.06)",
       }}
     >
@@ -571,7 +582,7 @@ export function TrendPlaceholder() {
             key={item}
             className="rounded-[28px] border px-6 py-7"
             style={{
-              background: "#FFFFFF",
+              background: "var(--tt-surface)",
               borderColor: "rgba(25,39,44,0.06)",
             }}
           >
@@ -586,7 +597,8 @@ export function TrendPlaceholder() {
       <div
         className="flex flex-1 flex-col rounded-[28px] border p-5"
         style={{
-          background: "linear-gradient(180deg, #FFFFFF 0%, #F9FCFB 100%)",
+          background:
+            "linear-gradient(180deg, var(--tt-surface) 0%, var(--tt-gray-50) 100%)",
           borderColor: "rgba(25,39,44,0.06)",
         }}
       >
