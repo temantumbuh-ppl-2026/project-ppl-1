@@ -43,31 +43,31 @@ export function LogoutConfirmDialog({
             {/* Header */}
             <div
               className="flex items-center justify-between px-5 py-4"
-              style={{ borderBottom: "1px solid var(--tt-gray-100)" }}
+              style={{ borderBottom: "1px solid #f1f5f4" }}
             >
               <div className="flex items-center gap-2.5">
                 <div
                   className="flex h-8 w-8 items-center justify-center rounded-lg"
-                  style={{ background: "var(--tt-attention-bg)" }}
+                  style={{ background: "rgba(239,68,68,0.08)" }}
                 >
-                  <LogOut size={15} color="var(--tt-attention-text)" />
+                  <LogOut size={15} color="#DC2626" />
                 </div>
-                <p className="text-[15px] font-bold text-tt-gray-900">
+                <p className="text-[15px] font-bold text-slate-900">
                   Keluar dari akun?
                 </p>
               </div>
               <button
                 type="button"
                 onClick={onCancel}
-                className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-tt-gray-100"
+                className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-slate-100"
               >
-                <X size={14} color="var(--tt-gray-400)" />
+                <X size={14} color="#64748b" />
               </button>
             </div>
 
             {/* Body */}
             <div className="px-5 py-4">
-              <p className="text-[13px] leading-relaxed text-tt-gray-600">
+              <p className="text-[13px] leading-relaxed text-slate-500">
                 Kamu akan keluar dari TemanTumbuh. Yakin ingin melanjutkan?
               </p>
             </div>
@@ -78,11 +78,8 @@ export function LogoutConfirmDialog({
                 type="button"
                 onClick={onCancel}
                 disabled={loading}
-                className="flex h-11 flex-1 cursor-pointer items-center justify-center rounded-xl text-[13px] font-semibold transition-colors hover:bg-tt-gray-50 disabled:opacity-50"
-                style={{
-                  border: "1.5px solid var(--tt-gray-200)",
-                  color: "var(--tt-gray-600)",
-                }}
+                className="flex h-11 flex-1 cursor-pointer items-center justify-center rounded-xl text-[13px] font-semibold transition-colors hover:bg-slate-50 disabled:opacity-50"
+                style={{ border: "1.5px solid #e2e8f0", color: "#475569" }}
               >
                 Batal
               </button>
@@ -92,9 +89,8 @@ export function LogoutConfirmDialog({
                 disabled={loading}
                 className="flex h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl text-[13px] font-semibold text-white transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                 style={{
-                  background: "var(--tt-attention-text)",
-                  boxShadow:
-                    "0 4px 12px color-mix(in srgb, var(--tt-attention-text) 20%, transparent)",
+                  background: "#DC2626",
+                  boxShadow: "0 4px 12px rgba(220,38,38,0.2)",
                 }}
               >
                 {loading ? "Keluar..." : "Ya, Keluar"}

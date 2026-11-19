@@ -63,15 +63,13 @@ function SidebarNavItem({
       href={targetHref}
       prefetch
       onClick={onClick}
-      className="flex cursor-pointer items-center gap-3 rounded-[0.95rem] px-3.5 py-3 transition-all hover:bg-[color-mix(in_srgb,_var(--tt-primary-500)_6%,_transparent)]"
+      className="flex cursor-pointer items-center gap-3 rounded-[0.95rem] px-3.5 py-3 transition-all hover:bg-[rgba(26,150,136,0.06)]"
       style={{
         background: active ? "var(--tt-dashboard-active-bg)" : "transparent",
         color: active
           ? "var(--tt-dashboard-active-text)"
           : "var(--tt-dashboard-text)",
-        boxShadow: active
-          ? "0 8px 18px color-mix(in srgb, var(--tt-primary-500) 14%, transparent)"
-          : "none",
+        boxShadow: active ? "0 8px 18px rgba(26,150,136,0.14)" : "none",
       }}
       aria-current={active ? "page" : undefined}
     >
@@ -136,14 +134,14 @@ function MobileSidebar({
         style={{
           borderColor: "var(--tt-dashboard-shell-border)",
           background:
-            "linear-gradient(180deg, color-mix(in srgb, var(--tt-gray-50) 98%, transparent) 0%, color-mix(in srgb, var(--tt-gray-50) 98%, transparent) 100%)",
+            "linear-gradient(180deg, rgba(246,250,249,0.98) 0%, rgba(241,247,246,0.98) 100%)",
         }}
       >
         {/* Header: brand + close */}
         <div className="mb-4 flex items-center justify-between px-1">
           <div>
             <p
-              className="text-[12px] font-extrabold uppercase tracking-[0.14em]"
+              className="text-[11px] font-extrabold uppercase tracking-[0.14em]"
               style={{ color: "var(--tt-dashboard-text-2)" }}
             >
               TEMANTUMBUH
@@ -220,7 +218,7 @@ function MobileSidebar({
             onClick={onLogout}
             disabled={isLoggingOut}
             className="flex w-12 shrink-0 cursor-pointer items-center justify-center rounded-2xl transition-all disabled:cursor-not-allowed disabled:opacity-60"
-            style={{ color: "var(--tt-attention-text)" }}
+            style={{ color: "#DC2626" }}
             aria-label="Keluar"
             title="Keluar"
           >
@@ -435,7 +433,7 @@ export function AppSidebarShell({ user, children }: Props) {
 
             <div className="min-w-0 flex-1">
               <p
-                className="text-[12px] font-extrabold uppercase tracking-[0.14em]"
+                className="text-[11px] font-extrabold uppercase tracking-[0.14em]"
                 style={{ color: "var(--tt-dashboard-text-2)" }}
               >
                 TEMANTUMBUH
@@ -514,7 +512,7 @@ function MobileProfileDropdown({
         aria-label="Menu profil"
       >
         <div
-          className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg text-[12px] font-black text-white"
+          className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg text-[10px] font-black text-white"
           style={{ background: "var(--tt-dashboard-brand)" }}
         >
           {userImageSrc ? (
@@ -552,7 +550,7 @@ function MobileProfileDropdown({
           <Link
             href="/profile"
             onClick={() => setOpen(false)}
-            className="flex cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[color-mix(in_srgb,_var(--tt-primary-500)_6%,_transparent)]"
+            className="flex cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[rgba(26,150,136,0.06)]"
             style={{ color: "var(--tt-dashboard-text)" }}
           >
             <User size={15} style={{ color: "var(--tt-dashboard-brand)" }} />
@@ -571,8 +569,8 @@ function MobileProfileDropdown({
               onLogout();
             }}
             disabled={isLoggingOut}
-            className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-tt-attention-bg disabled:cursor-not-allowed disabled:opacity-60"
-            style={{ color: "var(--tt-attention-text)" }}
+            className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[rgba(239,68,68,0.06)] disabled:cursor-not-allowed disabled:opacity-60"
+            style={{ color: "#DC2626" }}
           >
             <LogOut size={15} />
             Keluar

@@ -31,7 +31,7 @@ export function AdminUsersClient() {
 
   if (error || !data) {
     return (
-      <div className="flex h-[75vh] w-full items-center justify-center text-tt-attention-text">
+      <div className="flex h-[75vh] w-full items-center justify-center text-red-500">
         Gagal memuat data pengguna.
       </div>
     );

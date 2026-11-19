@@ -335,7 +335,7 @@ function ClosedCoverContent() {
         transition={{ delay: 0.75, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         style={{
           margin: 0,
-          fontFamily: "var(--tt-font-sans)",
+          fontFamily: "Georgia, 'Times New Roman', serif",
           fontSize: "clamp(22px, 5.5vw, 34px)",
           fontWeight: 900,
           lineHeight: 1.08,

@@ -187,7 +187,7 @@ export async function generateDailyInsight({
   ];
 
   const completion = await openai.chat.completions.create({
-    model: (process.env.LLM_MODEL || DEFAULT_MODEL).trim(),
+    model: DEFAULT_MODEL,
     messages: [
       {
         role: "system",

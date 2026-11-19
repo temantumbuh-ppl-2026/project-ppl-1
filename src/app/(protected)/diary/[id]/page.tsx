@@ -31,6 +31,7 @@ export default async function DiaryPage({ params }: PageProps) {
       name: true,
       isPremium: true,
       currentStreak: true,
+      parentEmail: true,
     },
   });
 
@@ -46,6 +47,7 @@ export default async function DiaryPage({ params }: PageProps) {
         name: user.name,
         plan: user.isPremium ? "premium" : "free",
         streakDays: user.currentStreak ?? 0,
+        parentEmail: user.parentEmail ?? undefined,
       }}
     />
   );

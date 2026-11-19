@@ -5,16 +5,13 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2, Info, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import QueryProvider from "@/components/providers/query-providers";
+import { BrandPageBackground } from "@/components/layout/brand-page-background";
 import { AuthField } from "@/components/auth/auth-field";
-import {
-  AuthFormHeading,
-  AuthSplitLayout,
-} from "@/components/auth/redesign/auth-split-layout";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AuthInfoCard } from "@/components/auth/auth-info-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -128,115 +125,137 @@ function ForgotPasswordPageContent() {
   };
 
   return (
-    <AuthSplitLayout>
-      <AuthFormHeading
-        eyebrow="tenang, kita bantu"
-        title="Lupa password?"
-        description="Masukkan email akunmu. Kami akan kirim link untuk mengatur ulang password."
-      />
-
-      {!isSubmitted ? (
-        <>
-          <div className="auth-note">
-            <Info aria-hidden="true" />
-            <span>
-              Pastikan email yang kamu masukkan sama dengan email yang terdaftar
-              di akun TemanTumbuh.
-            </span>
+    <BrandPageBackground>
+      <div className="mx-auto flex min-h-[calc(100vh-128px)] w-full max-w-md items-center px-4 py-12">
+        <div className="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <div className="mb-6 flex items-start justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">
+                Lupa Password
+              </h1>
+              <p className="mt-2 text-sm text-slate-600">
+                Masukkan email akunmu. Kami akan kirim link untuk mengatur ulang
+                password.
+              </p>
+            </div>
           </div>
 
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="auth-form"
-            noValidate
-            aria-busy={forgotPasswordMutation.isPending}
-          >
-            <AuthField
-              id="forgot-email"
-              label="Email"
-              error={errors.email?.message}
-            >
-              <Input
-                id="forgot-email"
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                autoFocus
-                placeholder="email@contoh.com"
-                {...register("email", {
-                  onChange: () => {
-                    if (errors.email) {
-                      clearErrors("email");
-                    }
-                  },
-                })}
-              />
-            </AuthField>
+          {!isSubmitted ? (
+            <>
+              <div className="mb-6">
+                <AuthInfoCard icon="info">
+                  Pastikan email yang kamu masukkan sama dengan email yang
+                  terdaftar di akun TemanTumbuh.
+                </AuthInfoCard>
+              </div>
 
-            <Button
-              type="submit"
-              disabled={forgotPasswordMutation.isPending}
-              aria-busy={forgotPasswordMutation.isPending}
-              className="auth-submit"
-            >
-              {forgotPasswordMutation.isPending ? (
-                <>
-                  <Loader2
-                    className="mr-2 h-4 w-4 animate-spin"
-                    aria-hidden="true"
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="space-y-4"
+                noValidate
+              >
+                <AuthField
+                  id="forgot-email"
+                  label="Email"
+                  error={errors.email?.message}
+                >
+                  <Input
+                    id="forgot-email"
+                    type="email"
+                    autoComplete="email"
+                    className="h-12 rounded-xl"
+                    placeholder="email@contoh.com"
+                    {...register("email", {
+                      onChange: () => {
+                        if (errors.email) {
+                          clearErrors("email");
+                        }
+                      },
+                    })}
                   />
-                  Mengirim...
-                </>
-              ) : (
-                "Kirim Link Reset"
-              )}
-            </Button>
-          </form>
-        </>
-      ) : (
-        <div className="auth-form">
-          <Alert
-            role="status"
-            className="rounded-tt-md border"
-            style={{
-              background: "var(--tt-success-bg)",
-              borderColor: "var(--tt-success-text)",
-              color: "var(--tt-success-text)",
-            }}
-          >
-            <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-            <AlertTitle>Link reset berhasil dikirim</AlertTitle>
-            <AlertDescription>
-              Kami sudah memproses permintaan reset password untuk{" "}
-              <span className="font-medium">{submittedEmail}</span>. Silakan cek
-              inbox atau folder spam email kamu.
-            </AlertDescription>
-          </Alert>
+                </AuthField>
 
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setIsSubmitted(false);
-              setSubmittedEmail("");
-              clearErrors();
-            }}
-            className="auth-secondary"
-          >
-            Kirim ke Email Lain
-          </Button>
+                <div className="pt-2">
+                  <Button
+                    type="submit"
+                    disabled={forgotPasswordMutation.isPending}
+                    className="h-12 w-full rounded-xl text-sm font-semibold text-white"
+                    style={{
+                      background: "var(--gradient-brand-btn)",
+                    }}
+                  >
+                    {forgotPasswordMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Mengirim...
+                      </>
+                    ) : (
+                      "Kirim Link Reset"
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </>
+          ) : (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+                <div className="flex items-start gap-3">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
+                  <div>
+                    <p className="font-semibold">Link reset berhasil dikirim</p>
+                    <p className="mt-1">
+                      Kami sudah memproses permintaan reset password untuk{" "}
+                      <span className="font-medium">{submittedEmail}</span>.
+                      Silakan cek inbox atau folder spam email kamu.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsSubmitted(false);
+                  setSubmittedEmail("");
+                  clearErrors();
+                }}
+                className="h-12 w-full rounded-xl"
+              >
+                Kirim ke Email Lain
+              </Button>
+            </div>
+          )}
+
+          <div className="mt-6 space-y-2 text-center text-sm text-slate-600">
+            <p>
+              Sudah ingat password?{" "}
+              <Link
+                href="/login"
+                className="font-semibold text-teal-700 hover:underline"
+              >
+                Kembali ke Login
+              </Link>
+            </p>
+
+            <p>
+              <Link
+                href="/"
+                className="font-semibold text-teal-700 hover:underline"
+              >
+                <span className="inline-flex items-center gap-1">
+                  <ArrowLeft className="h-4 w-4" />
+                  Kembali ke Beranda
+                </span>
+              </Link>
+            </p>
+          </div>
         </div>
-      )}
-
-      <p className="auth-switch">
-        Sudah ingat password? <Link href="/login">Kembali ke Login</Link>
-      </p>
-      <p className="auth-switch">
-        <Link href="/">← Kembali ke Beranda</Link>
-      </p>
-    </AuthSplitLayout>
+      </div>
+    </BrandPageBackground>
   );
 }
+
 export default function ForgotPasswordPage() {
   return (
     <QueryProvider>

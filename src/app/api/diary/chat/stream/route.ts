@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { getAuthenticatedUserIdFromRequest } from "@/lib/auth";
+import { generateDiaryAssistantReplyStream } from "@/lib/diary/litellm";
 import {
-  completePreparedDiaryStructuredChatSession,
   DiaryServiceError,
+  persistDiaryChatSession,
   prepareDiaryChatSession,
   toDiaryServiceErrorForAiFailure,
 } from "@/lib/diary/service";
@@ -39,35 +40,38 @@ export async function POST(request: Request) {
       );
     }
 
-    const session = await prepareDiaryChatSession(
-      {
-        userId,
-        entryId: parsedPayload.data.entryId,
-        messageText: parsedPayload.data.messageText,
-        timezone: parsedPayload.data.timezone,
-      },
-      { includeMetadata: true },
-    );
+    const session = await prepareDiaryChatSession({
+      userId,
+      entryId: parsedPayload.data.entryId,
+      messageText: parsedPayload.data.messageText,
+      timezone: parsedPayload.data.timezone,
+    });
 
     const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
-        try {
-          const result =
-            await completePreparedDiaryStructuredChatSession(session);
+        let assistantText = "";
 
-          controller.enqueue(
-            toSseChunk("chunk", { text: result.aiMessage.text }),
-          );
+        try {
+          for await (const textChunk of generateDiaryAssistantReplyStream({
+            messages: session.promptMessages,
+          })) {
+            assistantText += textChunk;
+            controller.enqueue(toSseChunk("chunk", { text: textChunk }));
+          }
+
+          const result = await persistDiaryChatSession({
+            session,
+            assistantText,
+          });
+
           controller.enqueue(toSseChunk("done", result));
         } catch (error) {
+          console.error("Diary chat stream error:", error);
+
           const serviceError =
             error instanceof DiaryServiceError
               ? error
               : toDiaryServiceErrorForAiFailure(error);
-          console.error("Diary chat stream error:", {
-            code: serviceError.code,
-            status: serviceError.status,
-          });
 
           controller.enqueue(
             toSseChunk("error", {
@@ -91,9 +95,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Diary chat stream POST error:", {
-      name: error instanceof Error ? error.name : typeof error,
-    });
+    console.error("Diary chat stream POST error:", error);
 
     if (error instanceof DiaryServiceError) {
       return NextResponse.json(

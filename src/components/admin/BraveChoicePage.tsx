@@ -100,11 +100,11 @@ const mInput: React.CSSProperties = {
   width: "100%",
   padding: "10px 14px",
   borderRadius: 10,
-  border: "1.5px solid var(--tt-gray-200)",
-  background: "var(--tt-surface)",
+  border: "1.5px solid #d1ebe8",
+  background: "#ffffff",
   fontSize: 14,
   fontFamily: "inherit",
-  color: "var(--tt-primary-900)",
+  color: "#1a2e2b",
   outline: "none",
   boxSizing: "border-box",
   transition: "border-color 0.15s",
@@ -117,9 +117,9 @@ const mSelect: React.CSSProperties = {
   WebkitAppearance: "none",
 };
 const mLabel: React.CSSProperties = {
-  fontSize: 12,
+  fontSize: 11,
   fontWeight: 700,
-  color: "var(--tt-gray-600)",
+  color: "#4a7a74",
   display: "block",
   marginBottom: 6,
   textTransform: "uppercase",
@@ -150,12 +150,12 @@ function SectionDivider({ label }: { label: string }) {
         margin: "4px 0 2px",
       }}
     >
-      <div style={{ flex: 1, height: 1, background: "var(--tt-gray-100)" }} />
+      <div style={{ flex: 1, height: 1, background: "#e0f0ee" }} />
       <span
         style={{
-          fontSize: 12,
+          fontSize: 10,
           fontWeight: 700,
-          color: "var(--tt-gray-400)",
+          color: "#8bbdb7",
           textTransform: "uppercase",
           letterSpacing: "0.08em",
           whiteSpace: "nowrap",
@@ -163,7 +163,7 @@ function SectionDivider({ label }: { label: string }) {
       >
         {label}
       </span>
-      <div style={{ flex: 1, height: 1, background: "var(--tt-gray-100)" }} />
+      <div style={{ flex: 1, height: 1, background: "#e0f0ee" }} />
     </div>
   );
 }
@@ -220,7 +220,7 @@ function Modal({
             width: "100%",
             maxWidth: 600,
             overflowY: "auto",
-            background: "var(--tt-surface)",
+            background: "#ffffff",
             boxShadow:
               "0 -8px 48px rgba(0,0,0,0.2), 0 4px 24px rgba(0,0,0,0.1)",
             border: "1px solid rgba(0,0,0,0.06)",
@@ -233,11 +233,11 @@ function Modal({
           <div
             style={{
               padding: "14px 20px",
-              borderBottom: "1px solid var(--tt-gray-200)",
+              borderBottom: "1px solid #c8ede9",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              background: "var(--tt-button-primary)",
+              background: "#1a9688",
               position: "sticky",
               top: 0,
               zIndex: 1,
@@ -249,7 +249,7 @@ function Modal({
               style={{
                 fontWeight: 700,
                 fontSize: 15,
-                color: "var(--tt-surface)",
+                color: "#fff",
                 letterSpacing: "0.01em",
               }}
             >
@@ -268,7 +268,7 @@ function Modal({
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                color: "var(--tt-surface)",
+                color: "#fff",
               }}
             >
               <X size={14} strokeWidth={2.5} />
@@ -276,13 +276,7 @@ function Modal({
           </div>
 
           {/* Body */}
-          <div
-            style={{
-              padding: "20px",
-              background: "var(--tt-gray-50)",
-              flex: 1,
-            }}
-          >
+          <div style={{ padding: "20px", background: "#f9fffe", flex: 1 }}>
             {children}
           </div>
         </div>
@@ -308,7 +302,7 @@ function Toggle({
         height: 24,
         borderRadius: 100,
         border: "none",
-        background: checked ? "var(--tt-button-primary)" : "rgba(0,0,0,0.12)",
+        background: checked ? "#1a9688" : "rgba(0,0,0,0.12)",
         cursor: "pointer",
         position: "relative",
         transition: "background 0.2s",
@@ -320,7 +314,7 @@ function Toggle({
           width: 18,
           height: 18,
           borderRadius: "50%",
-          background: "var(--tt-surface)",
+          background: "#fff",
           position: "absolute",
           top: 3,
           left: checked ? 21 : 3,
@@ -389,8 +383,7 @@ function QuestionForm({
       <div className="tt-form-grid">
         <div>
           <label style={mLabel}>
-            Kategori{" "}
-            <span style={{ color: "var(--tt-attention-text)" }}>*</span>
+            Kategori <span style={{ color: "#ef4444" }}>*</span>
           </label>
           <input
             type="text"
@@ -403,8 +396,7 @@ function QuestionForm({
         </div>
         <div>
           <label style={mLabel}>
-            Segmen Usia{" "}
-            <span style={{ color: "var(--tt-attention-text)" }}>*</span>
+            Segmen Usia <span style={{ color: "#ef4444" }}>*</span>
           </label>
           <div style={{ position: "relative" }}>
             <select
@@ -426,7 +418,7 @@ function QuestionForm({
                 right: 11,
                 top: "50%",
                 transform: "translateY(-50%)",
-                color: "var(--tt-gray-400)",
+                color: "#8bbdb7",
                 pointerEvents: "none",
               }}
             />
@@ -436,8 +428,7 @@ function QuestionForm({
 
       <div>
         <label style={mLabel}>
-          Skenario / Pertanyaan{" "}
-          <span style={{ color: "var(--tt-attention-text)" }}>*</span>
+          Skenario / Pertanyaan <span style={{ color: "#ef4444" }}>*</span>
         </label>
         <textarea
           value={form.scenario}
@@ -454,8 +445,7 @@ function QuestionForm({
       <div className="tt-form-grid">
         <div>
           <label style={mLabel}>
-            Pilihan A{" "}
-            <span style={{ color: "var(--tt-attention-text)" }}>*</span>
+            Pilihan A <span style={{ color: "#ef4444" }}>*</span>
           </label>
           <input
             type="text"
@@ -468,8 +458,7 @@ function QuestionForm({
         </div>
         <div>
           <label style={mLabel}>
-            Pilihan B{" "}
-            <span style={{ color: "var(--tt-attention-text)" }}>*</span>
+            Pilihan B <span style={{ color: "#ef4444" }}>*</span>
           </label>
           <input
             type="text"
@@ -501,16 +490,10 @@ function QuestionForm({
                   cursor: "pointer",
                   fontFamily: "inherit",
                   transition: "all 0.15s",
-                  border: sel
-                    ? "2px solid var(--tt-primary-500)"
-                    : "1.5px solid var(--tt-gray-200)",
-                  background: sel
-                    ? "var(--tt-button-primary)"
-                    : "var(--tt-surface)",
-                  color: sel ? "var(--tt-surface)" : "var(--tt-gray-600)",
-                  boxShadow: sel
-                    ? "0 3px 12px color-mix(in srgb, var(--tt-primary-500) 25%, transparent)"
-                    : "none",
+                  border: sel ? "2px solid #1a9688" : "1.5px solid #d1ebe8",
+                  background: sel ? "#1a9688" : "#fff",
+                  color: sel ? "#fff" : "#4a7a74",
+                  boxShadow: sel ? "0 3px 12px rgba(26,150,136,0.25)" : "none",
                 }}
               >
                 {sel ? "✓ " : ""}Pilihan {opt}
@@ -523,7 +506,7 @@ function QuestionForm({
       <SectionDivider label="Penjelasan" />
 
       <div>
-        <label style={{ ...mLabel, color: "var(--tt-primary-500)" }}>
+        <label style={{ ...mLabel, color: "#1a9688" }}>
           ✓ Penjelasan Jawaban Benar
         </label>
         <textarea
@@ -534,14 +517,14 @@ function QuestionForm({
           style={{
             ...mInput,
             resize: "vertical",
-            border: "1.5px solid var(--tt-gray-200)",
-            background: "var(--tt-primary-50)",
+            border: "1.5px solid #b6ddd9",
+            background: "#f0faf9",
           }}
         />
       </div>
 
       <div>
-        <label style={{ ...mLabel, color: "var(--tt-warning-text)" }}>
+        <label style={{ ...mLabel, color: "#b45309" }}>
           ✕ Penjelasan Jawaban Salah
         </label>
         <textarea
@@ -552,8 +535,8 @@ function QuestionForm({
           style={{
             ...mInput,
             resize: "vertical",
-            border: "1.5px solid var(--tt-attention-border)",
-            background: "var(--tt-attention-bg)",
+            border: "1.5px solid #fcd9aa",
+            background: "#fffbf5",
           }}
         />
       </div>
@@ -565,7 +548,7 @@ function QuestionForm({
           alignItems: "center",
           justifyContent: "space-between",
           paddingTop: 14,
-          borderTop: "1px solid var(--tt-gray-100)",
+          borderTop: "1px solid #e0f0ee",
           marginTop: 2,
           flexWrap: "wrap",
           gap: 12,
@@ -584,13 +567,7 @@ function QuestionForm({
             checked={form.isActive}
             onChange={(v) => set("isActive", v)}
           />
-          <span
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "var(--tt-gray-600)",
-            }}
-          >
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#4a7a74" }}>
             Soal aktif
           </span>
         </div>
@@ -602,9 +579,9 @@ function QuestionForm({
               height: 44,
               padding: "0 20px",
               borderRadius: 10,
-              border: "1.5px solid var(--tt-gray-200)",
-              background: "var(--tt-surface)",
-              color: "var(--tt-gray-600)",
+              border: "1.5px solid #d1ebe8",
+              background: "#fff",
+              color: "#4a7a74",
               fontSize: 13,
               fontWeight: 600,
               fontFamily: "inherit",
@@ -620,18 +597,14 @@ function QuestionForm({
               height: 44,
               padding: "0 24px",
               borderRadius: 10,
-              background: loading
-                ? "color-mix(in srgb, var(--tt-primary-500) 50%, transparent)"
-                : "var(--tt-button-primary)",
+              background: loading ? "rgba(26,150,136,0.5)" : "#1a9688",
               border: "none",
-              color: "var(--tt-surface)",
+              color: "#fff",
               fontSize: 13,
               fontWeight: 700,
               fontFamily: "inherit",
               cursor: loading ? "not-allowed" : "pointer",
-              boxShadow: loading
-                ? "none"
-                : "0 4px 14px color-mix(in srgb, var(--tt-primary-500) 30%, transparent)",
+              boxShadow: loading ? "none" : "0 4px 14px rgba(26,150,136,0.3)",
               display: "flex",
               alignItems: "center",
               gap: 7,
@@ -674,25 +647,19 @@ function DeleteConfirm({
             gap: 12,
             padding: "14px 16px",
             borderRadius: 13,
-            background: "var(--tt-attention-bg)",
-            border: "1px solid var(--tt-attention-border)",
+            background: "rgba(239,68,68,0.07)",
+            border: "1px solid rgba(239,68,68,0.18)",
             alignItems: "flex-start",
           }}
         >
           <AlertCircle
             size={17}
             strokeWidth={2}
-            color="var(--tt-attention-text)"
+            color="#ef4444"
             style={{ flexShrink: 0, marginTop: 1 }}
           />
           <div>
-            <p
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                color: "var(--tt-attention-text)",
-              }}
-            >
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#ef4444" }}>
               Tindakan ini tidak bisa dibatalkan
             </p>
             <p
@@ -716,7 +683,7 @@ function DeleteConfirm({
               border: "1px solid var(--tt-dashboard-card-border)",
             }}
           >
-            <p style={{ fontSize: 12, color: C.text3, marginBottom: 4 }}>
+            <p style={{ fontSize: 11, color: C.text3, marginBottom: 4 }}>
               Soal yang akan dihapus:
             </p>
             <p
@@ -739,9 +706,9 @@ function DeleteConfirm({
               height: 44,
               padding: "0 20px",
               borderRadius: 10,
-              border: "1.5px solid var(--tt-gray-200)",
-              background: "var(--tt-surface)",
-              color: "var(--tt-gray-600)",
+              border: "1.5px solid #d1ebe8",
+              background: "#fff",
+              color: "#4a7a74",
               fontSize: 13,
               fontWeight: 600,
               fontFamily: "inherit",
@@ -758,11 +725,9 @@ function DeleteConfirm({
               height: 44,
               padding: "0 22px",
               borderRadius: 10,
-              background: loading
-                ? "color-mix(in srgb, var(--tt-attention-text) 50%, transparent)"
-                : "var(--tt-attention-text)",
+              background: loading ? "rgba(239,68,68,0.5)" : "#ef4444",
               border: "none",
-              color: "var(--tt-surface)",
+              color: "#fff",
               fontSize: 13,
               fontWeight: 700,
               fontFamily: "inherit",
@@ -770,9 +735,7 @@ function DeleteConfirm({
               display: "flex",
               alignItems: "center",
               gap: 6,
-              boxShadow: loading
-                ? "none"
-                : "0 4px 14px color-mix(in srgb, var(--tt-attention-text) 25%, transparent)",
+              boxShadow: loading ? "none" : "0 4px 14px rgba(239,68,68,0.25)",
             }}
           >
             {loading ? (
@@ -827,7 +790,7 @@ function QuestionCard({
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           <span
             style={{
-              fontSize: 12,
+              fontSize: 10,
               color: C.text3,
               fontVariantNumeric: "tabular-nums",
               alignSelf: "center",
@@ -837,7 +800,7 @@ function QuestionCard({
           </span>
           <span
             style={{
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: 700,
               padding: "3px 10px",
               borderRadius: 100,
@@ -849,7 +812,7 @@ function QuestionCard({
           </span>
           <span
             style={{
-              fontSize: 12,
+              fontSize: 11,
               fontWeight: 600,
               padding: "3px 10px",
               borderRadius: 100,
@@ -870,8 +833,7 @@ function QuestionCard({
               height: 34,
               borderRadius: 9,
               border: "1px solid var(--tt-dashboard-card-border)",
-              background:
-                "color-mix(in srgb, var(--tt-primary-500) 8%, transparent)",
+              background: "rgba(26,150,136,0.08)",
               color: C.brand,
               display: "flex",
               alignItems: "center",
@@ -889,8 +851,8 @@ function QuestionCard({
               width: 34,
               height: 34,
               borderRadius: 9,
-              border: "1px solid var(--tt-attention-border)",
-              background: "var(--tt-attention-bg)",
+              border: "1px solid rgba(239,68,68,0.2)",
+              background: "rgba(239,68,68,0.07)",
               color: C.danger,
               display: "flex",
               alignItems: "center",
@@ -926,17 +888,15 @@ function QuestionCard({
                 padding: "8px 12px",
                 borderRadius: 10,
                 fontSize: 12,
-                border: `1.5px solid ${isCorrect ? "var(--tt-gray-200)" : "var(--tt-dashboard-card-border)"}`,
-                background: isCorrect
-                  ? "var(--tt-primary-50)"
-                  : "rgba(0,0,0,0.02)",
-                color: isCorrect ? "var(--tt-primary-500)" : C.text2,
+                border: `1.5px solid ${isCorrect ? "#b6ddd9" : "var(--tt-dashboard-card-border)"}`,
+                background: isCorrect ? "#f0faf9" : "rgba(0,0,0,0.02)",
+                color: isCorrect ? "#1a9688" : C.text2,
                 fontWeight: isCorrect ? 700 : 400,
               }}
             >
               <span
                 style={{
-                  fontSize: 12,
+                  fontSize: 10,
                   fontWeight: 800,
                   marginRight: 4,
                   opacity: 0.7,
@@ -946,7 +906,7 @@ function QuestionCard({
               </span>
               {opt === "A" ? q.optionA : q.optionB}
               {isCorrect && (
-                <span style={{ marginLeft: 4, fontSize: 12 }}>✓</span>
+                <span style={{ marginLeft: 4, fontSize: 10 }}>✓</span>
               )}
             </div>
           );
@@ -1013,9 +973,9 @@ function PaginationBar({
 
   const btnActive: React.CSSProperties = {
     ...btnBase,
-    background: "var(--tt-button-primary)",
-    borderColor: "var(--tt-primary-500)",
-    color: "var(--tt-surface)",
+    background: "#1a9688",
+    borderColor: "#1a9688",
+    color: "#fff",
     fontWeight: 700,
   };
 
@@ -1310,8 +1270,8 @@ export function BraveChoicePage({
             alignItems: "center",
             padding: "12px 16px",
             borderRadius: 13,
-            background: "var(--tt-attention-bg)",
-            border: "1px solid var(--tt-attention-border)",
+            background: "rgba(239,68,68,0.08)",
+            border: "1px solid rgba(239,68,68,0.2)",
           }}
         >
           <AlertCircle size={15} strokeWidth={2} color={C.danger} />
@@ -1372,7 +1332,7 @@ export function BraveChoicePage({
               >
                 {s.value}
               </p>
-              <p style={{ fontSize: 12, fontWeight: 600, color: C.text3 }}>
+              <p style={{ fontSize: 10, fontWeight: 600, color: C.text3 }}>
                 {s.label}
               </p>
             </div>
@@ -1392,13 +1352,12 @@ export function BraveChoicePage({
             borderRadius: 13,
             background: "var(--tt-dashboard-button-bg)",
             border: "none",
-            color: "var(--tt-surface)",
+            color: "#fff",
             fontSize: 13,
             fontWeight: 700,
             fontFamily: "inherit",
             cursor: "pointer",
-            boxShadow:
-              "0 4px 16px color-mix(in srgb, var(--tt-primary-500) 30%, transparent)",
+            boxShadow: "0 4px 16px rgba(26,150,136,0.3)",
             display: "flex",
             alignItems: "center",
             gap: 8,
@@ -1448,7 +1407,7 @@ export function BraveChoicePage({
                   ? "1.5px solid var(--tt-dashboard-brand)"
                   : "1.5px solid var(--tt-dashboard-card-border)",
                 background: showFilters
-                  ? "color-mix(in srgb, var(--tt-primary-500) 8%, transparent)"
+                  ? "rgba(26,150,136,0.08)"
                   : "rgba(255,255,255,0.85)",
                 color: showFilters ? C.brand : C.text3,
                 display: "flex",
@@ -1699,12 +1658,7 @@ export function BraveChoicePage({
               }}
             >
               <thead>
-                <tr
-                  style={{
-                    background:
-                      "color-mix(in srgb, var(--tt-primary-500) 4%, transparent)",
-                  }}
-                >
+                <tr style={{ background: "rgba(26,150,136,0.04)" }}>
                   {[
                     "#",
                     "Kategori",
@@ -1721,7 +1675,7 @@ export function BraveChoicePage({
                       style={{
                         textAlign: "left",
                         padding: "11px 14px",
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: 700,
                         color: C.text3,
                         textTransform: "uppercase",
@@ -1750,13 +1704,13 @@ export function BraveChoicePage({
                         background:
                           i % 2 === 0
                             ? "transparent"
-                            : "color-mix(in srgb, var(--tt-primary-500) 2%, transparent)",
+                            : "rgba(26,150,136,0.015)",
                       }}
                     >
                       <td
                         style={{
                           padding: "12px 14px",
-                          fontSize: 12,
+                          fontSize: 11,
                           color: C.text3,
                           borderBottom:
                             "1px solid var(--tt-dashboard-card-border)",
@@ -1853,7 +1807,7 @@ export function BraveChoicePage({
                       >
                         <span
                           style={{
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: 800,
                             padding: "3px 10px",
                             borderRadius: 100,
@@ -1874,7 +1828,7 @@ export function BraveChoicePage({
                       >
                         <span
                           style={{
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: 700,
                             padding: "3px 10px",
                             borderRadius: 100,
@@ -1919,8 +1873,7 @@ export function BraveChoicePage({
                               borderRadius: 9,
                               border:
                                 "1px solid var(--tt-dashboard-card-border)",
-                              background:
-                                "color-mix(in srgb, var(--tt-primary-500) 8%, transparent)",
+                              background: "rgba(26,150,136,0.08)",
                               color: C.brand,
                               display: "flex",
                               alignItems: "center",
@@ -1938,8 +1891,8 @@ export function BraveChoicePage({
                               width: 32,
                               height: 32,
                               borderRadius: 9,
-                              border: "1px solid var(--tt-attention-border)",
-                              background: "var(--tt-attention-bg)",
+                              border: "1px solid rgba(239,68,68,0.2)",
+                              background: "rgba(239,68,68,0.07)",
                               color: C.danger,
                               display: "flex",
                               alignItems: "center",

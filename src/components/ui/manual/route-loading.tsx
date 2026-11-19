@@ -112,7 +112,7 @@ function SkeletonBlock({
       className={`rounded-[1.15rem] ${className}`}
       style={{
         background:
-          "linear-gradient(110deg, color-mix(in srgb, var(--tt-gray-200) 45%, transparent) 8%, rgba(255,255,255,0.75) 18%, color-mix(in srgb, var(--tt-gray-200) 45%, transparent) 33%)",
+          "linear-gradient(110deg, rgba(196,224,220,0.45) 8%, rgba(255,255,255,0.75) 18%, rgba(196,224,220,0.45) 33%)",
         backgroundSize: "200% 100%",
         animation: "tt-skeleton 1.35s linear infinite",
         border: "1px solid rgba(255,255,255,0.72)",
@@ -334,7 +334,7 @@ function SubscriptionPlanSkeleton({
 
 function FeatureSkeletonRow() {
   return (
-    <div className="flex items-center gap-3 rounded-[16px] bg-[color-mix(in_srgb,_var(--tt-primary-500)_4%,_transparent)] px-3.5 py-3">
+    <div className="flex items-center gap-3 rounded-[16px] bg-[rgba(26,150,136,0.04)] px-3.5 py-3">
       <SkeletonBlock className="h-5 w-5 shrink-0 rounded-full" />
       <SkeletonBlock className="h-4 w-full rounded-full" />
     </div>
@@ -346,12 +346,12 @@ function ProfileSkeleton() {
     <div className="mx-auto max-w-5xl space-y-4">
       <div className="h-10 w-48 animate-pulse rounded-full bg-white/70" />
       <div className="overflow-hidden rounded-[20px] bg-white shadow-sm">
-        <div className="h-16 animate-pulse border-b border-tt-gray-200 bg-tt-gray-50" />
+        <div className="h-16 animate-pulse border-b border-slate-200 bg-slate-50" />
         <div className="space-y-px">
           <div className="h-20 animate-pulse bg-white" />
-          <div className="h-20 animate-pulse bg-tt-gray-50/70" />
+          <div className="h-20 animate-pulse bg-slate-50/70" />
           <div className="h-20 animate-pulse bg-white" />
-          <div className="h-20 animate-pulse bg-tt-gray-50/70" />
+          <div className="h-20 animate-pulse bg-slate-50/70" />
         </div>
       </div>
     </div>

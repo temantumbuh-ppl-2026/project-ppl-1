@@ -1,24 +1,20 @@
 // ============================================================
 //  src/features/diary/components/DiaryRightPage.tsx
-//  Percakapan diary (TemanCerita) — satu layout responsif
+//  Halaman kanan diary — responsive desktop & mobile
 // ============================================================
 
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import {
-  BookText,
+  Lock,
   ChevronLeft,
   ChevronRight,
-  Lock,
   SendHorizonal,
   TriangleAlert,
 } from "lucide-react";
 import {
   useEffect,
   useMemo,
-  useState,
   useRef,
   useCallback,
   type RefObject,
@@ -27,44 +23,23 @@ import {
 } from "react";
 import { useQuery } from "@tanstack/react-query";
 
-import { getMoodLabel } from "@/components/mood/mood-face-icons";
-import { ConversationState, RiskLevel } from "@/app/generated/prisma/enums";
-import { DIARY_TOPIC_LABELS } from "../constants/topics";
-import type {
-  DiaryConversation,
-  DiaryEntry,
-  ChatMessage,
-  DiaryConversationStarter,
-} from "../types";
+import { colors as C, fonts } from "../constants/tokens";
+import type { DiaryEntry, ChatMessage } from "../types";
 import { MoodFace } from "./MoodFace";
 import { ChatBubble } from "./ChatBubble";
-import { AiAvatar } from "./AiAvatar";
-import { SafetyNotice } from "./SafetyNotice";
 import { TypingIndicator } from "./TypingIndicator";
 
 type Props = {
   entry: DiaryEntry;
   messages: ChatMessage[];
-  conversation?: DiaryConversation | null;
-  starters: DiaryConversationStarter[];
-  startersError?: string | null;
   inputValue: string;
   isAiTyping: boolean;
-  isGreetingPending?: boolean;
-  isMessagesLoading: boolean;
   sendError?: string | null;
-  requiresReload?: boolean;
   isReadOnly: boolean;
   canWriteDiary: boolean;
   isPremium: boolean;
   diaryPerMonth: number;
-  /** Tidak dipakai lagi (responsif via CSS); dipertahankan agar kompatibel. */
   isMobile?: boolean;
-  /** Ada entri yang lebih lama/baru untuk dinavigasi. */
-  hasPrevEntry?: boolean;
-  hasNextEntry?: boolean;
-  /** Membuka riwayat (drawer di tablet/mobile, sidebar saat diciutkan). */
-  onOpenHistory?: () => void;
   onPrevEntry: () => void;
   onNextEntry: () => void;
   onInputChange: (value: string) => void;
@@ -102,8 +77,6 @@ type DiaryEntryWithMoodFallback = DiaryEntry & {
   isoDate?: string | null;
   rawDate?: string | null;
 };
-
-const TEXTAREA_MAX_HEIGHT = 128;
 
 function getTimezone(): string {
   try {
@@ -201,22 +174,14 @@ function resolveMoodFromEntry(entry: DiaryEntryWithMoodFallback): MoodScore {
 export function DiaryRightPage({
   entry,
   messages,
-  conversation = null,
-  starters,
-  startersError,
   inputValue,
   isAiTyping,
-  isGreetingPending = false,
-  isMessagesLoading,
   sendError,
-  requiresReload = false,
   isReadOnly,
   canWriteDiary,
   isPremium,
   diaryPerMonth,
-  hasPrevEntry = true,
-  hasNextEntry = true,
-  onOpenHistory,
+  isMobile = false,
   onPrevEntry,
   onNextEntry,
   onInputChange,
@@ -224,60 +189,14 @@ export function DiaryRightPage({
   onKeyDown,
 }: Props) {
   const chatScrollRef = useRef<HTMLDivElement | null>(null);
-  const [pickedAction, setPickedAction] = useState<{
-    option: string;
-    key: string;
-  } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const canSend =
-    inputValue.trim().length > 0 &&
-    !isAiTyping &&
-    !isMessagesLoading &&
-    !requiresReload;
-  const showStarters =
-    entry.isToday &&
-    canWriteDiary &&
-    !isAiTyping &&
-    !isMessagesLoading &&
-    !messages.some((message) => message.role === "user");
+  const canSend = inputValue.trim().length > 0 && !isAiTyping;
   const displayMessages = useMemo(
     () => buildDisplayMessages(messages),
     [messages],
   );
   const lastMessageText =
     displayMessages[displayMessages.length - 1]?.text ?? "";
-  const actionOptions = conversation?.actionOptions ?? [];
-  // Saat risiko HIGH, arahan keselamatan menggantikan saran tindakan.
-  const showSafetyNotice =
-    conversation?.riskLevel === RiskLevel.HIGH &&
-    !isMessagesLoading &&
-    messages.length > 0;
-  const showActionOptions =
-    !isAiTyping &&
-    !isMessagesLoading &&
-    messages.at(-1)?.role === "ai" &&
-    conversation?.conversationState === ConversationState.ACTION &&
-    conversation?.riskLevel === RiskLevel.NONE &&
-    actionOptions.length >= 2;
-  // Pilihan hanya berlaku untuk balasan yang sedang tampil.
-  const actionPickKey = `${entry.id}:${messages.length}`;
-  const selectedActionOption =
-    pickedAction?.key === actionPickKey ? pickedAction.option : null;
-  const canDiscussOption =
-    !isReadOnly && canWriteDiary && !requiresReload && !isAiTyping;
-
-  // Hero hanya muncul ketika entri hari ini memang belum berisi pesan apa pun.
-  const showHero = showStarters && messages.length === 0 && !isGreetingPending;
-  const showCompactStarters =
-    showStarters &&
-    !showHero &&
-    (starters.length > 0 || Boolean(startersError));
-  const showEmptyReadOnly =
-    isReadOnly &&
-    messages.length === 0 &&
-    !isMessagesLoading &&
-    !isGreetingPending &&
-    !isAiTyping;
 
   const timezone = useMemo(() => getTimezone(), []);
 
@@ -324,9 +243,12 @@ export function DiaryRightPage({
     const el = textareaRef.current;
     if (!el) return;
 
+    const maxHeight = isMobile ? 104 : 128;
     el.style.height = "0px";
-    el.style.height = `${Math.min(el.scrollHeight, TEXTAREA_MAX_HEIGHT)}px`;
-  }, [textareaRef]);
+    const nextHeight = Math.min(el.scrollHeight, maxHeight);
+    el.style.height = `${nextHeight}px`;
+    el.style.overflowY = el.scrollHeight > maxHeight ? "auto" : "hidden";
+  }, [textareaRef, isMobile]);
 
   useEffect(() => {
     const chatContainer = chatScrollRef.current;
@@ -361,7 +283,7 @@ export function DiaryRightPage({
 
   useEffect(() => {
     resizeTextarea();
-  }, [inputValue, resizeTextarea]);
+  }, [inputValue, isMobile, resizeTextarea]);
 
   const handleTextareaKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -385,314 +307,262 @@ export function DiaryRightPage({
     onInputChange(e.target.value);
 
     const el = e.target;
+    const maxHeight = isMobile ? 104 : 128;
     el.style.height = "0px";
-    el.style.height = `${Math.min(el.scrollHeight, TEXTAREA_MAX_HEIGHT)}px`;
+    const nextHeight = Math.min(el.scrollHeight, maxHeight);
+    el.style.height = `${nextHeight}px`;
+    el.style.overflowY = el.scrollHeight > maxHeight ? "auto" : "hidden";
   };
-
-  const handleActionOption = (option: string) => {
-    setPickedAction({ option, key: actionPickKey });
-    const selectedOption = option.trim().replace(/[.!?]+$/, "");
-    const draft = `Aku ingin mencoba langkah ini: ${selectedOption}. Bantu aku memikirkan cara memulainya yang sederhana.`;
-    const currentDraft = inputValue.trim();
-    onInputChange(currentDraft ? `${currentDraft}\n\n${draft}` : draft);
-    textareaRef.current?.focus();
-  };
-
-  const starterButtons = (
-    <div className="dy-starters">
-      {starters.map((starter) => (
-        <button
-          key={starter.id}
-          type="button"
-          className="dy-starter"
-          onClick={() => {
-            onInputChange(starter.messageText);
-            textareaRef.current?.focus();
-          }}
-        >
-          {starter.label}
-        </button>
-      ))}
-    </div>
-  );
 
   return (
-    <section className="dy-conversation" aria-label="Percakapan diary">
-      <header className="dy-header">
-        <div className="dy-header-inner">
-          {onOpenHistory ? (
-            <button
-              type="button"
-              className="dy-history-trigger"
-              onClick={onOpenHistory}
-              aria-controls="diary-history"
-            >
-              <BookText size={18} aria-hidden="true" /> Riwayat
-            </button>
-          ) : null}
-
-          <div className="dy-header-title">
-            <h1>{entry.dateLabel}</h1>
-            <p>TemanCerita · Pendamping AI</p>
-          </div>
-
-          <div className="dy-header-tools">
-            <div
-              className="dy-header-mood"
-              aria-label={`Mood: ${getMoodLabel(displayMood)}`}
-            >
-              <span aria-hidden="true">
-                <MoodFace score={displayMood} size={26} />
-              </span>
-              <strong>{getMoodLabel(displayMood)}</strong>
-            </div>
-
-            <div
-              className="dy-entry-nav"
-              role="group"
-              aria-label="Navigasi entri diary"
-            >
-              <small>Entri diary</small>
-              <button
-                type="button"
-                onClick={onPrevEntry}
-                disabled={!hasPrevEntry}
-                aria-label="Entry sebelumnya"
-              >
-                <ChevronLeft size={16} aria-hidden="true" />
-              </button>
-              <button
-                type="button"
-                onClick={onNextEntry}
-                disabled={!hasNextEntry}
-                aria-label="Entry berikutnya"
-              >
-                <ChevronRight size={16} aria-hidden="true" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {conversation && conversation.topics.length > 0 ? (
-        <div className="dy-topics" aria-label="Topik percakapan">
-          <span>Topik cerita:</span>
-          {conversation.topics.map((topic) => (
-            <span key={topic} className="dy-topic-chip">
-              {DIARY_TOPIC_LABELS[topic]}
-            </span>
-          ))}
-        </div>
+    <div
+      style={{
+        flex: 1,
+        minWidth: 0,
+        background: C.paper,
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+        height: "100%",
+        minHeight: 0,
+        maxHeight: "100%",
+        overflow: "hidden",
+      }}
+    >
+      {!isMobile ? (
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: 14,
+            height: "100%",
+            background:
+              "linear-gradient(to right,rgba(0,0,0,0.05),transparent)",
+            pointerEvents: "none",
+            zIndex: 1,
+          }}
+        />
       ) : null}
+
+      <div
+        style={{
+          flexShrink: 0,
+          padding: isMobile ? "16px 16px 12px 44px" : "16px 22px 12px 56px",
+          borderBottom: `1px solid ${C.spine}`,
+          background: C.paper,
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "space-between",
+          gap: 12,
+          zIndex: 2,
+          position: "relative",
+        }}
+      >
+        <div style={{ minWidth: 0 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: 4,
+              flexWrap: "wrap",
+            }}
+          >
+            <p
+              style={{
+                fontWeight: 900,
+                fontSize: isMobile ? 14 : 15,
+                color: C.inkD,
+                fontFamily: fonts.serif,
+                fontStyle: "italic",
+                margin: 0,
+                lineHeight: 1.35,
+              }}
+            >
+              {entry.dateLabel}
+            </p>
+          </div>
+
+          <p
+            style={{
+              fontSize: 10.5,
+              color: C.sub,
+              fontFamily: fonts.sans,
+              margin: 0,
+            }}
+          >
+            TemanCerita · AI Companion
+          </p>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            flexShrink: 0,
+          }}
+        >
+          <MoodFace score={displayMood} size={28} />
+          <div style={{ height: 28, width: 1, background: C.bdL }} />
+          <NavArrowButton onClick={onPrevEntry} direction="left" />
+          <NavArrowButton onClick={onNextEntry} direction="right" />
+        </div>
+      </div>
 
       {!isPremium && entry.isToday && !canWriteDiary ? (
-        <div className="dy-limit">
-          <span>
-            <TriangleAlert size={16} aria-hidden="true" />
-            Batas {diaryPerMonth} sesi diary bulan ini tercapai. Upgrade ke
-            Premium untuk menulis tanpa batas.
-          </span>
-          <Link href="/subscription">Upgrade →</Link>
+        <div
+          style={{
+            flexShrink: 0,
+            padding: isMobile ? "10px 14px" : "10px 22px",
+            background: C.amberL,
+            borderBottom: `1px solid ${C.amberB}`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+            <TriangleAlert
+              size={16}
+              color={C.amber}
+              style={{ marginTop: 1, flexShrink: 0 }}
+            />
+            <span
+              style={{
+                fontSize: 12,
+                color: C.amber,
+                fontWeight: 600,
+                lineHeight: 1.5,
+              }}
+            >
+              Batas {diaryPerMonth} sesi diary bulan ini tercapai. Upgrade ke
+              Premium untuk menulis tanpa batas.
+            </span>
+          </div>
+
+          <button
+            style={{
+              flexShrink: 0,
+              padding: "6px 14px",
+              borderRadius: 10,
+              border: "none",
+              background: C.gold,
+              color: C.white,
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: "pointer",
+              fontFamily: fonts.sans,
+            }}
+          >
+            Upgrade →
+          </button>
         </div>
       ) : null}
 
-      <div className="dy-scroll" ref={chatScrollRef}>
-        <div className="dy-thread" role="log" aria-live="polite">
-          {isReadOnly ? (
-            <p className="dy-readonly">
-              <Lock size={14} aria-hidden="true" />
+      <div
+        ref={chatScrollRef}
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          padding: isMobile ? "14px 14px 18px" : "16px 22px 18px",
+          display: "flex",
+          flexDirection: "column",
+          gap: 12,
+          background: `linear-gradient(180deg, ${C.paper} 0%, ${C.white} 100%)`,
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
+        {isReadOnly ? (
+          <div
+            style={{
+              padding: "8px 14px",
+              borderRadius: 10,
+              background: C.bg,
+              border: `1px solid ${C.bdL}`,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              alignSelf: "center",
+              maxWidth: "100%",
+            }}
+          >
+            <Lock size={11} color={C.sub} />
+            <p
+              style={{
+                fontSize: 11,
+                color: C.sub,
+                fontStyle: "italic",
+                margin: 0,
+                textAlign: "center",
+              }}
+            >
               Diary ini sudah selesai - entri lampau hanya bisa dibaca.
             </p>
-          ) : null}
+          </div>
+        ) : null}
 
-          {isMessagesLoading ? (
-            <div className="dy-loading" role="status">
-              <span className="dy-spinner" aria-hidden="true" />
-              Memuat percakapan…
-            </div>
-          ) : null}
+        {displayMessages.map((msg) => (
+          <ChatBubble
+            key={msg.displayKey}
+            message={msg}
+            showAiMeta={msg.showAiMeta}
+            showTimestamp={msg.showTimestamp}
+          />
+        ))}
 
-          {showHero ? (
-            <div className="dy-hero">
-              <Image
-                className="dy-hero-logo"
-                src="/img/LOGO_TEMANTUMBUH.svg"
-                alt=""
-                width={44}
-                height={44}
-              />
-              <span className="dy-hero-hand">
-                ceritamu boleh dimulai dari mana saja
-              </span>
-              <h2>Mau cerita tentang apa hari ini?</h2>
-              <p>
-                {starters.length > 0
-                  ? "Kamu bisa mulai dari pilihan di bawah atau langsung menulis ceritamu."
-                  : "Tulis ceritamu di kolom bawah kapan pun kamu siap."}
-              </p>
-              {startersError ? (
-                <p role="status" className="dy-hero-note">
-                  Pilihan awal belum tersedia. Kamu tetap bisa menulis di bawah.
-                </p>
-              ) : starters.length > 0 ? (
-                starterButtons
-              ) : null}
-              <svg
-                className="dy-hero-doodle"
-                viewBox="0 0 100 60"
-                aria-hidden="true"
-              >
-                <path d="M4 45c23-37 41 19 65-15 8-11 16-10 26-4M83 16l13 10-12 8" />
-              </svg>
-            </div>
-          ) : null}
-
-          {showEmptyReadOnly ? (
-            <div className="dy-empty-entry">
-              <strong>{entry.dateLabel}</strong>
-              Belum ada cerita pada hari ini.
-            </div>
-          ) : null}
-
-          {displayMessages.map((msg) => (
-            <ChatBubble
-              key={msg.displayKey}
-              message={msg}
-              showAiMeta={msg.showAiMeta}
-              showTimestamp={msg.showTimestamp}
-            />
-          ))}
-
-          {showSafetyNotice ? <SafetyNotice /> : null}
-
-          {showActionOptions ? (
-            <section
-              className="dy-action-choices"
-              aria-label="Pilihan tindakan"
-            >
-              <div className="dy-action-choices-heading">
-                <strong>Kalau kamu ingin mencoba sesuatu</strong>
-                <p>
-                  {canDiscussOption
-                    ? "Pilih satu untuk dibahas, atau lanjut menulis dengan caramu sendiri."
-                    : "Pilihan yang sempat muncul dalam percakapan ini."}
-                </p>
-              </div>
-              <ol className="dy-action-choices-list">
-                {actionOptions.map((option, index) => (
-                  <li key={`${index}-${option}`}>
-                    {canDiscussOption ? (
-                      <button
-                        type="button"
-                        className={`dy-action-choice${selectedActionOption === option ? " is-selected" : ""}`}
-                        aria-pressed={selectedActionOption === option}
-                        onClick={() => handleActionOption(option)}
-                      >
-                        <span
-                          className="dy-action-choice-number"
-                          aria-hidden="true"
-                        >
-                          {index + 1}
-                        </span>
-                        <span>{option}</span>
-                      </button>
-                    ) : (
-                      <div className="dy-action-choice is-readonly">
-                        <span
-                          className="dy-action-choice-number"
-                          aria-hidden="true"
-                        >
-                          {index + 1}
-                        </span>
-                        <span>{option}</span>
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ol>
-            </section>
-          ) : null}
-
-          {showCompactStarters ? (
-            <div className="dy-starter-block">
-              <p>
-                Mau mulai dari mana? Pilih salah satu atau tulis ceritamu
-                sendiri.
-              </p>
-              {startersError ? (
-                <p role="status">
-                  Pilihan awal belum tersedia. Kamu tetap bisa menulis di bawah.
-                </p>
-              ) : (
-                starterButtons
-              )}
-            </div>
-          ) : null}
-
-          {isGreetingPending ? (
-            <div className="dy-status" role="status" aria-live="polite">
-              <AiAvatar />
-              <p>
-                <strong>Menyiapkan sapaan…</strong>
-                Kamu tetap bisa mulai cerita.
-              </p>
-              <span className="dy-dots" aria-hidden="true">
-                <i />
-                <i />
-                <i />
-              </span>
-            </div>
-          ) : isAiTyping ? (
-            <TypingIndicator />
-          ) : null}
-        </div>
+        {isAiTyping ? <TypingIndicator /> : null}
       </div>
 
-      <div className="dy-composer">
-        <div className="dy-composer-inner">
-          {sendError ? (
-            <div className="dy-error" role="alert">
-              <strong>Pesan belum terkirim.</strong>
-              {sendError}
-              {requiresReload ? (
-                <>
-                  <p>
-                    Salin draf di kolom chat sebelum memuat ulang jika ingin
-                    menyimpannya.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => window.location.reload()}
-                  >
-                    Muat ulang diary
-                  </button>
-                </>
-              ) : (
-                <p>
-                  Ceritamu masih ada di kolom tulis. Kirim lagi untuk mencoba.
-                </p>
-              )}
-            </div>
-          ) : null}
+      <div
+        style={{
+          flexShrink: 0,
+          padding: isMobile ? "12px 14px 10px" : "12px 18px 12px",
+          borderTop: `1px solid ${C.spine}`,
+          background: C.paperL,
+          zIndex: 2,
+          position: "relative",
+        }}
+      >
+        {sendError ? (
+          <div
+            style={{
+              marginBottom: 10,
+              padding: "8px 10px",
+              borderRadius: 10,
+              border: `1px solid ${C.amberB}`,
+              background: C.amberL,
+              color: C.amber,
+              fontSize: 11,
+              lineHeight: 1.45,
+              fontFamily: fonts.sans,
+            }}
+          >
+            {sendError}
+          </div>
+        ) : null}
 
-          {isReadOnly ? (
-            <LockedInputNotice message="Entri lampau tidak bisa diedit - pilih Hari Ini untuk menulis baru." />
-          ) : !canWriteDiary ? (
-            <LockedInputNotice message="Batas sesi bulan ini tercapai. Upgrade ke Premium untuk lanjut menulis." />
-          ) : (
-            <ChatInputRow
-              value={inputValue}
-              canSend={canSend}
-              disabled={isAiTyping || isMessagesLoading}
-              textareaRef={textareaRef}
-              onChange={handleTextareaChange}
-              onSend={onSend}
-              onKeyDown={handleTextareaKeyDown}
-            />
-          )}
-        </div>
+        {isReadOnly ? (
+          <LockedInputNotice message="Entri lampau tidak bisa diedit - pilih Hari Ini untuk menulis baru." />
+        ) : !canWriteDiary ? (
+          <LockedInputNotice message="Batas sesi bulan ini tercapai. Upgrade ke Premium untuk lanjut menulis." />
+        ) : (
+          <ChatInputRow
+            value={inputValue}
+            canSend={canSend}
+            textareaRef={textareaRef}
+            onChange={handleTextareaChange}
+            onSend={onSend}
+            onKeyDown={handleTextareaKeyDown}
+            isMobile={isMobile}
+          />
+        )}
       </div>
-    </section>
+    </div>
   );
 }
 
@@ -742,17 +612,177 @@ function splitAiMessageIntoBubbles(rawText: string): string[] {
     return [];
   }
 
-  return normalized
+  const paragraphBlocks = normalized
     .split(/\n{2,}/)
     .map((block) => block.trim())
     .filter(Boolean);
+
+  if (paragraphBlocks.length > 1) {
+    return paragraphBlocks.flatMap((block) => splitLongBlockIntoBubbles(block));
+  }
+
+  const lineBlocks = normalized
+    .split("\n")
+    .map((block) => block.trim())
+    .filter(Boolean);
+
+  if (lineBlocks.length > 1) {
+    return lineBlocks.flatMap((block) => splitLongBlockIntoBubbles(block));
+  }
+
+  return splitLongBlockIntoBubbles(normalized);
+}
+
+function splitLongBlockIntoBubbles(block: string): string[] {
+  const MAX_BUBBLE_CHARS = 210;
+  const IDEAL_BUBBLE_CHARS = 150;
+  const MAX_SENTENCES_PER_BUBBLE = 2;
+
+  if (block.length <= MAX_BUBBLE_CHARS) {
+    return [block];
+  }
+
+  const sentences = splitIntoSentences(block);
+
+  if (sentences.length <= 1) {
+    return chunkTextByLength(block, IDEAL_BUBBLE_CHARS);
+  }
+
+  const bundled: string[] = [];
+  let currentBubble = "";
+  let sentenceCount = 0;
+
+  for (const sentence of sentences) {
+    const nextBubble = currentBubble
+      ? `${currentBubble} ${sentence}`
+      : sentence;
+
+    const shouldWrap =
+      nextBubble.length > MAX_BUBBLE_CHARS ||
+      sentenceCount >= MAX_SENTENCES_PER_BUBBLE;
+
+    if (shouldWrap && currentBubble) {
+      bundled.push(currentBubble.trim());
+      currentBubble = sentence;
+      sentenceCount = 1;
+    } else {
+      currentBubble = nextBubble;
+      sentenceCount += 1;
+    }
+  }
+
+  if (currentBubble.trim()) {
+    bundled.push(currentBubble.trim());
+  }
+
+  return bundled.flatMap((item) =>
+    item.length > MAX_BUBBLE_CHARS
+      ? chunkTextByLength(item, IDEAL_BUBBLE_CHARS)
+      : [item],
+  );
+}
+
+function splitIntoSentences(text: string): string[] {
+  return (
+    text
+      .match(/[^.!?]+[.!?]+|[^.!?]+$/g)
+      ?.map((sentence) => sentence.trim())
+      .filter(Boolean) ?? [text]
+  );
+}
+
+function chunkTextByLength(text: string, maxLength: number): string[] {
+  const words = text.split(/\s+/).filter(Boolean);
+
+  if (words.length === 0) {
+    return [];
+  }
+
+  const chunks: string[] = [];
+  let currentChunk = "";
+
+  for (const word of words) {
+    const nextChunk = currentChunk ? `${currentChunk} ${word}` : word;
+
+    if (nextChunk.length > maxLength && currentChunk) {
+      chunks.push(currentChunk.trim());
+      currentChunk = word;
+    } else {
+      currentChunk = nextChunk;
+    }
+  }
+
+  if (currentChunk.trim()) {
+    chunks.push(currentChunk.trim());
+  }
+
+  return chunks;
+}
+
+function NavArrowButton({
+  onClick,
+  direction,
+}: {
+  onClick: () => void;
+  direction: "left" | "right";
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={
+        direction === "left" ? "Entry sebelumnya" : "Entry berikutnya"
+      }
+      style={{
+        width: 32,
+        height: 32,
+        borderRadius: 10,
+        border: `1px solid ${C.bdL}`,
+        background: C.white,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        color: C.ink,
+        boxShadow: "0 2px 8px rgba(13,70,70,0.05)",
+        transition: "all 0.16s ease",
+      }}
+    >
+      {direction === "left" ? (
+        <ChevronLeft size={15} />
+      ) : (
+        <ChevronRight size={15} />
+      )}
+    </button>
+  );
 }
 
 function LockedInputNotice({ message }: { message: string }) {
   return (
-    <div className="dy-locked">
-      <Lock size={16} aria-hidden="true" />
-      <p style={{ margin: 0 }}>{message}</p>
+    <div
+      style={{
+        minHeight: 48,
+        borderRadius: 14,
+        border: `1px solid ${C.bdL}`,
+        background: C.bg,
+        padding: "12px 14px",
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+      }}
+    >
+      <Lock size={14} color={C.sub} />
+      <p
+        style={{
+          margin: 0,
+          fontSize: 11,
+          lineHeight: 1.45,
+          color: C.sub,
+          fontFamily: fonts.sans,
+        }}
+      >
+        {message}
+      </p>
     </div>
   );
 }
@@ -760,50 +790,93 @@ function LockedInputNotice({ message }: { message: string }) {
 function ChatInputRow({
   value,
   canSend,
-  disabled,
   textareaRef,
   onChange,
   onSend,
   onKeyDown,
+  isMobile,
 }: {
   value: string;
   canSend: boolean;
-  disabled: boolean;
   textareaRef: RefObject<HTMLTextAreaElement | null>;
   onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
   onSend: () => void;
   onKeyDown: (e: KeyboardEvent<HTMLTextAreaElement>) => void;
+  isMobile: boolean;
 }) {
+  const buttonSize = isMobile ? 40 : 42;
+  const minInputHeight = isMobile ? 40 : 42;
+
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (canSend) onSend();
+    <div
+      style={{
+        borderRadius: 18,
+        border: `1px solid ${C.bd}`,
+        background: C.white,
+        padding: isMobile ? "7px 7px 7px 12px" : "8px 8px 8px 14px",
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        boxShadow: "0 8px 22px rgba(13,70,70,0.06)",
       }}
     >
-      <div className="dy-composer-box">
+      <div
+        style={{
+          flex: 1,
+          minHeight: minInputHeight,
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
         <textarea
           ref={textareaRef}
           value={value}
-          disabled={disabled}
           onChange={onChange}
           onKeyDown={onKeyDown}
           rows={1}
-          aria-label="Tulis ceritamu"
           placeholder="Tulis ceritamu di sini..."
+          style={{
+            flex: 1,
+            border: "none",
+            outline: "none",
+            resize: "none",
+            background: "transparent",
+            color: C.inkD,
+            fontSize: isMobile ? 13 : 14,
+            lineHeight: isMobile ? "20px" : "22px",
+            fontFamily: fonts.sans,
+            minHeight: isMobile ? 20 : 22,
+            maxHeight: isMobile ? 104 : 128,
+            padding: 0,
+            margin: 0,
+            display: "block",
+          }}
         />
-        <button
-          type="submit"
-          className="dy-send"
-          disabled={!canSend}
-          aria-label="Kirim pesan"
-        >
-          <SendHorizonal size={19} aria-hidden="true" />
-        </button>
       </div>
-      <small className="dy-hint">
-        Enter untuk kirim · Shift+Enter untuk baris baru
-      </small>
-    </form>
+
+      <button
+        type="button"
+        onClick={onSend}
+        disabled={!canSend}
+        aria-label="Kirim pesan"
+        style={{
+          width: buttonSize,
+          height: buttonSize,
+          borderRadius: 13,
+          border: "none",
+          background: canSend ? C.inkD : C.bg,
+          color: canSend ? C.white : C.sub,
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: canSend ? "pointer" : "not-allowed",
+          flexShrink: 0,
+          transition: "all 0.16s ease",
+          boxShadow: canSend ? "0 6px 16px rgba(13,70,70,0.16)" : "none",
+        }}
+      >
+        <SendHorizonal size={16} />
+      </button>
+    </div>
   );
 }

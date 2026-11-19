@@ -1,29 +1,20 @@
-import "@/components/landing/home/landing-redesign.css";
-import "@/components/landing/pricing/pricing-redesign.css";
-import "@/components/landing/home/landing-motion.css";
-
-import type { Metadata } from "next";
-
-import { LandingMotion } from "@/components/landing/home/landing-motion";
+import { Metadata } from "next";
 import {
-  PricingClosing,
-  PricingFaqSection,
-  PricingHero,
+  PricingContent,
+  PricingBackground,
 } from "@/components/landing/pricing/pricing-sections";
 
 export const metadata: Metadata = {
-  title: "Paket Berlangganan",
+  title: "Paket Berlangganan | TemanTumbuh",
   description:
     "Mulai gratis, upgrade kapan saja. Semua paket mencakup keamanan data dan privasi penuh.",
 };
 
 export default function PricingPage() {
   return (
-    <main className="tt-landing pricing-page">
-      <LandingMotion />
-      <PricingHero />
-      <PricingFaqSection />
-      <PricingClosing />
+    <main className="min-h-screen relative overflow-x-hidden font-sans pt-12 text-teal-950 pb-20">
+      <PricingBackground />
+      <PricingContent />
     </main>
   );
 }

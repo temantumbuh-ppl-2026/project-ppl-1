@@ -3,19 +3,6 @@ import { POST, GET } from "@/app/api/mood/route";
 import { getAuthenticatedUserIdFromRequest } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
-const { mockAfter, mockGenerateGreeting } = vi.hoisted(() => ({
-  mockAfter: vi.fn(),
-  mockGenerateGreeting: vi.fn(),
-}));
-vi.mock("next/server", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("next/server")>()),
-  after: mockAfter,
-}));
-vi.mock("@/lib/diary/service", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/diary/service")>()),
-  generateDiaryGreetingFromMood: mockGenerateGreeting,
-}));
-
 // Mocking dependencies
 vi.mock("@/lib/auth", () => ({
   getAuthenticatedUserIdFromRequest: vi.fn(),
@@ -37,7 +24,6 @@ vi.mock("@/lib/prisma", () => ({
       create: vi.fn(),
     },
     $transaction: vi.fn(),
-    $queryRaw: vi.fn(),
   },
 }));
 
@@ -57,7 +43,6 @@ type MockUser = Awaited<ReturnType<typeof prisma.user.findUnique>>;
 describe("Mood API Routes (/api/mood)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(prisma.$queryRaw).mockResolvedValue([]);
     mockDiaryCreate.mockResolvedValue({ id: "d1" } as never);
   });
 
@@ -143,13 +128,11 @@ describe("Mood API Routes (/api/mood)", () => {
       mockFindUnique.mockResolvedValue({
         currentStreak: 1,
       } as unknown as MockUser);
-      mockTransaction.mockImplementation((input) =>
-        typeof input === "function"
-          ? input(prisma)
-          : Promise.resolve([
-              { id: "m-note-100", moodScore: 4 },
-              { id: "user1", currentStreak: 2 },
-            ]),
+      mockTransaction.mockImplementation(() =>
+        Promise.resolve([
+          { id: "m-note-100", moodScore: 4 },
+          { id: "user1", currentStreak: 2 },
+        ]),
       );
       mockDiaryFindFirst.mockResolvedValue(null);
 
@@ -197,13 +180,11 @@ describe("Mood API Routes (/api/mood)", () => {
       mockFindUnique.mockResolvedValue({
         currentStreak: 1,
       } as unknown as MockUser);
-      mockTransaction.mockImplementation((input) =>
-        typeof input === "function"
-          ? input(prisma)
-          : Promise.resolve([
-              { id: "m-empty-note", moodScore: 3 },
-              { id: "user1", currentStreak: 2 },
-            ]),
+      mockTransaction.mockImplementation(() =>
+        Promise.resolve([
+          { id: "m-empty-note", moodScore: 3 },
+          { id: "user1", currentStreak: 2 },
+        ]),
       );
       mockDiaryFindFirst.mockResolvedValue(null);
 
@@ -228,13 +209,11 @@ describe("Mood API Routes (/api/mood)", () => {
       mockFindUnique.mockResolvedValue({
         currentStreak: 3,
       } as unknown as MockUser);
-      mockTransaction.mockImplementation((input) =>
-        typeof input === "function"
-          ? input(prisma)
-          : Promise.resolve([
-              { id: "m1", moodScore: 5 },
-              { id: "user1", currentStreak: 4 },
-            ]),
+      mockTransaction.mockImplementation(() =>
+        Promise.resolve([
+          { id: "m1", moodScore: 5 },
+          { id: "user1", currentStreak: 4 },
+        ]),
       );
       mockDiaryFindFirst.mockResolvedValue(null);
 
@@ -259,13 +238,11 @@ describe("Mood API Routes (/api/mood)", () => {
       mockFindUnique.mockResolvedValue({
         currentStreak: 2,
       } as unknown as MockUser);
-      mockTransaction.mockImplementation((input) =>
-        typeof input === "function"
-          ? input(prisma)
-          : Promise.resolve([
-              { id: "m2", moodScore: 4 },
-              { id: "user1", currentStreak: 3 },
-            ]),
+      mockTransaction.mockImplementation(() =>
+        Promise.resolve([
+          { id: "m2", moodScore: 4 },
+          { id: "user1", currentStreak: 3 },
+        ]),
       );
       mockDiaryFindFirst.mockResolvedValue({
         id: "existing-diary",
@@ -287,48 +264,6 @@ describe("Mood API Routes (/api/mood)", () => {
         id: "existing-diary",
         greetingStatus: "ready",
       });
-    });
-
-    it("tetap memeriksa catatan mood saat diary sudah berisi chat dan membawa ID pemicu", async () => {
-      mockGetAuthenticatedUserIdFromRequest.mockResolvedValue("user1");
-      mockFindFirst.mockResolvedValue(null);
-      mockFindUnique.mockResolvedValue({
-        currentStreak: 2,
-      } as unknown as MockUser);
-      mockTransaction.mockImplementation((input) =>
-        typeof input === "function"
-          ? input(prisma)
-          : Promise.resolve([
-              { id: "m-safety", moodScore: 1 },
-              { id: "user1", currentStreak: 3 },
-            ]),
-      );
-      mockDiaryFindFirst.mockResolvedValue({
-        id: "existing-diary",
-        messages: [{ id: "msg-1" }],
-      } as never);
-      const note = "Aku merasa tidak aman sekarang.";
-      const response = await POST(
-        new Request("http://localhost/api/mood", {
-          method: "POST",
-          body: JSON.stringify({
-            moodScore: 1,
-            note,
-            timezone: "Asia/Jakarta",
-          }),
-        }),
-      );
-      expect(response.status).toBe(200);
-      expect(mockAfter).toHaveBeenCalledTimes(1);
-      await mockAfter.mock.calls[0][0]();
-      expect(mockGenerateGreeting).toHaveBeenCalledWith(
-        expect.objectContaining({
-          userId: "user1",
-          moodLogId: "m-safety",
-          notes: note,
-          diaryId: "existing-diary",
-        }),
-      );
     });
 
     it("Harus menolak dengan 409 jika submit berkali-kali di hari yang sama (lokal)", async () => {

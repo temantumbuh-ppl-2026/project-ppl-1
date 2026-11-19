@@ -273,11 +273,11 @@ function BaselinePageContent() {
         <div className="grid w-full max-w-5xl gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div className="hidden lg:block">
             <div className="max-w-xl">
-              <h1 className="text-4xl font-bold leading-tight text-tt-gray-900">
+              <h1 className="text-4xl font-bold leading-tight text-slate-900">
                 Sebelum mulai, yuk isi pertanyaan awal dulu.
               </h1>
 
-              <p className="mt-5 text-base leading-8 text-tt-gray-600">
+              <p className="mt-5 text-base leading-8 text-slate-600">
                 Jawabanmu membantu TemanTumbuh menyesuaikan pengalaman awal yang
                 lebih relevan, aman, dan personal untukmu.
               </p>
@@ -285,23 +285,23 @@ function BaselinePageContent() {
           </div>
 
           <div className="w-full max-w-[420px] justify-self-center lg:max-w-[560px]">
-            <div className="rounded-[30px] border border-tt-gray-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
-              <div className="rounded-t-[30px] border-b border-tt-gray-100 px-6 pb-5 pt-6 sm:px-7">
+            <div className="rounded-[30px] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+              <div className="rounded-t-[30px] border-b border-slate-100 px-6 pb-5 pt-6 sm:px-7">
                 <BaselineProgress
                   currentStep={currentQuestion.step}
                   totalSteps={currentQuestion.total}
                 />
 
                 <div className="mb-6">
-                  <p className="mb-3 text-sm font-medium text-tt-primary-700">
+                  <p className="mb-3 text-sm font-medium text-teal-700">
                     Pertanyaan {currentQuestion.step}
                   </p>
 
-                  <h2 className="text-[22px] font-bold leading-tight text-tt-gray-900 sm:text-[26px]">
+                  <h2 className="text-[22px] font-bold leading-tight text-slate-900 sm:text-[26px]">
                     {currentQuestion.question}
                   </h2>
 
-                  <p className="mt-4 text-sm leading-7 text-tt-gray-600">
+                  <p className="mt-4 text-sm leading-7 text-slate-500">
                     Jawab sesuai pemahamanmu saat ini. Tidak ada jawaban benar
                     atau salah.
                   </p>
@@ -343,7 +343,7 @@ function BaselinePageContent() {
                   }
                   aria-label="Kembali ke pertanyaan sebelumnya"
                   title="Kembali"
-                  className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-tt-gray-400 transition hover:bg-tt-gray-100 hover:text-tt-gray-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-tt-gray-400"
+                  className="inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-slate-400"
                 >
                   <ArrowLeft className="h-5 w-5" strokeWidth={2.2} />
                   <span className="sr-only">Kembali</span>

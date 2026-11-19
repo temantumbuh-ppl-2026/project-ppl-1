@@ -1,9 +1,11 @@
 import prisma from "@/lib/prisma";
+import { getBaselineByUserId } from "@/lib/baseline/service";
 
 export type PostLoginRoute =
   | "/login"
   | "/admin"
   | "/register?completeProfile=1"
+  | "/baseline"
   | "/mood"
   | "/home";
 
@@ -25,6 +27,12 @@ function getJakartaDayRange(now = new Date()) {
     start: new Date(startUtcMs),
     end: new Date(endUtcMs),
   };
+}
+
+async function hasCompletedBaseline(userId: string): Promise<boolean> {
+  const baseline = await getBaselineByUserId(userId);
+
+  return Boolean(baseline);
 }
 
 async function hasMoodToday(userId: string): Promise<boolean> {
@@ -73,7 +81,12 @@ export async function getPostLoginRedirect(
     return "/register?completeProfile=1";
   }
 
-  // Baseline tidak lagi menghalangi akses (FE-03). Alur mood sengaja dibiarkan apa adanya.
+  const baselineCompleted = await hasCompletedBaseline(userId);
+
+  if (!baselineCompleted) {
+    return "/baseline";
+  }
+
   const moodToday = await hasMoodToday(userId);
 
   if (!moodToday) {

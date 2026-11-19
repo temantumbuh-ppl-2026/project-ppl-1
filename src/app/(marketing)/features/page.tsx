@@ -1,31 +1,23 @@
-import "@/components/landing/home/landing-redesign.css";
-import "@/components/landing/features/features-redesign.css";
-import "@/components/landing/home/landing-motion.css";
-
-import type { Metadata } from "next";
-
+import { Metadata } from "next";
 import { FeaturesHero } from "@/components/landing/features/features-hero";
 import {
-  FeaturesBraveChoice,
-  FeaturesCTA,
   FeaturesDiary,
-  FeaturesInsight,
+  FeaturesBraveChoice,
   FeaturesMood,
-  FeaturesPrivacy,
+  FeaturesInsight,
   FeaturesQuote,
+  FeaturesPrivacy,
+  FeaturesCTA,
 } from "@/components/landing/features/features-sections";
-import { LandingMotion } from "@/components/landing/home/landing-motion";
 
 export const metadata: Metadata = {
   title: "Fitur TemanTumbuh",
-  description:
-    "Kenali TemanCerita, Brave Choice, Mood Check-in, dan Insight Dashboard yang menemani langkah kecilmu setiap hari.",
+  description: "Ekosistem Lengkap Keamanan Emosional Kamu",
 };
 
 export default function FeaturesPage() {
   return (
-    <main className="tt-landing features-page">
-      <LandingMotion />
+    <main className="min-h-screen bg-white overflow-x-hidden font-sans">
       <FeaturesHero />
       <FeaturesDiary />
       <FeaturesBraveChoice />
