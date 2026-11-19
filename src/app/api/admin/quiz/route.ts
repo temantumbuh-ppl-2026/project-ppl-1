@@ -1,26 +1,10 @@
 import { NextResponse } from "next/server";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth";
+import { requireAdminApi, AdminAccessError } from "@/lib/admin/authorization";
 import prisma from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const adminUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { role: true },
-    });
-
-    if (adminUser?.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    await requireAdminApi();
 
     const questions = await prisma.quizQuestion.findMany({
       orderBy: [{ createdAt: "desc" }, { id: "asc" }],
@@ -41,6 +25,11 @@ export async function GET() {
 
     return NextResponse.json({ data: questions });
   } catch (error) {
+    if (error instanceof AdminAccessError)
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.status },
+      );
     console.error("Admin Quiz API Error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },

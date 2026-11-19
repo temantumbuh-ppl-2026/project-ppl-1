@@ -24,15 +24,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AuthField } from "@/components/auth/auth-field";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import type { UserProfile } from "@/components/settings/settings-shell";
-
-type ParentStatus = "pending" | "verified" | "expired" | null;
 
 type ProfileContentProps = {
   profile: UserProfile;
-  parentStatus: ParentStatus;
-  pendingParentEmail: string | null;
   isGoogleLinked: boolean;
   hasPassword: boolean;
   onRefresh: () => Promise<void>;
@@ -48,7 +43,6 @@ const profileSettingsSchema = profileEditFormSchema.pick({
   name: true,
   birthYear: true,
   gender: true,
-  parentEmail: true,
 });
 
 function getGenderLabel(gender: string | null) {
@@ -59,8 +53,6 @@ function getGenderLabel(gender: string | null) {
 
 export function ProfileContent({
   profile,
-  parentStatus,
-  pendingParentEmail,
   isGoogleLinked,
   hasPassword,
   onRefresh,
@@ -74,16 +66,13 @@ export function ProfileContent({
     control,
     handleSubmit,
     formState: { errors, isValid },
-  } = useForm<
-    Pick<ProfileEditFormInput, "name" | "birthYear" | "gender" | "parentEmail">
-  >({
+  } = useForm<Pick<ProfileEditFormInput, "name" | "birthYear" | "gender">>({
     resolver: zodResolver(profileSettingsSchema),
     mode: "onChange",
     defaultValues: {
       name: "",
       birthYear: "",
       gender: "prefer_not",
-      parentEmail: "",
     },
   });
 
@@ -97,7 +86,6 @@ export function ProfileContent({
         profile.gender === "prefer_not"
           ? profile.gender
           : "prefer_not",
-      parentEmail: profile.parentEmail || "",
     });
   }, [profile, reset]);
 
@@ -117,10 +105,7 @@ export function ProfileContent({
 
   const updateProfileMutation = useMutation({
     mutationFn: async (
-      formData: Pick<
-        ProfileEditFormInput,
-        "name" | "birthYear" | "gender" | "parentEmail"
-      >,
+      formData: Pick<ProfileEditFormInput, "name" | "birthYear" | "gender">,
     ) => {
       const response = await authClient.updateUser({
         name: formData.name.trim(),
@@ -162,19 +147,18 @@ export function ProfileContent({
         profile.gender === "prefer_not"
           ? profile.gender
           : "prefer_not",
-      parentEmail: profile.parentEmail || "",
     });
     setIsEditingProfile(false);
   };
 
   const rowBaseClass =
-    "grid grid-cols-1 gap-3 border-b border-slate-200 px-4 py-4 sm:px-5 md:grid-cols-[320px_minmax(0,1fr)] md:gap-8 md:px-6 md:py-5 lg:grid-cols-[340px_minmax(0,1fr)]";
+    "grid grid-cols-1 gap-3 border-b border-tt-gray-200 px-4 py-4 sm:px-5 md:grid-cols-[320px_minmax(0,1fr)] md:gap-8 md:px-6 md:py-5 lg:grid-cols-[340px_minmax(0,1fr)]";
 
   const leftColClass = "md:max-w-[300px] lg:max-w-[320px]";
   const fieldClass =
-    "h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900 shadow-none";
+    "h-12 w-full rounded-2xl border border-tt-gray-200 bg-tt-gray-50 px-4 text-sm font-semibold text-tt-gray-900 shadow-none";
   const readonlyFieldClass =
-    "flex min-h-12 w-full items-center rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900";
+    "flex min-h-12 w-full items-center rounded-2xl border border-tt-gray-200 bg-tt-gray-50 px-4 text-sm font-semibold text-tt-gray-900";
 
   const passwordActionHref = hasPassword
     ? "/profile/change-password"
@@ -190,21 +174,10 @@ export function ProfileContent({
 
   return (
     <div className="space-y-4">
-      {pendingParentEmail && parentStatus === "pending" ? (
-        <Alert className="border-amber-200 bg-amber-50 text-amber-800">
-          <AlertTitle>Menunggu Persetujuan Orang Tua</AlertTitle>
-          <AlertDescription>
-            Permintaan verifikasi email orang tua sudah dikirim ke{" "}
-            <strong>{pendingParentEmail}</strong>. Email akan terhubung setelah
-            orang tua atau wali menyetujui.
-          </AlertDescription>
-        </Alert>
-      ) : null}
-
-      <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center gap-2.5 border-b border-slate-200 px-4 py-4 sm:px-5 md:px-6">
+      <div className="overflow-hidden rounded-[20px] border border-tt-gray-200 bg-white shadow-sm">
+        <div className="flex items-center gap-2.5 border-b border-tt-gray-200 px-4 py-4 sm:px-5 md:px-6">
           <User className="h-[18px] w-[18px] text-[var(--color-brand-teal)]" />
-          <h2 className="text-[15px] font-extrabold text-slate-900 sm:text-base">
+          <h2 className="text-[15px] font-extrabold text-tt-gray-900 sm:text-base">
             Informasi Profil
           </h2>
         </div>
@@ -212,8 +185,8 @@ export function ProfileContent({
         <div className="p-0">
           <div className={rowBaseClass}>
             <div className={leftColClass}>
-              <p className="text-sm font-bold text-slate-900">Nama Lengkap</p>
-              <p className="mt-1 text-[11px] leading-relaxed text-slate-500 sm:text-xs">
+              <p className="text-sm font-bold text-tt-gray-900">Nama Lengkap</p>
+              <p className="mt-1 text-[12px] leading-relaxed text-tt-gray-600 sm:text-xs">
                 Nama yang akan ditampilkan pada profil kamu.
               </p>
             </div>
@@ -239,8 +212,8 @@ export function ProfileContent({
 
           <div className={rowBaseClass}>
             <div className={leftColClass}>
-              <p className="text-sm font-bold text-slate-900">Email</p>
-              <p className="mt-1 text-[11px] leading-relaxed text-slate-500 sm:text-xs">
+              <p className="text-sm font-bold text-tt-gray-900">Email</p>
+              <p className="mt-1 text-[12px] leading-relaxed text-tt-gray-600 sm:text-xs">
                 {isGoogleLinked
                   ? "Terhubung melalui Google"
                   : hasPassword
@@ -250,19 +223,19 @@ export function ProfileContent({
             </div>
 
             <div className="min-w-0 w-full">
-              <div className="flex min-h-12 w-full items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900">
+              <div className="flex min-h-12 w-full items-center gap-2 rounded-2xl border border-tt-gray-200 bg-tt-gray-50 px-4 text-sm font-semibold text-tt-gray-900">
                 <span className="min-w-0 flex-1 break-all">
                   {profile.email}
                 </span>
 
                 {isGoogleLinked ? (
-                  <span className="shrink-0 rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600">
+                  <span className="shrink-0 rounded-full border border-tt-info-bg bg-tt-info-bg px-2 py-0.5 text-[12px] font-bold text-tt-info-text">
                     Google
                   </span>
                 ) : null}
 
                 {hasPassword ? (
-                  <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                  <span className="shrink-0 rounded-full border border-tt-success-bg bg-tt-success-bg px-2 py-0.5 text-[12px] font-bold text-tt-success-text">
                     Password
                   </span>
                 ) : null}
@@ -272,9 +245,9 @@ export function ProfileContent({
 
           <div className={rowBaseClass}>
             <div className={leftColClass}>
-              <p className="text-sm font-bold text-slate-900">Tahun Lahir</p>
-              <p className="mt-1 text-[11px] leading-relaxed text-slate-500 sm:text-xs">
-                Pilih tahun lahir Anda.
+              <p className="text-sm font-bold text-tt-gray-900">Tahun Lahir</p>
+              <p className="mt-1 text-[12px] leading-relaxed text-tt-gray-600 sm:text-xs">
+                Pilih tahun lahirmu.
               </p>
             </div>
 
@@ -311,10 +284,10 @@ export function ProfileContent({
                   />
                 </AuthField>
               ) : (
-                <div className="flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900">
+                <div className="flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl border border-tt-gray-200 bg-tt-gray-50 px-4 text-sm font-semibold text-tt-gray-900">
                   <span>{profile.birthYear || "Belum diatur"}</span>
                   {currentAge !== null ? (
-                    <span className="shrink-0 rounded-full bg-teal-50 px-2.5 py-1 text-[11px] font-semibold text-teal-600">
+                    <span className="shrink-0 rounded-full bg-tt-primary-50 px-2.5 py-1 text-[12px] font-semibold text-tt-primary-700">
                       {currentAge} Tahun
                     </span>
                   ) : null}
@@ -325,8 +298,10 @@ export function ProfileContent({
 
           <div className={rowBaseClass}>
             <div className={leftColClass}>
-              <p className="text-sm font-bold text-slate-900">Jenis Kelamin</p>
-              <p className="mt-1 text-[11px] leading-relaxed text-slate-500 sm:text-xs">
+              <p className="text-sm font-bold text-tt-gray-900">
+                Jenis Kelamin
+              </p>
+              <p className="mt-1 text-[12px] leading-relaxed text-tt-gray-600 sm:text-xs">
                 Data ini tersimpan dari proses registrasi.
               </p>
             </div>
@@ -373,14 +348,16 @@ export function ProfileContent({
 
           <div className={rowBaseClass}>
             <div className={leftColClass}>
-              <p className="text-sm font-bold text-slate-900">Keamanan Akun</p>
-              <p className="mt-1 text-[11px] leading-relaxed text-slate-500 sm:text-xs">
+              <p className="text-sm font-bold text-tt-gray-900">
+                Keamanan Akun
+              </p>
+              <p className="mt-1 text-[12px] leading-relaxed text-tt-gray-600 sm:text-xs">
                 {passwordActionDescription}
               </p>
             </div>
 
             <div className="min-w-0 w-full">
-              <div className="flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-900">
+              <div className="flex min-h-12 w-full items-center justify-between gap-3 rounded-2xl border border-tt-gray-200 bg-tt-gray-50 px-4 text-sm font-semibold text-tt-gray-900">
                 <div className="flex items-center gap-2">
                   <span>
                     {hasPassword
@@ -391,7 +368,7 @@ export function ProfileContent({
 
                 <Link
                   href={passwordActionHref}
-                  className="inline-flex h-9 items-center justify-center rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                  className="inline-flex h-9 items-center justify-center rounded-xl border border-tt-gray-200 bg-white px-4 text-sm font-semibold text-tt-gray-600 transition-colors hover:bg-tt-gray-50"
                 >
                   {passwordActionLabel}
                 </Link>
@@ -399,7 +376,7 @@ export function ProfileContent({
             </div>
           </div>
 
-          <div className="flex flex-col gap-3 bg-slate-50/60 px-4 py-4 sm:px-5 md:px-6">
+          <div className="flex flex-col gap-3 bg-tt-gray-50/60 px-4 py-4 sm:px-5 md:px-6">
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap md:justify-end">
               {isEditingProfile ? (
                 <>
@@ -440,20 +417,20 @@ export function ProfileContent({
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-[20px] border border-slate-200 bg-white shadow-sm">
-        <div className="flex items-center gap-3 border-b border-slate-200 px-4 py-4 sm:px-5 md:px-6">
+      <div className="overflow-hidden rounded-[20px] border border-tt-gray-200 bg-white shadow-sm">
+        <div className="flex items-center gap-3 border-b border-tt-gray-200 px-4 py-4 sm:px-5 md:px-6">
           <div>
             <div className="mb-1 flex flex-wrap items-center gap-2">
-              <p className="text-sm font-extrabold text-slate-900 sm:text-[15px]">
+              <p className="text-sm font-extrabold text-tt-gray-900 sm:text-[15px]">
                 Akun Aktif
               </p>
-              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+              <span className="rounded-full border border-tt-success-bg bg-tt-success-bg px-2 py-0.5 text-[12px] font-bold text-tt-success-text">
                 Aktif
               </span>
             </div>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-tt-gray-600">
               Bergabung sejak{" "}
-              <strong className="text-slate-900">
+              <strong className="text-tt-gray-900">
                 {profile.createdAt
                   ? new Date(profile.createdAt).toLocaleDateString("id-ID", {
                       month: "long",

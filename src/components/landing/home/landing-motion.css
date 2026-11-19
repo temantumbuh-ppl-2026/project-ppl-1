@@ -1,0 +1,655 @@
+/*
+ * Animasi hidup untuk landing page dan About.
+ * Hanya memakai opacity dan properti transform individual (translate/scale/rotate)
+ * agar tidak bentrok dengan `transform` dekoratif yang sudah ada dan tetap ringan.
+ * Selector memakai .tt-landing agar tidak memengaruhi halaman lain.
+ */
+
+@keyframes tt-rise {
+  from {
+    opacity: 0;
+    translate: 0 28px;
+  }
+}
+@keyframes tt-reveal-up {
+  from {
+    opacity: 0;
+    translate: 0 40px;
+  }
+}
+@keyframes tt-reveal-left {
+  from {
+    opacity: 0;
+    translate: -56px 0;
+  }
+}
+@keyframes tt-reveal-right {
+  from {
+    opacity: 0;
+    translate: 56px 0;
+  }
+}
+@keyframes tt-reveal-zoom {
+  from {
+    opacity: 0;
+    translate: 0 24px;
+    scale: 0.92;
+  }
+}
+@keyframes tt-pop {
+  from {
+    opacity: 0;
+    translate: 0 46px;
+    scale: 0.9;
+  }
+}
+@keyframes tt-sticker {
+  from {
+    opacity: 0;
+    scale: 0.4;
+    rotate: -14deg;
+  }
+}
+@keyframes tt-bob {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -9px;
+  }
+}
+@keyframes tt-bob-soft {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -5px;
+  }
+}
+@keyframes tt-drift {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 10px -12px;
+  }
+}
+@keyframes tt-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+@keyframes tt-breathe {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.08;
+  }
+}
+@keyframes tt-underline {
+  from {
+    scale: 0 1;
+    transform-origin: left center;
+  }
+}
+@keyframes tt-draw {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes tt-caret {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+@keyframes tt-line {
+  from {
+    scale: 0 1;
+  }
+}
+@keyframes tt-mood-pop {
+  0% {
+    scale: 0.5;
+    rotate: -12deg;
+  }
+  60% {
+    scale: 1.25;
+    rotate: 6deg;
+  }
+  100% {
+    scale: 1;
+    rotate: 0deg;
+  }
+}
+
+/* ---------- Reveal saat scroll (diatur oleh LandingMotion) ---------- */
+.tt-landing [data-reveal]:not([data-reveal="draw"]) {
+  opacity: 0;
+}
+.tt-landing [data-reveal="draw"] {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+}
+.tt-landing [data-reveal][data-reveal-state="in"]:not([data-reveal="draw"]) {
+  opacity: 1;
+}
+.tt-landing [data-reveal="draw"][data-reveal-state="in"] {
+  stroke-dashoffset: 0;
+  animation: tt-draw 1.2s cubic-bezier(0.4, 0, 0.2, 1) var(--reveal-delay, 0ms)
+    backwards;
+}
+.tt-landing [data-reveal="up"][data-reveal-state="in"] {
+  animation: tt-reveal-up 0.9s cubic-bezier(0.2, 0.8, 0.2, 1)
+    var(--reveal-delay, 0ms) backwards;
+}
+.tt-landing [data-reveal="left"][data-reveal-state="in"] {
+  animation: tt-reveal-left 1s cubic-bezier(0.2, 0.8, 0.2, 1)
+    var(--reveal-delay, 0ms) backwards;
+}
+.tt-landing [data-reveal="right"][data-reveal-state="in"] {
+  animation: tt-reveal-right 1s cubic-bezier(0.2, 0.8, 0.2, 1)
+    var(--reveal-delay, 0ms) backwards;
+}
+.tt-landing [data-reveal="zoom"][data-reveal-state="in"] {
+  animation: tt-reveal-zoom 0.85s cubic-bezier(0.2, 0.8, 0.2, 1)
+    var(--reveal-delay, 0ms) backwards;
+}
+
+/* ---------- Hero landing ---------- */
+.tt-landing .hero-copy > * {
+  animation: tt-rise 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+.tt-landing .hero-copy > :nth-child(1) {
+  animation-delay: 0.05s;
+}
+.tt-landing .hero-copy > :nth-child(2) {
+  animation-delay: 0.15s;
+}
+.tt-landing .hero-copy > :nth-child(3) {
+  animation-delay: 0.28s;
+}
+.tt-landing .hero-copy > :nth-child(4) {
+  animation-delay: 0.4s;
+}
+.tt-landing .hero-copy > :nth-child(5) {
+  animation-delay: 0.52s;
+}
+.tt-landing .hero h1 em::after {
+  animation: tt-underline 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.95s backwards;
+}
+
+.tt-landing .hero-collage .shape-sky {
+  animation: tt-drift 12s ease-in-out infinite;
+}
+.tt-landing .hero-collage .shape-yellow {
+  animation: tt-drift 14s ease-in-out -4s infinite reverse;
+}
+.tt-landing .hero-collage .photo {
+  transition:
+    scale 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.4s ease;
+}
+.tt-landing .hero-collage .photo:hover {
+  scale: 1.04;
+  box-shadow: 0 26px 52px rgba(19, 38, 62, 0.22);
+}
+.tt-landing .hero-collage .photo-main {
+  animation:
+    tt-pop 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s backwards,
+    tt-bob-soft 7s ease-in-out 1.2s infinite;
+}
+.tt-landing .hero-collage .photo-top {
+  animation:
+    tt-pop 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s backwards,
+    tt-bob 8s ease-in-out -2s infinite;
+}
+.tt-landing .hero-collage .photo-small {
+  animation:
+    tt-pop 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s backwards,
+    tt-bob-soft 6s ease-in-out -1s infinite;
+}
+.tt-landing .hero-collage .sticker-stay {
+  animation:
+    tt-sticker 0.7s cubic-bezier(0.3, 1.6, 0.5, 1) 1s backwards,
+    tt-bob 5s ease-in-out 1.7s infinite;
+}
+.tt-landing .hero-collage .hero-star {
+  animation:
+    tt-sticker 0.7s cubic-bezier(0.3, 1.6, 0.5, 1) 0.8s backwards,
+    tt-spin 26s linear 1.5s infinite;
+}
+.tt-landing .hero-collage .mood-widget {
+  animation:
+    tt-pop 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.65s backwards,
+    tt-bob 6.5s ease-in-out 1.6s infinite;
+}
+.tt-landing .mood-row button img {
+  transition: scale 0.25s ease;
+}
+.tt-landing .mood-row button:hover img {
+  scale: 1.15;
+}
+.tt-landing .mood-row button.active img {
+  animation: tt-mood-pop 0.5s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+.tt-landing .hero-arrow {
+  stroke-dasharray: 100;
+  animation: tt-draw 1.3s cubic-bezier(0.4, 0, 0.2, 1) 1.1s backwards;
+}
+
+/* ---------- Interaksi hover ---------- */
+.tt-landing .button .icon,
+.tt-landing .text-link span,
+.tt-landing .closing-link span,
+.tt-landing .feature-item > a span {
+  display: inline-block;
+  transition: translate 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.tt-landing .button:hover .icon {
+  translate: 5px 0;
+}
+.tt-landing .text-link:hover span,
+.tt-landing .closing-link:hover span,
+.tt-landing .feature-item > a:hover span {
+  translate: 3px -3px;
+}
+
+.tt-landing .feature-item {
+  transition: background-color 0.3s ease;
+}
+.tt-landing .feature-item:hover {
+  background-color: var(--mint-light);
+}
+.tt-landing .feature-icon {
+  transition:
+    rotate 0.4s cubic-bezier(0.3, 1.6, 0.5, 1),
+    scale 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.tt-landing .feature-item:hover .feature-icon,
+.tt-landing .diary-feature:hover .feature-icon {
+  rotate: -8deg;
+  scale: 1.1;
+}
+
+/* ---------- Digital Diary ---------- */
+.tt-landing .diary-window {
+  animation: tt-bob-soft 7s ease-in-out infinite;
+}
+.tt-landing .diary-canvas .paper-tape {
+  animation: tt-bob 6s ease-in-out -1s infinite;
+}
+.tt-landing .diary-canvas .tiny-note {
+  animation: tt-bob 5.5s ease-in-out -2s infinite;
+}
+.tt-landing .diary-canvas .canvas-squiggle {
+  animation: tt-drift 9s ease-in-out infinite;
+}
+.tt-landing .writing span::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 0.85em;
+  margin-left: 3px;
+  vertical-align: -0.1em;
+  background: var(--teal);
+  animation: tt-caret 1s steps(1) infinite;
+}
+.tt-landing .diary-feature[data-reveal-state="in"] .writing i {
+  transform-origin: left center;
+  animation: tt-line 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+.tt-landing .diary-feature[data-reveal-state="in"] .writing i:nth-of-type(1) {
+  animation-delay: 0.5s;
+}
+.tt-landing .diary-feature[data-reveal-state="in"] .writing i:nth-of-type(2) {
+  animation-delay: 0.7s;
+}
+.tt-landing .diary-feature[data-reveal-state="in"] .writing i:nth-of-type(3) {
+  animation-delay: 0.9s;
+}
+
+/* ---------- Langkah, nilai, penutup ---------- */
+.tt-landing .step-icon {
+  transition:
+    rotate 0.4s cubic-bezier(0.3, 1.6, 0.5, 1),
+    scale 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.tt-landing .steps article:hover .step-icon {
+  rotate: 8deg;
+  scale: 1.1;
+}
+.tt-landing .step-no {
+  transition: translate 0.4s ease;
+}
+.tt-landing .steps article:hover .step-no {
+  translate: 0 -6px;
+}
+.tt-landing .values-visual .smile-doodle {
+  animation: tt-bob 6s ease-in-out infinite;
+}
+.tt-landing .values-visual .quote-sticker {
+  animation: tt-bob-soft 6s ease-in-out -2s infinite;
+}
+.tt-landing .value-photo {
+  transition: scale 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.tt-landing .values-visual:hover .value-photo {
+  scale: 1.02;
+}
+.tt-landing .value-list > div > span {
+  transition: rotate 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.tt-landing .value-list > div:hover > span {
+  rotate: -8deg;
+}
+.tt-landing .testimonial-card .quote-mark {
+  animation: tt-bob-soft 5s ease-in-out infinite;
+}
+.tt-landing .closing-star {
+  animation: tt-spin 30s linear infinite;
+}
+.tt-landing .closing::before {
+  animation: tt-breathe 10s ease-in-out infinite;
+}
+.tt-landing .closing::after {
+  animation: tt-breathe 12s ease-in-out -3s infinite;
+}
+.tt-landing .marquee:hover > div {
+  animation-play-state: paused;
+}
+
+/* ---------- About ---------- */
+.tt-landing .about-hero .about-hero-copy {
+  animation: none;
+}
+.tt-landing .about-hero .about-hero-copy > * {
+  animation: tt-rise 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+.tt-landing .about-hero .about-hero-copy > :nth-child(1) {
+  animation-delay: 0.05s;
+}
+.tt-landing .about-hero .about-hero-copy > :nth-child(2) {
+  animation-delay: 0.15s;
+}
+.tt-landing .about-hero .about-hero-copy > :nth-child(3) {
+  animation-delay: 0.28s;
+}
+.tt-landing .about-hero .about-hero-copy > :nth-child(4) {
+  animation-delay: 0.4s;
+}
+.tt-landing .about-hero .about-hero-copy > :nth-child(5) {
+  animation-delay: 0.52s;
+}
+.tt-landing .about-collage .about-shape-mint {
+  animation: tt-drift 13s ease-in-out infinite;
+}
+.tt-landing .about-collage .about-shape-yellow {
+  animation: tt-drift 15s ease-in-out -5s infinite reverse;
+}
+.tt-landing .about-collage .about-main-photo {
+  transition: scale 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  animation: tt-bob-soft 8s ease-in-out 1s infinite;
+}
+.tt-landing .about-collage .about-main-photo:hover {
+  scale: 1.03;
+}
+.tt-landing .about-collage .about-photo-note {
+  animation:
+    tt-sticker 0.7s cubic-bezier(0.3, 1.6, 0.5, 1) 0.9s backwards,
+    tt-bob 5.5s ease-in-out 1.6s infinite;
+}
+.tt-landing .about-collage .about-spark {
+  animation:
+    tt-sticker 0.7s cubic-bezier(0.3, 1.6, 0.5, 1) 0.7s backwards,
+    tt-spin 26s linear 1.4s infinite;
+}
+.tt-landing .about-collage .about-hero-arrow {
+  stroke-dasharray: 100;
+  animation: tt-draw 1.3s cubic-bezier(0.4, 0, 0.2, 1) 1.2s backwards;
+}
+
+.tt-landing .mission-icon {
+  transition:
+    rotate 0.4s cubic-bezier(0.3, 1.6, 0.5, 1),
+    scale 0.4s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.tt-landing .mission-list article:hover .mission-icon {
+  rotate: 10deg;
+  scale: 1.12;
+}
+.tt-landing .mission-number {
+  transition:
+    translate 0.4s ease,
+    color 0.4s ease;
+}
+.tt-landing .mission-list article:hover .mission-number {
+  translate: 6px 0;
+  color: rgba(16, 168, 154, 0.4);
+}
+.tt-landing .vision-photo-wrap .vision-sticker {
+  animation: tt-bob 5.5s ease-in-out -1s infinite;
+}
+.tt-landing .vision-photo {
+  transition: scale 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.tt-landing .vision-photo-wrap:hover .vision-photo {
+  scale: 1.03;
+}
+.tt-landing .vision-line span {
+  transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.tt-landing .vision-copy:hover .vision-line span {
+  width: 100px;
+}
+.tt-landing .team-section::before {
+  animation: tt-breathe 11s ease-in-out infinite;
+}
+.tt-landing .team-photo img.team-photo-fg {
+  transition: scale 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.tt-landing .team-grid article:hover .team-photo-fg {
+  scale: 1.06;
+}
+
+/* ---------- Fitur ---------- */
+.tt-landing .feature-hero .feature-hero-copy {
+  animation: none;
+}
+.tt-landing .feature-hero .feature-hero-copy > * {
+  animation: tt-rise 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+.tt-landing .feature-hero .feature-hero-copy > :nth-child(1) {
+  animation-delay: 0.05s;
+}
+.tt-landing .feature-hero .feature-hero-copy > :nth-child(2) {
+  animation-delay: 0.15s;
+}
+.tt-landing .feature-hero .feature-hero-copy > :nth-child(3) {
+  animation-delay: 0.28s;
+}
+.tt-landing .feature-hero .feature-hero-copy > :nth-child(4) {
+  animation-delay: 0.4s;
+}
+.tt-landing .feature-hero-preview .preview-shape-mint {
+  animation: tt-drift 13s ease-in-out infinite;
+}
+.tt-landing .feature-hero-preview .preview-shape-yellow {
+  animation: tt-drift 15s ease-in-out -5s infinite reverse;
+}
+.tt-landing .feature-hero-preview .hero-chat-card {
+  animation:
+    tt-pop 0.95s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s backwards,
+    tt-bob-soft 7s ease-in-out 1.2s infinite;
+}
+.tt-landing .feature-hero-preview .hero-mood-card {
+  animation:
+    tt-pop 0.95s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s backwards,
+    tt-bob 6.5s ease-in-out -1s infinite;
+}
+.tt-landing .feature-hero-preview .hero-insight-card {
+  animation:
+    tt-pop 0.95s cubic-bezier(0.2, 0.8, 0.2, 1) 0.65s backwards,
+    tt-bob-soft 8s ease-in-out -3s infinite;
+}
+.tt-landing .feature-hero-preview .preview-sticker {
+  animation:
+    tt-sticker 0.7s cubic-bezier(0.3, 1.6, 0.5, 1) 1s backwards,
+    tt-bob 5s ease-in-out 1.7s infinite;
+}
+.tt-landing .feature-hero-preview .feature-hero-arrow {
+  stroke-dasharray: 100;
+  animation: tt-draw 1.3s cubic-bezier(0.4, 0, 0.2, 1) 1.2s backwards;
+}
+.tt-landing .mini-bars i {
+  transform-origin: bottom center;
+  animation: tt-line-up 1s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+.tt-landing .mini-bars i:nth-child(2) {
+  animation-delay: 0.9s;
+}
+.tt-landing .mini-bars i:nth-child(3) {
+  animation-delay: 1s;
+}
+.tt-landing .mini-bars i:nth-child(4) {
+  animation-delay: 1.1s;
+}
+.tt-landing .mini-bars i:nth-child(5) {
+  animation-delay: 1.2s;
+}
+.tt-landing .mini-bars i:nth-child(6) {
+  animation-delay: 1.3s;
+}
+.tt-landing .mini-bars i:nth-child(7) {
+  animation-delay: 1.4s;
+}
+.tt-landing .mini-bars i:nth-child(1) {
+  animation-delay: 0.8s;
+}
+@keyframes tt-line-up {
+  from {
+    scale: 1 0;
+  }
+}
+.tt-landing .feature-chips a span {
+  display: inline-block;
+  transition: translate 0.3s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.tt-landing .feature-chips a:hover span {
+  translate: 0 -3px;
+}
+.tt-landing .feature-big-number {
+  animation: tt-bob-soft 9s ease-in-out infinite;
+}
+.tt-landing .brave-demo {
+  animation: tt-bob-soft 8s ease-in-out infinite;
+}
+.tt-landing .product-demo .online-dot {
+  animation: tt-breathe 2.4s ease-in-out infinite;
+}
+.tt-landing .chat-bubble:last-child {
+  animation: tt-rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.tt-landing .mood-picker button b {
+  transition: scale 0.3s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.tt-landing .mood-picker button:hover b {
+  scale: 1.1;
+}
+.tt-landing .mood-picker button.active b {
+  animation: tt-mood-pop 0.5s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+.tt-landing .mood-history-detail,
+.tt-landing .mood-response,
+.tt-landing .consequence {
+  animation: tt-rise 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.tt-landing .feature-quote::before {
+  animation: tt-drift 14s ease-in-out infinite;
+}
+.tt-landing .feature-quote::after {
+  animation: tt-breathe 12s ease-in-out -4s infinite;
+}
+.tt-landing .feature-quote .quote-scribble {
+  animation: tt-bob-soft 5s ease-in-out infinite;
+}
+.tt-landing .privacy-preview {
+  transition: translate 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.tt-landing .privacy-preview:hover {
+  translate: 0 -5px;
+}
+
+/* ---------- Langganan ---------- */
+.tt-landing .pricing-heading > * {
+  animation: tt-rise 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+.tt-landing .pricing-heading > :nth-child(2) {
+  animation-delay: 0.1s;
+}
+.tt-landing .pricing-heading > :nth-child(3) {
+  animation-delay: 0.2s;
+}
+.tt-landing .pricing-heading > :nth-child(4) {
+  animation-delay: 0.3s;
+}
+.tt-landing .pricing-squiggle path {
+  stroke-dasharray: 100;
+  animation: tt-draw 1.2s cubic-bezier(0.4, 0, 0.2, 1) 0.6s backwards;
+}
+.tt-landing .pricing-hero::before {
+  animation: tt-breathe 11s ease-in-out infinite;
+}
+.tt-landing .pricing-card {
+  transition:
+    translate 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.4s ease;
+}
+.tt-landing .pricing-card:hover {
+  translate: 0 -6px;
+}
+.tt-landing .plan-star {
+  animation:
+    tt-sticker 0.7s cubic-bezier(0.3, 1.6, 0.5, 1) 0.8s backwards,
+    tt-spin 26s linear 1.5s infinite;
+}
+.tt-landing .plan-features li > span {
+  transition:
+    background-color 0.25s ease,
+    scale 0.3s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.tt-landing .plan-features li:hover > span {
+  scale: 1.15;
+  background-color: var(--mint);
+}
+.tt-landing .faq-toggle:hover .faq-icon {
+  background: var(--mint);
+}
+
+/* ---------- Preferensi pengguna: kurangi gerak ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .tt-landing *,
+  .tt-landing *::before,
+  .tt-landing *::after {
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+  .tt-landing [data-reveal]:not([data-reveal="draw"]) {
+    opacity: 1;
+  }
+  .tt-landing [data-reveal="draw"] {
+    stroke-dashoffset: 0;
+  }
+}

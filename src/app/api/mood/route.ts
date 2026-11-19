@@ -101,10 +101,11 @@ export async function POST(request: Request) {
       timezone: parsedPayload.data.timezone,
     });
 
-    if (diaryShell.shouldGenerateGreeting) {
+    if (diaryShell.shouldGenerateGreeting || parsedPayload.data.note?.trim()) {
       scheduleAfterResponse(async () => {
         await generateDiaryGreetingFromMood({
           userId,
+          moodLogId: newLog.id,
           moodScore: parsedPayload.data.moodScore,
           notes: parsedPayload.data.note || "",
           diaryId: diaryShell.diaryId,
@@ -129,7 +130,9 @@ export async function POST(request: Request) {
       },
     });
   } catch (error: unknown) {
-    console.error("Mood POST error:", error);
+    console.error("Mood POST error:", {
+      name: error instanceof Error ? error.name : "UnknownError",
+    });
 
     // Mengembalikan pesan spesifik misal error "Kamu sudah mengisi mood check-in hari ini."
     return NextResponse.json(
@@ -154,18 +157,20 @@ function scheduleAfterResponse(task: () => Promise<void>) {
     try {
       await task();
     } catch (error) {
-      console.error("Mood diary background task error:", error);
+      console.error("Mood diary background task error:", {
+        name: error instanceof Error ? error.name : "UnknownError",
+      });
     }
   };
 
   try {
     after(runTask);
-  } catch (error) {
+  } catch {
     if (process.env.NODE_ENV === "test") {
       return;
     }
 
-    console.warn("Falling back to in-process diary task scheduling:", error);
+    console.warn("Falling back to in-process diary task scheduling.");
     void runTask();
   }
 }

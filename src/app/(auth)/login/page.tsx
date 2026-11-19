@@ -13,11 +13,6 @@ import { AlertCircle, Loader2 } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
 import { loginSchema, type LoginInput } from "@/lib/validations";
-import {
-  fadeUpVariants,
-  logoDropVariants,
-  springSmooth,
-} from "@/lib/animations";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,9 +24,11 @@ import {
 } from "@/components/ui/manual/page-loader";
 import { GoogleIcon } from "@/components/ui/manual/google-icon";
 
-import { AuthShell } from "@/components/auth/auth-shell";
 import { AuthField } from "@/components/auth/auth-field";
-import { BrandPageBackground } from "@/components/layout/brand-page-background";
+import {
+  AuthFormHeading,
+  AuthSplitLayout,
+} from "@/components/auth/redesign/auth-split-layout";
 
 type SessionStatus = {
   isAuthenticated: boolean;
@@ -190,185 +187,125 @@ function LoginPageContent() {
     /*  */
   }
 
+  const isEmailPending = isSubmitting || loginMutation.isPending;
+
   return (
-    <BrandPageBackground fillViewport>
-      <AuthShell maxWidth={440} compact={false}>
-        <motion.div
-          initial={shouldReduce ? false : "hidden"}
-          animate="visible"
-          variants={fadeUpVariants}
-          transition={springSmooth}
-        >
+    <AuthSplitLayout>
+      <AuthFormHeading
+        eyebrow="selamat datang lagi"
+        title="Senang kamu kembali."
+        description="Masuk ke akun TemanTumbuh-mu dan lanjutkan ceritamu."
+      />
+
+      <AnimatePresence mode="wait">
+        {serverError ? (
           <motion.div
-            initial={shouldReduce ? false : "hidden"}
-            animate="visible"
-            variants={logoDropVariants}
-            transition={{ ...springSmooth, delay: 0.05 }}
-            className="mb-4 text-center"
+            key="error"
+            initial={shouldReduce ? false : { opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2 }}
+            className="auth-alert"
           >
-            <h1
-              className="mb-2 text-xl font-bold"
-              style={{ color: "var(--color-text-brand-primary)" }}
-            >
-              Selamat Datang Kembali
-            </h1>
-            <p
-              className="text-sm"
-              style={{ color: "var(--color-text-brand-muted)" }}
-            >
-              Masuk ke akun TemanTumbuh-mu
-            </p>
-          </motion.div>
-
-          <AnimatePresence mode="wait">
-            {serverError ? (
-              <motion.div
-                key="error"
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.2 }}
-                className="mb-4"
-              >
-                <Alert
-                  className="rounded-lg border"
-                  style={{
-                    background: "#FEF2F2",
-                    borderColor: "#FECACA",
-                    color: "#B91C1C",
-                  }}
-                >
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Login gagal</AlertTitle>
-                  <AlertDescription>{serverError}</AlertDescription>
-                </Alert>
-              </motion.div>
-            ) : null}
-          </AnimatePresence>
-
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setServerError("");
-              googleMutation.mutate();
-            }}
-            disabled={googleMutation.isPending}
-            className="mb-4 h-11 w-full gap-4 rounded-lg border-[1.5px] bg-white font-semibold"
-            style={{
-              borderColor: "var(--color-brand-border)",
-              color: "var(--color-text-brand-primary)",
-            }}
-          >
-            {googleMutation.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <GoogleIcon />
-            )}
-            {googleMutation.isPending
-              ? "Menghubungkan..."
-              : "Masuk dengan Google"}
-          </Button>
-
-          <div className="mb-4 flex items-center gap-4">
-            <div
-              className="h-px flex-1"
-              style={{ background: "var(--color-brand-border)" }}
-            />
-            <span
-              className="text-sm"
-              style={{ color: "var(--color-text-brand-muted)" }}
-            >
-              atau masuk dengan email
-            </span>
-            <div
-              className="h-px flex-1"
-              style={{ background: "var(--color-brand-border)" }}
-            />
-          </div>
-
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="space-y-4"
-            noValidate
-          >
-            <AuthField
-              id="login-email"
-              label="Email"
-              error={errors.email?.message}
-            >
-              <Input
-                id="login-email"
-                type="email"
-                placeholder="email@contoh.com"
-                autoComplete="email"
-                autoFocus
-                className="h-11 rounded-lg"
-                {...register("email")}
-              />
-            </AuthField>
-
-            <AuthField
-              id="login-password"
-              label="Password"
-              error={errors.password?.message}
-            >
-              <PasswordInput
-                id="login-password"
-                placeholder="Masukkan password"
-                autoComplete="current-password"
-                className="h-11 rounded-lg"
-                hasError={!!errors.password}
-                {...register("password")}
-              />
-            </AuthField>
-
-            <div className="pt-0.5">
-              <Link
-                href="/forgot-password"
-                className="text-sm font-medium transition-opacity hover:opacity-70"
-                style={{ color: "var(--color-brand-teal)" }}
-              >
-                Lupa password?
-              </Link>
-            </div>
-
-            <Button
-              type="submit"
-              disabled={isSubmitting || loginMutation.isPending}
-              className="mt-1 h-11 w-full rounded-lg font-semibold text-white"
+            <Alert
+              className="rounded-tt-md border"
               style={{
-                background: "var(--gradient-brand-btn)",
-                boxShadow: "0 4px 18px rgba(26,150,136,0.18)",
+                background: "var(--tt-attention-bg)",
+                borderColor: "var(--tt-attention-border)",
+                color: "var(--tt-attention-text)",
               }}
             >
-              {isSubmitting || loginMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Masuk...
-                </>
-              ) : (
-                <>Masuk</>
-              )}
-            </Button>
-          </form>
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Login gagal</AlertTitle>
+              <AlertDescription>{serverError}</AlertDescription>
+            </Alert>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
 
-          <p
-            className="mt-4 text-center text-sm"
-            style={{ color: "var(--color-text-brand-muted)" }}
-          >
-            Belum punya akun?{" "}
-            <Link
-              href="/register"
-              className="font-semibold underline-offset-2 hover:underline"
-              style={{ color: "var(--color-brand-teal)" }}
-            >
-              Daftar Gratis
-            </Link>
-          </p>
-        </motion.div>
-      </AuthShell>
-    </BrandPageBackground>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => {
+          setServerError("");
+          googleMutation.mutate();
+        }}
+        disabled={googleMutation.isPending || isEmailPending}
+        aria-busy={googleMutation.isPending}
+        className="google-button"
+      >
+        {googleMutation.isPending ? (
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+        ) : (
+          <GoogleIcon />
+        )}
+        {googleMutation.isPending ? "Menghubungkan..." : "Masuk dengan Google"}
+      </Button>
+
+      <div className="auth-divider">
+        <span>atau masuk dengan email</span>
+      </div>
+
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="auth-form"
+        noValidate
+        aria-busy={isEmailPending}
+      >
+        <AuthField id="login-email" label="Email" error={errors.email?.message}>
+          <Input
+            id="login-email"
+            type="email"
+            inputMode="email"
+            placeholder="email@contoh.com"
+            autoComplete="email"
+            autoFocus
+            {...register("email")}
+          />
+        </AuthField>
+
+        <AuthField
+          id="login-password"
+          label="Password"
+          error={errors.password?.message}
+        >
+          <PasswordInput
+            id="login-password"
+            placeholder="Masukkan password"
+            autoComplete="current-password"
+            hasError={!!errors.password}
+            {...register("password")}
+          />
+        </AuthField>
+
+        <Link href="/forgot-password" className="forgot-link">
+          Lupa password?
+        </Link>
+
+        <Button
+          type="submit"
+          disabled={isEmailPending || googleMutation.isPending}
+          aria-busy={isEmailPending}
+          className="auth-submit"
+        >
+          {isEmailPending ? (
+            <>
+              <Loader2
+                className="mr-2 h-4 w-4 animate-spin"
+                aria-hidden="true"
+              />
+              Masuk...
+            </>
+          ) : (
+            <>Masuk</>
+          )}
+        </Button>
+      </form>
+
+      <p className="auth-switch">
+        Belum punya akun? <Link href="/register">Daftar Gratis</Link>
+      </p>
+    </AuthSplitLayout>
   );
 }
 

@@ -8,15 +8,12 @@ import { ChevronDown, LogOut, User } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
 import SnapPayButton from "@/components/payment/SnapPayButton";
+import {
+  PRICE_PER_MONTH,
+  SUBSCRIPTION_DURATIONS,
+} from "@/lib/subscription/plans";
 
-const PRICE_PER_MONTH = 59000;
-
-const DURATION_OPTIONS = [
-  { months: 1, label: "1 Bulan" },
-  { months: 3, label: "3 Bulan" },
-  { months: 6, label: "6 Bulan" },
-  { months: 12, label: "12 Bulan" },
-];
+const DURATION_OPTIONS = SUBSCRIPTION_DURATIONS;
 
 const basicFeatures = ["Mood check-in", "Diary harian", "Riwayat dasar"];
 
@@ -158,7 +155,8 @@ export default function SubscriptionClient({
             style={{
               background: "var(--tt-dashboard-success-soft)",
               color: "var(--tt-dashboard-success)",
-              border: "1px solid rgba(26,150,136,0.18)",
+              border:
+                "1px solid color-mix(in srgb, var(--tt-primary-500) 18%, transparent)",
             }}
           >
             Pembayaran berhasil! Premium kamu sudah aktif.
@@ -169,9 +167,10 @@ export default function SubscriptionClient({
           <div
             className="rounded-[16px] px-5 py-4 text-[14px] font-semibold"
             style={{
-              background: "#FFF8F0",
-              color: "#B4722A",
-              border: "1px solid rgba(209,136,61,0.28)",
+              background: "var(--tt-warning-bg)",
+              color: "var(--tt-warning-text)",
+              border:
+                "1px solid color-mix(in srgb, var(--tt-warning-text) 28%, transparent)",
             }}
           >
             Pembayaran sedang diproses. Status akan diperbarui otomatis.
@@ -182,9 +181,10 @@ export default function SubscriptionClient({
           <div
             className="rounded-[16px] px-5 py-4 text-[14px] font-semibold"
             style={{
-              background: "#FFF8F0",
-              color: "#B4722A",
-              border: "1px solid rgba(209,136,61,0.28)",
+              background: "var(--tt-warning-bg)",
+              color: "var(--tt-warning-text)",
+              border:
+                "1px solid color-mix(in srgb, var(--tt-warning-text) 28%, transparent)",
             }}
           >
             Ada pembayaran {pendingPayment.durationMonths} bulan yang masih
@@ -198,7 +198,7 @@ export default function SubscriptionClient({
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div className="min-w-0">
               <p
-                className="text-[10px] font-extrabold uppercase tracking-[0.16em]"
+                className="text-[12px] font-extrabold uppercase tracking-[0.16em]"
                 style={{ color: "var(--tt-dashboard-text-3)" }}
               >
                 Subscription
@@ -244,7 +244,7 @@ export default function SubscriptionClient({
             </div>
 
             <div
-              className="inline-flex h-fit items-center rounded-full px-3 py-1.5 text-[11px] font-bold"
+              className="inline-flex h-fit items-center rounded-full px-3 py-1.5 text-[12px] font-bold"
               style={{
                 background: isPremium
                   ? "var(--tt-dashboard-success-soft)"
@@ -282,7 +282,7 @@ export default function SubscriptionClient({
                 <div
                   className="flex h-12 items-center justify-center rounded-[16px] text-[13px] font-semibold"
                   style={{
-                    background: "#FFFFFF",
+                    background: "var(--tt-surface)",
                     color: "var(--tt-dashboard-text-3)",
                     border: "1px solid var(--tt-dashboard-card-border)",
                   }}
@@ -304,7 +304,7 @@ export default function SubscriptionClient({
                 {/* Duration selector */}
                 <div>
                   <p
-                    className="mb-2 text-[11px] font-bold uppercase tracking-wider"
+                    className="mb-2 text-[12px] font-bold uppercase tracking-wider"
                     style={{ color: "var(--tt-dashboard-text-3)" }}
                   >
                     {isPremium ? "Perpanjang Durasi" : "Pilih Durasi"}
@@ -324,15 +324,15 @@ export default function SubscriptionClient({
                         style={{
                           background:
                             checkoutDuration === opt.months
-                              ? "rgba(26,150,136,0.14)"
-                              : "rgba(26,150,136,0.04)",
+                              ? "color-mix(in srgb, var(--tt-primary-500) 14%, transparent)"
+                              : "color-mix(in srgb, var(--tt-primary-500) 4%, transparent)",
                           color:
                             checkoutDuration === opt.months
                               ? "var(--tt-dashboard-brand)"
                               : "var(--tt-dashboard-text-2)",
                           border:
                             checkoutDuration === opt.months
-                              ? "1.5px solid rgba(26,150,136,0.3)"
+                              ? "1.5px solid color-mix(in srgb, var(--tt-primary-500) 30%, transparent)"
                               : "1.5px solid transparent",
                         }}
                       >
@@ -359,8 +359,9 @@ export default function SubscriptionClient({
                       label="Lanjutkan Pembayaran Tertunda"
                       className="h-12 w-full rounded-[16px] text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-[1px] hover:opacity-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{
-                        background: "#F59E0B",
-                        boxShadow: "0 12px 26px rgba(245,158,11,0.18)",
+                        background: "var(--tt-warning-text)",
+                        boxShadow:
+                          "0 12px 26px color-mix(in srgb, var(--tt-warning-text) 18%, transparent)",
                       }}
                     />
 
@@ -370,15 +371,16 @@ export default function SubscriptionClient({
                       disabled={cancelLoading}
                       className="h-12 w-full cursor-pointer rounded-[16px] bg-white text-[14px] font-semibold transition-all duration-200 hover:-translate-y-[1px] hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
                       style={{
-                        color: "#B45309",
-                        border: "1px solid rgba(245,158,11,0.3)",
+                        color: "var(--tt-warning-text)",
+                        border:
+                          "1px solid color-mix(in srgb, var(--tt-warning-text) 30%, transparent)",
                       }}
                     >
                       {cancelLoading ? "Membatalkan..." : "Batalkan Pembayaran"}
                     </button>
 
                     {cancelError && (
-                      <p className="text-center text-xs font-medium text-red-500">
+                      <p className="text-center text-xs font-medium text-tt-attention-text">
                         {cancelError}
                       </p>
                     )}
@@ -396,7 +398,8 @@ export default function SubscriptionClient({
                     className="h-12 w-full rounded-[16px] text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-[1px] hover:opacity-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     style={{
                       background: "var(--gradient-brand-btn)",
-                      boxShadow: "0 12px 26px rgba(26,150,136,0.18)",
+                      boxShadow:
+                        "0 12px 26px color-mix(in srgb, var(--tt-primary-500) 18%, transparent)",
                     }}
                   />
                 )}
@@ -435,9 +438,11 @@ function PlanCard({
         featured
           ? {
               background:
-                "linear-gradient(160deg, rgba(237,249,247,0.98) 0%, rgba(255,255,255,1) 60%, rgba(244,251,250,1) 100%)",
-              border: "1px solid rgba(26,150,136,0.18)",
-              boxShadow: "0 20px 46px rgba(26,150,136,0.12)",
+                "linear-gradient(160deg, color-mix(in srgb, var(--tt-gray-50) 98%, transparent) 0%, rgba(255,255,255,1) 60%, color-mix(in srgb, var(--tt-gray-50) 100%, transparent) 100%)",
+              border:
+                "1px solid color-mix(in srgb, var(--tt-primary-500) 18%, transparent)",
+              boxShadow:
+                "0 20px 46px color-mix(in srgb, var(--tt-primary-500) 12%, transparent)",
             }
           : subdued
             ? {
@@ -450,11 +455,17 @@ function PlanCard({
         <>
           <div
             className="pointer-events-none absolute inset-0 rounded-[28px]"
-            style={{ border: "1px solid rgba(78,207,195,0.28)" }}
+            style={{
+              border:
+                "1px solid color-mix(in srgb, var(--tt-primary-300) 28%, transparent)",
+            }}
           />
           <div
             className="pointer-events-none absolute -right-14 -top-16 h-52 w-52 rounded-full blur-3xl"
-            style={{ background: "rgba(26,150,136,0.10)" }}
+            style={{
+              background:
+                "color-mix(in srgb, var(--tt-primary-500) 10%, transparent)",
+            }}
           />
         </>
       ) : null}
@@ -463,7 +474,7 @@ function PlanCard({
         <div className="flex items-start justify-between gap-3">
           <div>
             <p
-              className="text-[11px] font-extrabold uppercase tracking-[0.14em]"
+              className="text-[12px] font-extrabold uppercase tracking-[0.14em]"
               style={{
                 color: featured
                   ? "var(--tt-dashboard-brand)"
@@ -483,10 +494,10 @@ function PlanCard({
 
           {active ? (
             <span
-              className="rounded-full px-2.5 py-1 text-[10px] font-bold"
+              className="rounded-full px-2.5 py-1 text-[12px] font-bold"
               style={{
                 background: featured
-                  ? "rgba(26,150,136,0.12)"
+                  ? "color-mix(in srgb, var(--tt-primary-500) 12%, transparent)"
                   : "var(--tt-dashboard-chip-bg)",
                 color: "var(--tt-dashboard-brand)",
               }}
@@ -517,13 +528,13 @@ function FeatureRow({
 }) {
   return (
     <div
-      className="flex items-center gap-3 rounded-[16px] px-3.5 py-3 transition-all duration-200 hover:scale-[1.01] hover:shadow-[0_6px_16px_rgba(26,150,136,0.08)]"
+      className="flex items-center gap-3 rounded-[16px] px-3.5 py-3 transition-all duration-200 hover:scale-[1.01] hover:shadow-[0_6px_16px_color-mix(in srgb, var(--tt-primary-500) 8%, transparent)]"
       style={{
         background: featured
-          ? "rgba(26,150,136,0.07)"
-          : "rgba(26,150,136,0.04)",
+          ? "color-mix(in srgb, var(--tt-primary-500) 7%, transparent)"
+          : "color-mix(in srgb, var(--tt-primary-500) 4%, transparent)",
         border: featured
-          ? "1px solid rgba(26,150,136,0.10)"
+          ? "1px solid color-mix(in srgb, var(--tt-primary-500) 10%, transparent)"
           : "1px solid transparent",
       }}
     >
@@ -531,12 +542,12 @@ function FeatureRow({
         className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
         style={{
           background: featured
-            ? "rgba(26,150,136,0.14)"
-            : "rgba(26,150,136,0.08)",
+            ? "color-mix(in srgb, var(--tt-primary-500) 14%, transparent)"
+            : "color-mix(in srgb, var(--tt-primary-500) 8%, transparent)",
           color: "var(--tt-dashboard-brand)",
         }}
       >
-        <span className="text-[11px] font-bold">✓</span>
+        <span className="text-[12px] font-bold">✓</span>
       </div>
 
       <p
@@ -600,7 +611,7 @@ function SubscriptionProfileDropdown({
         style={{ background: "var(--tt-dashboard-chip-bg)" }}
       >
         <div
-          className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg text-[11px] font-black text-white"
+          className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-lg text-[12px] font-black text-white"
           style={{ background: "var(--tt-dashboard-brand)" }}
         >
           {userImage ? (
@@ -644,7 +655,7 @@ function SubscriptionProfileDropdown({
           <Link
             href="/profile"
             onClick={() => setOpen(false)}
-            className="flex cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[rgba(26,150,136,0.06)]"
+            className="flex cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[color-mix(in_srgb,_var(--tt-primary-500)_6%,_transparent)]"
             style={{ color: "var(--tt-dashboard-text)" }}
           >
             <User size={15} style={{ color: "var(--tt-dashboard-brand)" }} />
@@ -663,8 +674,8 @@ function SubscriptionProfileDropdown({
               onLogout();
             }}
             disabled={isLoggingOut}
-            className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[rgba(239,68,68,0.06)] disabled:cursor-not-allowed disabled:opacity-60"
-            style={{ color: "#DC2626" }}
+            className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-tt-attention-bg disabled:cursor-not-allowed disabled:opacity-60"
+            style={{ color: "var(--tt-attention-text)" }}
           >
             <LogOut size={15} />
             Keluar

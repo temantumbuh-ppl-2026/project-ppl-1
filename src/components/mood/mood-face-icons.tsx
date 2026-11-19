@@ -2,21 +2,8 @@
 
 type FaceProps = { active?: boolean; size?: number };
 
-const MOOD_COLORS: Record<
-  number,
-  { bg: string; stroke: string; fill: string }
-> = {
-  1: { bg: "rgba(239,68,68,0.10)", stroke: "#EF4444", fill: "#EF4444" },
-  2: { bg: "rgba(249,115,22,0.10)", stroke: "#F97316", fill: "#F97316" },
-  3: { bg: "rgba(234,179,8,0.10)", stroke: "#EAB308", fill: "#EAB308" },
-  4: { bg: "rgba(34,197,94,0.10)", stroke: "#22C55E", fill: "#22C55E" },
-  5: { bg: "rgba(16,185,129,0.10)", stroke: "#10B981", fill: "#10B981" },
-};
-
-export function getMoodColor(score: number | null): string {
-  if (score === null) return "#8AADAD";
-  return MOOD_COLORS[score]?.stroke ?? "#8AADAD";
-}
+import { MOOD_COLORS } from "@/lib/mood/palette";
+export { getMoodColor } from "@/lib/mood/palette";
 
 export function getMoodLabel(score: number | null): string {
   if (score === null) return "-";
@@ -64,24 +51,24 @@ export function MoodFaceIcon({
         cy={cy}
         r={r}
         fill={active ? c.bg : "rgba(0,0,0,0.04)"}
-        stroke={active ? c.stroke : "#8AADAD"}
+        stroke={active ? c.stroke : "#3D5A5A"}
         strokeWidth={s * 0.038}
       />
       <circle
         cx={cx - eyeOff}
         cy={eyeY}
         r={eyeR}
-        fill={active ? c.fill : "#8AADAD"}
+        fill={active ? c.fill : "#3D5A5A"}
       />
       <circle
         cx={cx + eyeOff}
         cy={eyeY}
         r={eyeR}
-        fill={active ? c.fill : "#8AADAD"}
+        fill={active ? c.fill : "#3D5A5A"}
       />
       <path
         d={mouths[score]}
-        stroke={active ? c.stroke : "#8AADAD"}
+        stroke={active ? c.stroke : "#3D5A5A"}
         strokeWidth={s * 0.05}
         strokeLinecap="round"
         fill="none"

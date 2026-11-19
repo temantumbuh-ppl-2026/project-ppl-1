@@ -3,10 +3,8 @@ import { NextResponse } from "next/server";
 import { getAuthenticatedUserIdFromRequest } from "@/lib/auth";
 import snap from "@/lib/midtrans";
 import prisma from "@/lib/prisma";
+import { ALLOWED_DURATIONS, PRICE_PER_MONTH } from "@/lib/subscription/plans";
 import { getLatestPendingPayment } from "@/lib/subscription/service";
-
-const PRICE_PER_MONTH = 59000;
-const ALLOWED_DURATIONS = [1, 3, 6, 12];
 
 /**
  * POST /api/payment/create

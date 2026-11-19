@@ -212,7 +212,8 @@ export default function InsightPageContent() {
                 className="flex h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-2xl text-[14px] font-semibold text-white transition-all hover:translate-y-[-1px] sm:h-14 sm:text-[15px]"
                 style={{
                   background: "var(--gradient-brand-btn)",
-                  boxShadow: "0 12px 28px rgba(26,150,136,0.20)",
+                  boxShadow:
+                    "0 12px 28px color-mix(in srgb, var(--tt-primary-500) 20%, transparent)",
                 }}
               >
                 <Sparkles size={18} />
@@ -252,7 +253,7 @@ function InsightSkeletonTyping() {
           100% { background-position: 200% 0; }
         }
         .insight-shimmer {
-          background: linear-gradient(90deg, rgba(26,150,136,0.08) 25%, rgba(26,150,136,0.16) 50%, rgba(26,150,136,0.08) 75%);
+          background: linear-gradient(90deg, color-mix(in srgb, var(--tt-primary-500) 8%, transparent) 25%, color-mix(in srgb, var(--tt-primary-500) 16%, transparent) 50%, color-mix(in srgb, var(--tt-primary-500) 8%, transparent) 75%);
           background-size: 200% 100%;
           animation: insightShimmer 1.5s ease-in-out infinite;
         }

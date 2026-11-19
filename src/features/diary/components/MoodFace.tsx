@@ -3,26 +3,24 @@
 //  SVG emoji mood — tidak ada library yang cocok untuk ini
 // ============================================================
 
-import { colors as C } from "../constants/tokens";
+import { MOOD_COLORS } from "@/lib/mood/palette";
 import type { MoodScore } from "../types";
 
 const MOOD_CONFIG: Record<
   MoodScore,
   { bg: string; stroke: string; mouth: string }
 > = {
-  5: { bg: C.okL, stroke: C.ok, mouth: "M5 13.5s2 3 6 3 6-3 6-3" },
+  5: { ...MOOD_COLORS[5], mouth: "M5 13.5s2 3 6 3 6-3 6-3" },
   4: {
-    bg: "#DCFCE7",
-    stroke: "#16A34A",
+    ...MOOD_COLORS[4],
     mouth: "M6 14s1.5 2.5 5 2.5 5-2.5 5-2.5",
   },
-  3: { bg: C.goldS, stroke: C.gold, mouth: "M7.5 15H14.5" },
+  3: { ...MOOD_COLORS[3], mouth: "M7.5 15H14.5" },
   2: {
-    bg: C.orangeL,
-    stroke: C.orange,
+    ...MOOD_COLORS[2],
     mouth: "M5.5 15.5s1.5-2 5.5-2 5.5 2 5.5 2",
   },
-  1: { bg: C.redL, stroke: C.red, mouth: "M5 16s2-3 6-3 6 3 6 3" },
+  1: { ...MOOD_COLORS[1], mouth: "M5 16s2-3 6-3 6 3 6 3" },
 };
 
 type Props = {

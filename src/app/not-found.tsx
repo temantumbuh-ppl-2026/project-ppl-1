@@ -43,20 +43,25 @@ function FloatingLeaf({
       <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
         <path
           d="M20 2C14 8 6 16 6 24c0 7.7 6.3 14 14 14s14-6.3 14-14C34 16 26 8 20 2z"
-          fill="#4ecfc3"
+          fill="var(--tt-primary-300)"
           opacity="0.55"
         />
-        <path d="M20 4v32" stroke="#1a9688" strokeWidth="1" opacity="0.5" />
+        <path
+          d="M20 4v32"
+          stroke="var(--tt-primary-500)"
+          strokeWidth="1"
+          opacity="0.5"
+        />
         <path
           d="M20 14 Q14 18 12 24"
-          stroke="#1a9688"
+          stroke="var(--tt-primary-500)"
           strokeWidth="0.7"
           opacity="0.4"
           fill="none"
         />
         <path
           d="M20 18 Q26 22 28 26"
-          stroke="#1a9688"
+          stroke="var(--tt-primary-500)"
           strokeWidth="0.7"
           opacity="0.4"
           fill="none"
@@ -94,7 +99,7 @@ export default function NotFound() {
       className="relative flex min-h-[100dvh] flex-col items-center justify-center overflow-hidden px-6"
       style={{
         background:
-          "linear-gradient(180deg, #f0f7f6 0%, #e4f1ef 40%, #f5faf9 100%)",
+          "linear-gradient(180deg, var(--tt-gray-50) 0%, var(--tt-gray-50) 40%, var(--tt-gray-50) 100%)",
       }}
     >
       {/* Falling leaves */}
@@ -107,7 +112,7 @@ export default function NotFound() {
         className="pointer-events-none absolute -left-32 top-1/4 h-80 w-80 rounded-full"
         style={{
           background:
-            "radial-gradient(circle, rgba(26,150,136,0.12) 0%, transparent 70%)",
+            "radial-gradient(circle, color-mix(in srgb, var(--tt-primary-500) 12%, transparent) 0%, transparent 70%)",
         }}
         animate={{ scale: [1, 1.1, 1] }}
         transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
@@ -116,7 +121,7 @@ export default function NotFound() {
         className="pointer-events-none absolute -right-24 bottom-1/4 h-64 w-64 rounded-full"
         style={{
           background:
-            "radial-gradient(circle, rgba(78,207,195,0.15) 0%, transparent 70%)",
+            "radial-gradient(circle, color-mix(in srgb, var(--tt-primary-300) 15%, transparent) 0%, transparent 70%)",
         }}
         animate={{ scale: [1, 1.15, 1] }}
         transition={{
@@ -135,7 +140,7 @@ export default function NotFound() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           className="mb-5 text-[16px] font-extrabold uppercase tracking-[0.22em] sm:text-[18px]"
-          style={{ color: "#1a9688" }}
+          style={{ color: "var(--tt-primary-500)" }}
         >
           TemanTumbuh
         </motion.p>
@@ -152,7 +157,7 @@ export default function NotFound() {
             className="text-[120px] font-black leading-none tracking-tighter sm:text-[160px] md:text-[200px]"
             style={{
               background:
-                "linear-gradient(135deg, #144949 0%, #1a9688 40%, #4ecfc3 100%)",
+                "linear-gradient(135deg, var(--tt-primary-900) 0%, var(--tt-primary-500) 40%, var(--tt-primary-300) 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -174,7 +179,13 @@ export default function NotFound() {
             >
               {/* Circle face (the "0") */}
               <circle cx="60" cy="60" r="55" fill="url(#faceGradient)" />
-              <circle cx="60" cy="60" r="48" fill="#22b8a6" opacity="0.3" />
+              <circle
+                cx="60"
+                cy="60"
+                r="48"
+                fill="var(--tt-primary-500)"
+                opacity="0.3"
+              />
 
               {/* Eyes */}
               <motion.g
@@ -188,18 +199,18 @@ export default function NotFound() {
                 style={{ transformOrigin: "60px 50px" }}
               >
                 <circle cx="44" cy="50" r="6" fill="white" />
-                <circle cx="46" cy="51" r="3" fill="#144949" />
+                <circle cx="46" cy="51" r="3" fill="var(--tt-primary-900)" />
                 <circle cx="47" cy="49" r="1.2" fill="white" />
 
                 <circle cx="76" cy="50" r="6" fill="white" />
-                <circle cx="78" cy="51" r="3" fill="#144949" />
+                <circle cx="78" cy="51" r="3" fill="var(--tt-primary-900)" />
                 <circle cx="79" cy="49" r="1.2" fill="white" />
               </motion.g>
 
               {/* Confused/dizzy mouth */}
               <motion.path
                 d="M42 75 Q50 68 58 75 Q66 82 74 75"
-                stroke="#144949"
+                stroke="var(--tt-primary-900)"
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 fill="none"
@@ -218,13 +229,25 @@ export default function NotFound() {
               />
 
               {/* Blush */}
-              <circle cx="36" cy="68" r="5" fill="#ff9f9f" opacity="0.3" />
-              <circle cx="84" cy="68" r="5" fill="#ff9f9f" opacity="0.3" />
+              <circle
+                cx="36"
+                cy="68"
+                r="5"
+                fill="var(--tt-attention-border)"
+                opacity="0.3"
+              />
+              <circle
+                cx="84"
+                cy="68"
+                r="5"
+                fill="var(--tt-attention-border)"
+                opacity="0.3"
+              />
 
               {/* Sweat drop */}
               <motion.path
                 d="M85 38 Q87 34 86 30"
-                stroke="#7dd3fc"
+                stroke="var(--tt-primary-300)"
                 strokeWidth="2"
                 strokeLinecap="round"
                 fill="none"
@@ -245,8 +268,8 @@ export default function NotFound() {
                   x2="100%"
                   y2="100%"
                 >
-                  <stop offset="0%" stopColor="#1a9688" />
-                  <stop offset="100%" stopColor="#148a7d" />
+                  <stop offset="0%" stopColor="var(--tt-primary-500)" />
+                  <stop offset="100%" stopColor="var(--tt-primary-500)" />
                 </linearGradient>
               </defs>
             </svg>
@@ -254,7 +277,7 @@ export default function NotFound() {
             {/* Floating question mark */}
             <motion.span
               className="absolute -right-2 -top-2 text-[22px] font-black sm:-right-3 sm:-top-3 sm:text-[28px]"
-              style={{ color: "#d6a11b" }}
+              style={{ color: "var(--tt-warning-text)" }}
               animate={{ y: [0, -4, 0], opacity: [0.7, 1, 0.7] }}
               transition={{
                 duration: 1.8,
@@ -271,7 +294,7 @@ export default function NotFound() {
             className="text-[120px] font-black leading-none tracking-tighter sm:text-[160px] md:text-[200px]"
             style={{
               background:
-                "linear-gradient(135deg, #144949 0%, #1a9688 40%, #4ecfc3 100%)",
+                "linear-gradient(135deg, var(--tt-primary-900) 0%, var(--tt-primary-500) 40%, var(--tt-primary-300) 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -287,7 +310,7 @@ export default function NotFound() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
           className="mt-4 text-[20px] font-bold sm:text-[24px]"
-          style={{ color: "#16313b" }}
+          style={{ color: "var(--tt-gray-900)" }}
         >
           Halaman tidak ditemukan
         </motion.p>
@@ -297,7 +320,7 @@ export default function NotFound() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.55 }}
           className="mt-3 max-w-sm text-[14px] leading-7 sm:text-[15px]"
-          style={{ color: "#58707c" }}
+          style={{ color: "var(--tt-gray-600)" }}
         >
           Halaman yang kamu cari sepertinya sudah berpindah atau tidak tersedia.
           Ayo kembali dan lanjutkan perjalananmu!
@@ -314,8 +337,10 @@ export default function NotFound() {
             href="/home"
             className="inline-flex h-12 cursor-pointer items-center gap-2 rounded-full px-7 text-[14px] font-semibold text-white transition-all duration-200 hover:-translate-y-[2px]"
             style={{
-              background: "linear-gradient(135deg, #144949 0%, #1a9688 100%)",
-              boxShadow: "0 12px 28px rgba(26,150,136,0.25)",
+              background:
+                "linear-gradient(135deg, var(--tt-primary-900) 0%, var(--tt-button-primary) 100%)",
+              boxShadow:
+                "0 12px 28px color-mix(in srgb, var(--tt-primary-500) 25%, transparent)",
             }}
           >
             <svg
@@ -338,8 +363,9 @@ export default function NotFound() {
             href="/diary"
             className="inline-flex h-12 cursor-pointer items-center gap-2 rounded-full border px-7 text-[14px] font-semibold transition-all duration-200 hover:-translate-y-[2px]"
             style={{
-              borderColor: "rgba(26,150,136,0.25)",
-              color: "#1a9688",
+              borderColor:
+                "color-mix(in srgb, var(--tt-primary-500) 25%, transparent)",
+              color: "var(--tt-primary-500)",
               background: "rgba(255,255,255,0.8)",
             }}
           >
@@ -371,7 +397,12 @@ export default function NotFound() {
             <motion.div
               key={i}
               className="h-1.5 w-1.5 rounded-full"
-              style={{ background: i % 2 === 0 ? "#1a9688" : "#4ecfc3" }}
+              style={{
+                background:
+                  i % 2 === 0
+                    ? "var(--tt-button-primary)"
+                    : "var(--tt-primary-300)",
+              }}
               animate={{ y: [0, -6, 0] }}
               transition={{
                 duration: 1.2,

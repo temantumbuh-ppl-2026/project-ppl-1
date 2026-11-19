@@ -7,6 +7,7 @@ import {
   useState,
   type CSSProperties,
   type ReactNode,
+  useLayoutEffect,
 } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -123,19 +124,19 @@ const adminMenuItems: MenuItem[] = [
 ];
 
 const C = {
-  teal: "#1A9688",
-  tealMid: "#28B0A4",
-  tealLight: "#4ECFC3",
-  tealPale: "#A8E0DA",
-  tealGhost: "#DDF5F2",
-  textPrimary: "#1A2840",
-  textSecondary: "#3A5068",
-  textMuted: "#7090A8",
-  border: "#C8DCED",
-  bg0: "#FAFBFF",
-  white: "#FFFFFF",
-  goldBg: "#FEF3C7",
-  goldText: "#D97706",
+  teal: "var(--tt-button-primary)",
+  tealMid: "var(--tt-primary-500)",
+  tealLight: "var(--tt-primary-300)",
+  tealPale: "var(--tt-primary-200)",
+  tealGhost: "var(--tt-primary-100)",
+  textPrimary: "var(--tt-gray-900)",
+  textSecondary: "var(--tt-gray-600)",
+  textMuted: "var(--tt-gray-400)",
+  border: "var(--tt-gray-200)",
+  bg0: "var(--tt-gray-50)",
+  white: "var(--tt-surface)",
+  goldBg: "var(--tt-warning-bg)",
+  goldText: "var(--tt-warning-text)",
 };
 
 function useOutsideClick(cb: () => void) {
@@ -205,8 +206,8 @@ function Avatar({
         width: size,
         height: size,
         fontSize: size < 30 ? 11 : 12,
-        background: `linear-gradient(135deg, ${C.teal}, ${C.tealMid})`,
-        color: "#fff",
+        background: C.teal,
+        color: "var(--tt-surface)",
       }}
     >
       {image ? (
@@ -236,24 +237,14 @@ function NavLink({
   onClick?: () => void;
 }) {
   const style: CSSProperties = { color: isActive ? C.teal : C.textSecondary };
-  const underline: CSSProperties = {
-    background: C.teal,
-    transform: `scaleX(${isActive ? 1 : 0})`,
-    opacity: isActive ? 1 : 0,
-  };
-
   const content = (
     <>
       <span
-        className="text-sm font-medium transition-colors duration-150 group-hover:text-[#1A9688]"
+        className="text-sm font-medium transition-colors duration-150 group-hover:text-tt-primary-500"
         style={style}
       >
         {label}
       </span>
-      <span
-        className="absolute -bottom-0.5 left-0 right-0 h-0.5 origin-center rounded-full transition-all duration-200 group-hover:scale-x-100 group-hover:opacity-100"
-        style={underline}
-      />
     </>
   );
 
@@ -262,6 +253,8 @@ function NavLink({
       <button
         onClick={onClick}
         className="group relative flex cursor-pointer flex-col items-center pb-0.5 outline-none"
+        data-nav-item=""
+        data-active={isActive}
         type="button"
       >
         {content}
@@ -273,6 +266,8 @@ function NavLink({
     <Link
       href={href ?? "#"}
       className="group relative flex cursor-pointer flex-col items-center pb-0.5"
+      data-nav-item=""
+      data-active={isActive}
     >
       {content}
     </Link>
@@ -311,19 +306,13 @@ function HomeDropdown({
       <div className="relative">
         <button
           onClick={handleHomeClick}
-          className="group relative flex cursor-pointer items-center gap-0.5 pb-0.5 text-sm font-medium outline-none transition-colors duration-150 hover:text-[#1A9688]"
+          className="group relative flex cursor-pointer items-center gap-0.5 pb-0.5 text-sm font-medium outline-none transition-colors duration-150 hover:text-tt-primary-500"
           style={{ color: isActive ? C.teal : C.textSecondary }}
+          data-nav-item=""
+          data-active={isActive}
           type="button"
         >
           Home
-          <span
-            className="absolute -bottom-0.5 left-0 right-0 h-0.5 origin-center rounded-full transition-all duration-200"
-            style={{
-              background: C.teal,
-              transform: `scaleX(${isActive ? 1 : 0})`,
-              opacity: isActive ? 1 : 0,
-            }}
-          />
         </button>
       </div>
     );
@@ -336,10 +325,14 @@ function HomeDropdown({
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      <div className="group relative flex cursor-pointer items-center gap-0.5 pb-0.5">
+      <div
+        className="group relative flex cursor-pointer items-center gap-0.5 pb-0.5"
+        data-nav-item=""
+        data-active={isActive}
+      >
         <button
           onClick={handleHomeClick}
-          className="text-sm font-medium outline-none transition-colors duration-150 group-hover:text-[#1A9688]"
+          className="text-sm font-medium outline-none transition-colors duration-150 group-hover:text-tt-primary-500"
           style={{ color: isActive || open ? C.teal : C.textSecondary }}
           type="button"
         >
@@ -361,15 +354,6 @@ function HomeDropdown({
             }`}
           />
         </button>
-
-        <span
-          className="absolute -bottom-0.5 left-0 right-0 h-0.5 origin-center rounded-full transition-all duration-200 group-hover:scale-x-100 group-hover:opacity-100"
-          style={{
-            background: C.teal,
-            transform: `scaleX(${isActive || open ? 1 : 0})`,
-            opacity: isActive || open ? 1 : 0,
-          }}
-        />
       </div>
 
       <AnimatePresence>
@@ -395,7 +379,7 @@ function HomeDropdown({
                     setOpen(false);
                     smoothScroll(item.sectionId, item.href);
                   }}
-                  className="group flex w-full cursor-pointer items-center rounded-xl px-3 py-2.5 text-left transition-colors duration-150 hover:bg-[#DDF5F2]"
+                  className="group flex w-full cursor-pointer items-center rounded-xl px-3 py-2.5 text-left transition-colors duration-150 hover:bg-tt-primary-100"
                   type="button"
                 >
                   <div className="min-w-0 flex-1">
@@ -406,7 +390,7 @@ function HomeDropdown({
                       {item.label}
                     </p>
                     <p
-                      className="truncate text-[11px]"
+                      className="truncate text-[12px]"
                       style={{ color: C.textMuted }}
                     >
                       {item.desc}
@@ -462,8 +446,10 @@ function ProfileDropdown({ session }: { session: Session }) {
         onClick={() => setOpen((v) => !v)}
         className="flex cursor-pointer items-center gap-2 rounded-full px-3 py-1 outline-none transition-all duration-150 active:scale-[0.98]"
         style={{
-          background: open ? "rgba(26,150,136,0.08)" : "rgba(26,150,136,0.04)",
-          border: `1.5px solid ${open ? C.tealPale : "rgba(26,150,136,0.12)"}`,
+          background: open
+            ? "color-mix(in srgb, var(--tt-primary-500) 8%, transparent)"
+            : "color-mix(in srgb, var(--tt-primary-500) 4%, transparent)",
+          border: `1.5px solid ${open ? C.tealPale : "color-mix(in srgb, var(--tt-primary-500) 12%, transparent)"}`,
         }}
         aria-expanded={open}
         type="button"
@@ -478,7 +464,7 @@ function ProfileDropdown({ session }: { session: Session }) {
             {session.name}
           </p>
           <p
-            className="text-[11px] font-medium"
+            className="text-[12px] font-medium"
             style={getPlanBadgeStyle(session)}
           >
             {getPlanLabel(session)}
@@ -528,7 +514,7 @@ function ProfileDropdown({ session }: { session: Session }) {
                   {session.email || "Pengguna TemanTumbuh"}
                 </p>
                 <p
-                  className="mt-1 text-[11px] font-semibold"
+                  className="mt-1 text-[12px] font-semibold"
                   style={getPlanBadgeStyle(session)}
                 >
                   {getPlanLabel(session)}
@@ -582,7 +568,7 @@ function ProfileDropdown({ session }: { session: Session }) {
                   });
                 }}
                 className="flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-sm font-semibold transition"
-                style={{ color: "#DC2626" }}
+                style={{ color: "var(--tt-attention-text)" }}
                 type="button"
               >
                 <LogOut size={16} />
@@ -643,7 +629,7 @@ function MobileMenu({
         >
           <div className="flex flex-col gap-1 px-5 py-4">
             <p
-              className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-widest"
+              className="mb-1 px-3 text-[12px] font-semibold uppercase tracking-widest"
               style={{ color: C.textMuted }}
             >
               Halaman
@@ -652,7 +638,7 @@ function MobileMenu({
             {isUserHomepage ? (
               <button
                 onClick={handleHomeMobile}
-                className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors duration-150 hover:bg-[#DDF5F2]"
+                className="flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors duration-150 hover:bg-tt-primary-100"
                 style={{
                   color: pathname === "/home" ? C.teal : C.textSecondary,
                   background:
@@ -672,7 +658,7 @@ function MobileMenu({
               <>
                 <button
                   onClick={() => setBerandaOpen((v) => !v)}
-                  className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors duration-150 hover:bg-[#DDF5F2]"
+                  className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors duration-150 hover:bg-tt-primary-100"
                   style={{
                     color: pathname === "/" ? C.teal : C.textSecondary,
                     background: pathname === "/" ? C.tealGhost : "transparent",
@@ -707,7 +693,7 @@ function MobileMenu({
                           onClick={() =>
                             handleSection(item.sectionId, item.href)
                           }
-                          className="flex w-full cursor-pointer items-center rounded-xl px-3 py-2 text-left text-[13px] font-medium transition-colors duration-150 hover:bg-[#DDF5F2]"
+                          className="flex w-full cursor-pointer items-center rounded-xl px-3 py-2 text-left text-[13px] font-medium transition-colors duration-150 hover:bg-tt-primary-100"
                           style={{ color: C.textSecondary }}
                           type="button"
                         >
@@ -793,8 +779,9 @@ function MobileMenu({
                   onClick={onClose}
                   className="flex h-11 items-center justify-center rounded-xl text-sm font-semibold text-white"
                   style={{
-                    background: `linear-gradient(135deg, ${C.teal} 0%, ${C.tealMid} 100%)`,
-                    boxShadow: "0 2px 12px rgba(26,150,136,0.28)",
+                    background: C.teal,
+                    boxShadow:
+                      "0 2px 12px color-mix(in srgb, var(--tt-primary-500) 28%, transparent)",
                   }}
                 >
                   Daftar Gratis
@@ -812,7 +799,7 @@ function MobileMenu({
                       {session.name}
                     </p>
                     <p
-                      className="text-[11px]"
+                      className="text-[12px]"
                       style={
                         session.plan === "premium" && session.role !== "admin"
                           ? {
@@ -862,7 +849,7 @@ function MobileMenu({
                     });
                   }}
                   className="mt-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium"
-                  style={{ color: "#EF4444" }}
+                  style={{ color: "var(--tt-attention-text)" }}
                   type="button"
                 >
                   <LogOut size={15} /> Keluar
@@ -890,7 +877,7 @@ function DesktopAuthActions({
     return (
       <div
         className="h-10 w-24 animate-pulse rounded-xl"
-        style={{ background: "#E4EEFA" }}
+        style={{ background: "var(--tt-info-bg)" }}
       />
     );
   }
@@ -900,7 +887,7 @@ function DesktopAuthActions({
       <>
         <Link
           href="/login"
-          className="relative inline-flex overflow-hidden rounded-xl px-4 py-2 text-sm font-semibold transition-colors duration-150 hover:bg-[#DDF5F2]"
+          className="relative inline-flex overflow-hidden rounded-xl px-4 py-2 text-sm font-semibold transition-colors duration-150 hover:bg-tt-primary-100"
           style={{
             color: C.teal,
             background: "transparent",
@@ -912,8 +899,9 @@ function DesktopAuthActions({
           href="/register"
           className="relative inline-flex rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-all active:scale-[0.97]"
           style={{
-            background: `linear-gradient(135deg, ${C.teal} 0%, ${C.tealMid} 100%)`,
-            boxShadow: "0 2px 14px rgba(26,150,136,0.32)",
+            background: C.teal,
+            boxShadow:
+              "0 2px 14px color-mix(in srgb, var(--tt-primary-500) 32%, transparent)",
           }}
         >
           Daftar Gratis
@@ -931,14 +919,62 @@ export function Navbar() {
   const [session, setSession] = useState<Session>(guestSession);
   const [loading, setLoading] = useState(true);
   const [scrolled, setScrolled] = useState(false);
+  const navRef = useRef<HTMLElement>(null);
+  const [indicator, setIndicator] = useState<{
+    left: number;
+    top: number;
+    width: number;
+  } | null>(null);
 
   const isLoggedIn = session.role !== "guest";
   const isUserHomepage = isLoggedIn;
   const homeIsActive = pathname === "/" || pathname === "/home";
+  // Login, register, dan halaman legal memakai latar "paper" yang sama dengan halaman marketing.
+  const isLandingPage = [
+    "/",
+    "/about",
+    "/features",
+    "/pricing",
+    "/login",
+    "/register",
+    "/terms",
+    "/privacy",
+  ].includes(pathname);
 
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  // Garis bawah menu aktif satu elemen bersama yang meluncur ke item aktif.
+  const updateIndicator = useCallback(() => {
+    const nav = navRef.current;
+    const active = nav?.querySelector<HTMLElement>(
+      '[data-nav-item][data-active="true"]',
+    );
+
+    if (!nav || !active) {
+      setIndicator(null);
+      return;
+    }
+
+    const navBox = nav.getBoundingClientRect();
+    const box = active.getBoundingClientRect();
+    setIndicator({
+      left: box.left - navBox.left,
+      top: box.bottom - navBox.top,
+      width: box.width,
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    updateIndicator();
+  }, [pathname, isUserHomepage, loading, updateIndicator]);
+
+  useEffect(() => {
+    window.addEventListener("resize", updateIndicator);
+    void document.fonts?.ready.then(updateIndicator);
+    return () => window.removeEventListener("resize", updateIndicator);
+  }, [updateIndicator]);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -949,8 +985,10 @@ export function Navbar() {
   useEffect(() => {
     let mounted = true;
 
+    // `loading` hanya true saat pemuatan pertama (nilai awal state). Sinkronisasi
+    // ulang tiap pindah halaman berjalan diam-diam agar tombol Masuk/Daftar
+    // tidak berubah menjadi placeholder dan menimbulkan kedipan.
     const sync = async () => {
-      setLoading(true);
       try {
         const { data } = await authClient.getSession();
 
@@ -999,9 +1037,13 @@ export function Navbar() {
     <header
       className="sticky top-0 z-50 transition-shadow duration-300"
       style={{
-        background: scrolled
-          ? "rgba(250,251,255,0.97)"
-          : "rgba(250,251,255,0.92)",
+        background: isLandingPage
+          ? scrolled
+            ? "color-mix(in srgb, var(--tt-gray-50) 97%, transparent)"
+            : "var(--tt-gray-50)"
+          : scrolled
+            ? "color-mix(in srgb, var(--tt-gray-50) 97%, transparent)"
+            : "color-mix(in srgb, var(--tt-gray-50) 92%, transparent)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
         borderBottom: `1px solid ${scrolled ? C.border : "transparent"}`,
@@ -1026,7 +1068,10 @@ export function Navbar() {
           </span>
         </Link>
 
-        <nav className="hidden flex-1 items-center justify-center gap-7 md:flex">
+        <nav
+          ref={navRef}
+          className="relative hidden flex-1 items-center justify-center gap-7 md:flex"
+        >
           <HomeDropdown
             isActive={homeIsActive}
             isUserHomepage={isUserHomepage}
@@ -1046,6 +1091,18 @@ export function Navbar() {
             isActive={pathname.startsWith("/pricing")}
             href="/pricing"
           />
+          {indicator && (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute h-0.5 rounded-full transition-[left,width] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+              style={{
+                background: C.teal,
+                left: indicator.left,
+                top: indicator.top,
+                width: indicator.width,
+              }}
+            />
+          )}
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
@@ -1058,7 +1115,7 @@ export function Navbar() {
         </div>
 
         <button
-          className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors duration-150 hover:bg-[#DDF5F2] md:hidden"
+          className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors duration-150 hover:bg-tt-primary-100 md:hidden"
           onClick={() => setMobileOpen((v) => !v)}
           aria-label="Toggle menu"
           aria-expanded={mobileOpen}

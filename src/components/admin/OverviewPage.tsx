@@ -105,7 +105,8 @@ function SectionCard({
         className="tt-section-header"
         style={{
           borderBottom: "1px solid var(--tt-dashboard-card-border)",
-          background: "rgba(26,150,136,0.04)",
+          background:
+            "color-mix(in srgb, var(--tt-primary-500) 4%, transparent)",
         }}
       >
         <p
@@ -150,7 +151,7 @@ const RESPONSIVE_CSS = `
   }
   .tt-stat-value { font-size: 36px; }
   .tt-stat-label { font-size: 13px; }
-  .tt-stat-sub   { font-size: 11px; }
+  .tt-stat-sub   { font-size: 12px; }
   .tt-section-header { padding: 15px 22px; }
   .tt-section-body   { padding: 18px 22px; }
   .tt-section-title  { font-size: 14px; }
@@ -168,7 +169,7 @@ const RESPONSIVE_CSS = `
     .tt-stat-card  { padding: 16px 18px; gap: 10px; }
     .tt-stat-value { font-size: 26px; }
     .tt-stat-label { font-size: 12px; }
-    .tt-stat-sub   { font-size: 10px; }
+    .tt-stat-sub   { font-size: 12px; }
     .tt-section-header { padding: 12px 16px; }
     .tt-section-body   { padding: 14px 16px; }
     .tt-section-title  { font-size: 13px; }
@@ -219,7 +220,7 @@ export function OverviewPage({ stats }: { stats: Stats }) {
             label="Total Jawaban Quiz"
             value={stats.quizLogCount}
             sub="Seluruh log jawaban user"
-            accent="#8b5cf6"
+            accent="var(--tt-info-text)"
           />
         </div>
 
@@ -346,7 +347,7 @@ export function OverviewPage({ stats }: { stats: Stats }) {
                         style={{
                           fontWeight: 400,
                           color: C.text3,
-                          fontSize: 10,
+                          fontSize: 12,
                         }}
                       >
                         ({pct(row.value, row.total)})

@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { getBaselineByUserId } from "@/lib/baseline/service";
 
 import { AppSidebarShell } from "@/components/layout/app-sidebar-shell";
 
@@ -38,7 +37,7 @@ export default async function MainLayout({
   const timezone = "Asia/Jakarta";
   const todayLocal = getLocalDateString(new Date(), timezone);
 
-  const [user, baseline, lastMoodLog] = await Promise.all([
+  const [user, lastMoodLog] = await Promise.all([
     prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -49,7 +48,6 @@ export default async function MainLayout({
         isPremium: true,
       },
     }),
-    getBaselineByUserId(userId),
     prisma.moodLog.findFirst({
       where: { userId },
       orderBy: { createdAt: "desc" },
@@ -63,10 +61,8 @@ export default async function MainLayout({
     redirect("/register?completeProfile=1");
   }
 
-  if (!baseline) {
-    redirect("/baseline");
-  }
-
+  // Baseline tidak lagi jadi syarat masuk dashboard (FE-03).
+  // Alur mood check-in sengaja dibiarkan apa adanya.
   const hasFilledMoodToday =
     lastMoodLog &&
     getLocalDateString(lastMoodLog.createdAt, timezone) === todayLocal;

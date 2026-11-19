@@ -42,7 +42,7 @@ test.describe("E2E MVP smoke coverage", () => {
     await page.goto("/login");
 
     await expect(
-      page.getByRole("heading", { name: /selamat datang kembali/i }),
+      page.getByRole("heading", { name: /senang kamu kembali/i }),
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: /masuk dengan google/i }),
@@ -74,7 +74,7 @@ test.describe("E2E MVP smoke coverage", () => {
     await page.goto("/register");
 
     await expect(
-      page.getByRole("heading", { name: /buat akun/i }),
+      page.getByRole("heading", { name: /mulai ruang ceritamu/i }),
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: /daftar dengan google/i }),
@@ -109,11 +109,6 @@ test.describe("E2E MVP smoke coverage", () => {
     { code: "F004", route: "/profile", name: "Kelola Profil" },
     { code: "F006", route: "/baseline", name: "Baseline Questions" },
     { code: "F007", route: "/mood", name: "Mood Check-In" },
-    {
-      code: "F008",
-      route: "/profile/parent-report",
-      name: "Manage Parent Email",
-    },
     { code: "F009", route: "/home", name: "User Dashboard" },
     { code: "F010", route: "/diary/today", name: "Safe Diary" },
     { code: "F011", route: "/diary/today", name: "Brave Choice" },
@@ -127,7 +122,7 @@ test.describe("E2E MVP smoke coverage", () => {
 
       await expect(page).toHaveURL(/\/login/);
       await expect(
-        page.getByRole("heading", { name: /selamat datang kembali/i }),
+        page.getByRole("heading", { name: /senang kamu kembali/i }),
       ).toBeVisible({ timeout: 15_000 });
     });
   }

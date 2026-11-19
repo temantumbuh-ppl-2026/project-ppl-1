@@ -10,23 +10,16 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { AlertCircle, CheckCircle2, Loader2, LogIn } from "lucide-react";
+import { AlertCircle, Loader2, LogIn, MailCheck } from "lucide-react";
 
 import { authClient } from "@/lib/auth-client";
 import {
   registerStep1Schema,
   registerStep2Schema,
-  registerStep3Schema,
   type RegisterStep1Input,
   type RegisterStep2Input,
-  type RegisterStep3Input,
 } from "@/lib/validations";
-import {
-  scalePopVariants,
-  slideInVariants,
-  springBouncy,
-  springSmooth,
-} from "@/lib/animations";
+import { slideInVariants, springSmooth } from "@/lib/animations";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,15 +38,15 @@ import {
 import { GoogleIcon } from "@/components/ui/manual/google-icon";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-import { AuthShell } from "@/components/auth/auth-shell";
-import { AuthStepIndicator } from "@/components/auth/auth-step-indicator";
 import { AuthField } from "@/components/auth/auth-field";
-import { AuthInfoCard } from "@/components/auth/auth-info-card";
-import { BrandPageBackground } from "@/components/layout/brand-page-background";
+import {
+  AuthFormHeading,
+  AuthSplitLayout,
+} from "@/components/auth/redesign/auth-split-layout";
+import { RegistrationStepper } from "@/components/auth/redesign/registration-stepper";
 
 type Step1 = RegisterStep1Input;
 type Step2 = RegisterStep2Input;
-type Step3 = RegisterStep3Input;
 
 type SessionUser = {
   name?: string | null;
@@ -79,6 +72,8 @@ type RegisterError =
   | null;
 
 const SESSION_QUERY_KEY = ["register", "session"] as const;
+const VERIFICATION_CALLBACK_URL = "/register?completeProfile=1";
+const RESEND_COOLDOWN_MS = 30_000;
 
 async function fetchProfileStatus(): Promise<ProfileStatus> {
   const { data } = await authClient.getSession();
@@ -181,31 +176,58 @@ function resolveRegisterError(
   };
 }
 
+function resolveResendError(error: RegisterAuthError): string {
+  const message = (error.message ?? "").toLowerCase();
+  const status = error.status ?? error.statusCode;
+
+  if (
+    status === 429 ||
+    message.includes("too many") ||
+    message.includes("rate")
+  ) {
+    return "Terlalu banyak permintaan. Tunggu sebentar sebelum mengirim ulang.";
+  }
+
+  if (message.includes("already verified")) {
+    return "Email sudah terverifikasi. Silakan masuk untuk melanjutkan.";
+  }
+
+  if (message.includes("gagal mengirim email")) {
+    return "Gagal mengirim ulang email verifikasi. Silakan daftar kembali.";
+  }
+
+  return "Gagal mengirim ulang email verifikasi. Silakan coba lagi.";
+}
+
+const alertMotion = {
+  initial: { opacity: 0, y: -6 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -6 },
+  transition: { duration: 0.2 },
+};
+
+const attentionAlertStyle = {
+  background: "var(--tt-attention-bg)",
+  borderColor: "var(--tt-attention-border)",
+  color: "var(--tt-attention-text)",
+};
+
 function EmailExistsAlert({ email }: { email: string }) {
   return (
-    <motion.div
-      key="email-exists"
-      initial={{ opacity: 0, y: -6 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6 }}
-      transition={{ duration: 0.2 }}
-      className="mb-4"
-    >
-      <Alert
-        className="rounded-xl border"
-        style={{
-          background: "#FFF7ED",
-          borderColor: "#FED7AA",
-          color: "#9A3412",
-        }}
-      >
-        <AlertCircle className="h-4 w-4" style={{ color: "#EA580C" }} />
+    <motion.div key="email-exists" {...alertMotion} className="auth-alert">
+      <Alert className="rounded-tt-md border" style={attentionAlertStyle}>
+        <AlertCircle
+          className="h-4 w-4"
+          style={{ color: "var(--tt-attention-text)" }}
+        />
 
-        <AlertTitle style={{ color: "#9A3412", fontWeight: 700 }}>
+        <AlertTitle
+          style={{ color: "var(--tt-attention-text)", fontWeight: 700 }}
+        >
           Email sudah terdaftar
         </AlertTitle>
 
-        <AlertDescription style={{ color: "#7C2D12" }}>
+        <AlertDescription style={{ color: "var(--tt-attention-text)" }}>
           <span className="mb-2 block">
             Akun dengan email <strong className="break-all">{email}</strong>{" "}
             sudah ada. Silakan login atau gunakan email lain.
@@ -214,10 +236,10 @@ function EmailExistsAlert({ email }: { email: string }) {
           <div className="mt-3 flex flex-wrap gap-2">
             <Link
               href="/login"
-              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-opacity hover:opacity-80"
+              className="inline-flex min-h-11 items-center gap-2 rounded-tt-md px-3 py-2 tt-text-caption font-bold transition-opacity hover:opacity-80"
               style={{
-                background: "#EA580C",
-                color: "#fff",
+                background: "var(--tt-attention-text)",
+                color: "var(--tt-surface)",
               }}
             >
               <LogIn size={12} />
@@ -226,11 +248,11 @@ function EmailExistsAlert({ email }: { email: string }) {
 
             <Link
               href="/forgot-password"
-              className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-opacity hover:opacity-80"
+              className="inline-flex min-h-11 items-center gap-2 rounded-tt-md px-3 py-2 tt-text-caption font-semibold transition-opacity hover:opacity-80"
               style={{
-                background: "rgba(234,88,12,0.1)",
-                color: "#C2410C",
-                border: "1px solid rgba(234,88,12,0.25)",
+                background: "var(--tt-attention-bg)",
+                color: "var(--tt-attention-text)",
+                border: "1px solid var(--tt-attention-border)",
               }}
             >
               Lupa password?
@@ -244,22 +266,8 @@ function EmailExistsAlert({ email }: { email: string }) {
 
 function GenericErrorAlert({ message }: { message: string }) {
   return (
-    <motion.div
-      key="generic-error"
-      initial={{ opacity: 0, y: -6 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6 }}
-      transition={{ duration: 0.2 }}
-      className="mb-4"
-    >
-      <Alert
-        className="rounded-xl border"
-        style={{
-          background: "#FEF2F2",
-          borderColor: "#FECACA",
-          color: "#B91C1C",
-        }}
-      >
+    <motion.div key="generic-error" {...alertMotion} className="auth-alert">
+      <Alert className="rounded-tt-md border" style={attentionAlertStyle}>
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Pendaftaran gagal</AlertTitle>
         <AlertDescription>{message}</AlertDescription>
@@ -268,25 +276,102 @@ function GenericErrorAlert({ message }: { message: string }) {
   );
 }
 
-function StepHeading({
-  title,
-  description,
+function StepMotion({
+  stepKey,
+  children,
 }: {
-  title: string;
-  description: string;
+  stepKey: string;
+  children: React.ReactNode;
+}) {
+  const shouldReduce = useReducedMotion();
+
+  return (
+    <motion.div
+      key={stepKey}
+      initial={shouldReduce ? false : "hidden"}
+      animate="visible"
+      exit={shouldReduce ? undefined : "exit"}
+      variants={slideInVariants}
+      transition={springSmooth}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function VerificationPending({
+  email,
+  onResend,
+  isResending,
+  resendCooldown,
+  resendMessage,
+  onChangeEmail,
+}: {
+  email: string;
+  onResend: () => void;
+  isResending: boolean;
+  resendCooldown: boolean;
+  resendMessage: string;
+  onChangeEmail: () => void;
 }) {
   return (
-    <div className="mb-4 text-center">
-      <h2
-        className="mb-2 text-xl font-bold"
-        style={{ color: "var(--color-text-brand-primary)" }}
-      >
-        {title}
-      </h2>
+    <div className="verify-panel">
+      <div className="verify-icon" aria-hidden="true">
+        <MailCheck />
+      </div>
 
-      <p className="text-sm" style={{ color: "var(--color-text-brand-muted)" }}>
-        {description}
-      </p>
+      <AuthFormHeading
+        eyebrow="satu langkah lagi"
+        title="Cek email kamu."
+        description="Verifikasi email dulu sebelum lanjut mengisi data diri."
+      />
+
+      <div className="auth-note" role="status">
+        <MailCheck aria-hidden="true" />
+        <span>
+          Link verifikasi sudah dikirim ke <strong>{email}</strong>. Cek
+          inbox/spam, klik link verifikasi, lalu kamu akan diarahkan untuk
+          melengkapi data diri. Jika diminta, login terlebih dahulu.
+        </span>
+      </div>
+
+      <div className="verify-actions">
+        <Button
+          type="button"
+          onClick={onResend}
+          disabled={isResending || resendCooldown}
+          aria-busy={isResending}
+          className="auth-submit"
+        >
+          {isResending ? (
+            <>
+              <Loader2
+                className="mr-2 h-4 w-4 animate-spin"
+                aria-hidden="true"
+              />
+              Mengirim ulang...
+            </>
+          ) : (
+            "Kirim Ulang Verifikasi"
+          )}
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onChangeEmail}
+          disabled={isResending}
+          className="auth-secondary"
+        >
+          Ganti email
+        </Button>
+      </div>
+
+      {resendMessage ? (
+        <p className="verify-status" role="status" aria-live="polite">
+          {resendMessage}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -296,7 +381,6 @@ function Step1Form({
   onGoogle,
   isGoogleLoading,
   isEmailLoading,
-  verificationEmail,
   isCompleteProfileFlow,
   defaultValues,
   registerError,
@@ -306,7 +390,6 @@ function Step1Form({
   onGoogle: () => void;
   isGoogleLoading: boolean;
   isEmailLoading: boolean;
-  verificationEmail?: string | null;
   isCompleteProfileFlow?: boolean;
   defaultValues: Partial<Step1>;
   registerError: RegisterError;
@@ -321,18 +404,14 @@ function Step1Form({
     defaultValues,
   });
 
+  const isEmailPending = isSubmitting || isEmailLoading;
+
   return (
-    <motion.div
-      key="step1"
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      variants={slideInVariants}
-      transition={springSmooth}
-    >
-      <StepHeading
-        title="Buat Akun"
-        description="Mulai dengan email atau Google"
+    <>
+      <AuthFormHeading
+        eyebrow="langkah pertama"
+        title="Mulai ruang ceritamu."
+        description="Buat akun dengan email atau Google untuk memulai bersama TemanTumbuh."
       />
 
       <AnimatePresence mode="wait">
@@ -347,38 +426,20 @@ function Step1Form({
         type="button"
         variant="outline"
         onClick={onGoogle}
-        disabled={isGoogleLoading}
-        className="mb-4 h-11 w-full gap-4 rounded-lg border-[1.5px] bg-white font-semibold"
-        style={{
-          borderColor: "var(--color-brand-border)",
-          color: "var(--color-text-brand-primary)",
-        }}
+        disabled={isGoogleLoading || isEmailPending}
+        aria-busy={isGoogleLoading}
+        className="google-button"
       >
         {isGoogleLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
         ) : (
           <GoogleIcon />
         )}
         {isGoogleLoading ? "Menghubungkan..." : "Daftar dengan Google"}
       </Button>
 
-      <div className="mb-4 flex items-center gap-4">
-        <div
-          className="h-px flex-1"
-          style={{ background: "var(--color-brand-border)" }}
-        />
-
-        <span
-          className="text-sm"
-          style={{ color: "var(--color-text-brand-muted)" }}
-        >
-          atau dengan email
-        </span>
-
-        <div
-          className="h-px flex-1"
-          style={{ background: "var(--color-brand-border)" }}
-        />
+      <div className="auth-divider">
+        <span>atau daftar dengan email</span>
       </div>
 
       <form
@@ -386,17 +447,18 @@ function Step1Form({
           onClearError();
           await onNext(data);
         })}
-        className="space-y-4"
+        className="auth-form"
         noValidate
+        aria-busy={isEmailPending}
       >
         <AuthField id="reg-email" label="Email" error={errors.email?.message}>
           <Input
             id="reg-email"
             type="email"
+            inputMode="email"
             placeholder="email@contoh.com"
             autoComplete="email"
             autoFocus
-            className="h-11 rounded-lg"
             {...register("email")}
           />
         </AuthField>
@@ -411,7 +473,6 @@ function Step1Form({
             id="reg-password"
             placeholder="Buat password"
             autoComplete="new-password"
-            className="h-11 rounded-lg"
             hasError={!!errors.password}
             {...register("password")}
           />
@@ -426,7 +487,6 @@ function Step1Form({
             id="reg-confirm"
             placeholder="Ulangi password"
             autoComplete="new-password"
-            className="h-11 rounded-lg"
             hasError={!!errors.confirm}
             {...register("confirm")}
           />
@@ -434,53 +494,39 @@ function Step1Form({
 
         <Button
           type="submit"
-          disabled={isSubmitting || isEmailLoading}
-          className="mt-1 h-11 w-full rounded-lg font-semibold text-white"
-          style={{
-            background: "var(--gradient-brand-btn)",
-            boxShadow: "0 4px 18px rgba(26,150,136,0.18)",
-          }}
+          disabled={isEmailPending || isGoogleLoading}
+          aria-busy={isEmailPending}
+          className="auth-submit"
         >
-          {isSubmitting || isEmailLoading ? (
+          {isEmailPending ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2
+                className="mr-2 h-4 w-4 animate-spin"
+                aria-hidden="true"
+              />
               Memproses...
             </>
           ) : (
-            <>
-              {verificationEmail
-                ? "Kirim Ulang Verifikasi"
-                : isCompleteProfileFlow
-                  ? "Lanjut"
-                  : "Daftar & Verifikasi"}
-            </>
+            <>{isCompleteProfileFlow ? "Lanjut" : "Daftar & Verifikasi"}</>
           )}
         </Button>
       </form>
-
-      {verificationEmail && !isCompleteProfileFlow ? (
-        <div className="mt-4">
-          <AuthInfoCard>
-            Link verifikasi sudah dikirim ke{" "}
-            <strong>{verificationEmail}</strong>. Cek inbox/spam, verifikasi
-            dulu, lalu login untuk lanjut isi data diri.
-          </AuthInfoCard>
-        </div>
-      ) : null}
-    </motion.div>
+    </>
   );
 }
 
 function Step2Form({
-  onNext,
+  onSubmit: onFinalSubmit,
   onBack,
   canGoBack,
   defaultValues,
+  isLoading,
 }: {
-  onNext: (data: Step2) => void;
-  onBack: () => void;
+  onSubmit: (data: Step2) => void;
+  onBack: (data: Partial<Step2>) => void;
   canGoBack: boolean;
   defaultValues: Partial<Step2>;
+  isLoading: boolean;
 }) {
   const currentYear = new Date().getFullYear();
 
@@ -494,27 +540,36 @@ function Step2Form({
     register,
     handleSubmit,
     control,
-    formState: { errors, isSubmitting },
+    getValues,
+    setValue,
+    formState: { errors },
   } = useForm<Step2>({
     resolver: zodResolver(registerStep2Schema),
     defaultValues,
   });
 
+  // Nama dari sesi (Google/verifikasi) bisa tiba setelah form ter-mount.
+  const sessionName = defaultValues.name;
+  useEffect(() => {
+    if (sessionName && !getValues("name")) {
+      setValue("name", sessionName);
+    }
+  }, [sessionName, getValues, setValue]);
+
   return (
-    <motion.div
-      key="step2"
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      variants={slideInVariants}
-      transition={springSmooth}
-    >
-      <StepHeading
-        title="Data Diri"
-        description="Kami sesuaikan pengalaman untukmu"
+    <>
+      <AuthFormHeading
+        eyebrow="tentang kamu"
+        title="Kenalan dulu, yuk."
+        description="Lengkapi data dirimu supaya pengalaman TemanTumbuh sesuai untukmu."
       />
 
-      <form onSubmit={handleSubmit(onNext)} className="space-y-4" noValidate>
+      <form
+        onSubmit={handleSubmit(onFinalSubmit)}
+        className="auth-form"
+        noValidate
+        aria-busy={isLoading}
+      >
         <AuthField
           id="reg-name"
           label="Nama Lengkap"
@@ -526,7 +581,6 @@ function Step2Form({
             placeholder="Nama kamu"
             autoComplete="name"
             autoFocus
-            className="h-11 rounded-lg"
             {...register("name")}
           />
         </AuthField>
@@ -543,7 +597,12 @@ function Step2Form({
               <Select value={field.value ?? ""} onValueChange={field.onChange}>
                 <SelectTrigger
                   id="reg-birthYear"
-                  className="h-11 w-full rounded-lg"
+                  className="tt-focus-ring h-11 w-full rounded-tt-md border-tt-gray-200 bg-tt-surface text-tt-gray-900"
+                  aria-invalid={!!errors.birthYear}
+                  aria-describedby={
+                    errors.birthYear ? "reg-birthYear-error" : undefined
+                  }
+                  onBlur={field.onBlur}
                 >
                   <SelectValue placeholder="Pilih tahun lahir" />
                 </SelectTrigger>
@@ -572,7 +631,12 @@ function Step2Form({
               <Select value={field.value ?? ""} onValueChange={field.onChange}>
                 <SelectTrigger
                   id="reg-gender"
-                  className="h-11 w-full rounded-lg"
+                  className="tt-focus-ring h-11 w-full rounded-tt-md border-tt-gray-200 bg-tt-surface text-tt-gray-900"
+                  aria-invalid={!!errors.gender}
+                  aria-describedby={
+                    errors.gender ? "reg-gender-error" : undefined
+                  }
+                  onBlur={field.onBlur}
                 >
                   <SelectValue placeholder="Pilih jenis kelamin" />
                 </SelectTrigger>
@@ -589,200 +653,36 @@ function Step2Form({
           />
         </AuthField>
 
-        <div className="mt-1 flex gap-4">
-          {canGoBack ? (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onBack}
-              className="h-11 flex-1 rounded-lg border-[1.5px] font-semibold"
-              style={{
-                borderColor: "var(--color-brand-border)",
-                color: "var(--color-text-brand-secondary)",
-              }}
-            >
-              Kembali
-            </Button>
-          ) : null}
-
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="h-11 flex-1 rounded-lg font-semibold text-white"
-            style={{
-              background: "var(--gradient-brand-btn)",
-              boxShadow: "0 4px 18px rgba(26,150,136,0.18)",
-            }}
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Memproses...
-              </>
-            ) : (
-              <>Lanjut</>
-            )}
-          </Button>
-        </div>
-      </form>
-    </motion.div>
-  );
-}
-
-function Step3Form({
-  onSubmit: onFinalSubmit,
-  onBack,
-  defaultValues,
-  isLoading,
-}: {
-  onSubmit: (data: Step3) => void;
-  onBack: () => void;
-  defaultValues: Partial<Step3>;
-  isLoading: boolean;
-}) {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<Step3>({
-    resolver: zodResolver(registerStep3Schema),
-    defaultValues,
-  });
-
-  return (
-    <motion.div
-      key="step3"
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      variants={slideInVariants}
-      transition={springSmooth}
-    >
-      <StepHeading title="Laporan Mingguan" description="" />
-
-      <div className="mb-4">
-        <AuthInfoCard icon="parent">
-          Orang tua akan menerima ringkasan emosi mingguan tanpa isi diary.
-        </AuthInfoCard>
-      </div>
-
-      <form
-        onSubmit={handleSubmit(onFinalSubmit)}
-        className="space-y-4"
-        noValidate
-      >
-        <AuthField
-          id="reg-parentEmail"
-          label="Email Orang Tua / Wali (Opsional)"
-          error={errors.parentEmail?.message}
-          hint="Kosongkan jika tidak ingin mengirim laporan"
+        <Button
+          type="submit"
+          disabled={isLoading}
+          aria-busy={isLoading}
+          className="auth-submit"
         >
-          <Input
-            id="reg-parentEmail"
-            type="email"
-            placeholder="email-orangtua@contoh.com"
-            autoComplete="off"
-            className="h-11 rounded-lg"
-            {...register("parentEmail")}
-          />
-        </AuthField>
-
-        <div className="mt-1 flex gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onBack}
-            className="h-11 flex-1 rounded-lg border-[1.5px] font-semibold"
-            style={{
-              borderColor: "var(--color-brand-border)",
-              color: "var(--color-text-brand-secondary)",
-            }}
-          >
-            Kembali
-          </Button>
-
-          <Button
-            type="submit"
-            disabled={isLoading}
-            className="h-11 flex-1 rounded-lg font-semibold text-white"
-            style={{
-              background: "var(--gradient-brand-btn)",
-              boxShadow: "0 4px 18px rgba(26,150,136,0.18)",
-            }}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Mendaftar...
-              </>
-            ) : (
-              <>Selesai</>
-            )}
-          </Button>
-        </div>
-
-        <p
-          className="text-center text-xs"
-          style={{ color: "var(--color-text-brand-muted)" }}
-        >
-          Email orang tua bisa ditambahkan nanti melalui pengaturan akun.
-        </p>
+          {isLoading ? (
+            <>
+              <Loader2
+                className="mr-2 h-4 w-4 animate-spin"
+                aria-hidden="true"
+              />
+              Memproses...
+            </>
+          ) : (
+            <>Selesai</>
+          )}
+        </Button>
       </form>
-    </motion.div>
-  );
-}
 
-function SuccessScreen({ name }: { name: string }) {
-  const shouldReduce = useReducedMotion();
-
-  return (
-    <motion.div
-      key="success"
-      initial={shouldReduce ? false : "hidden"}
-      animate="visible"
-      variants={slideInVariants}
-      transition={springSmooth}
-      className="flex flex-col items-center py-1 text-center"
-    >
-      <motion.div
-        initial={shouldReduce ? false : "hidden"}
-        animate="visible"
-        variants={scalePopVariants}
-        transition={{ ...springBouncy, delay: 0.1 }}
-        className="mb-4"
-      >
-        <CheckCircle2
-          className="h-11 w-12"
-          style={{ color: "var(--color-brand-teal)" }}
-        />
-      </motion.div>
-
-      <h2
-        className="mb-2 text-xl font-bold"
-        style={{ color: "var(--color-text-brand-primary)" }}
-      >
-        Selamat Datang, {name || "Teman"}!
-      </h2>
-
-      <p
-        className="mb-4 max-w-xs text-sm leading-relaxed"
-        style={{ color: "var(--color-text-brand-muted)" }}
-      >
-        Akunmu berhasil dibuat. Kamu siap memulai perjalanan tumbuh bersama
-        TemanTumbuh.
-      </p>
-
-      <Button
-        asChild
-        className="h-11 w-full rounded-lg font-semibold text-white"
-        style={{
-          background: "var(--gradient-brand-btn)",
-          boxShadow: "0 4px 18px rgba(26,150,136,0.18)",
-        }}
-      >
-        <Link href="/">Lanjut ke Beranda</Link>
-      </Button>
-    </motion.div>
+      {canGoBack ? (
+        <button
+          type="button"
+          onClick={() => onBack(getValues())}
+          className="step-back-link"
+        >
+          ← Kembali ke akun
+        </button>
+      ) : null}
+    </>
   );
 }
 
@@ -802,6 +702,9 @@ function RegisterPageContent() {
     null,
   );
   const [registerError, setRegisterError] = useState<RegisterError>(null);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
 
   const { data: sessionData, isLoading: isSessionLoading } = useQuery({
     queryKey: SESSION_QUERY_KEY,
@@ -817,7 +720,7 @@ function RegisterPageContent() {
     if (!isCompleteProfileFlow || isSessionLoading || !sessionData) return;
 
     if (sessionData.isAuthenticated && sessionData.isComplete) {
-      window.location.href = "/baseline";
+      window.location.href = "/home";
       return;
     }
 
@@ -840,6 +743,17 @@ function RegisterPageContent() {
     }
   }, [isCompleteProfileFlow, isSessionLoading, sessionData, router]);
 
+  useEffect(() => {
+    if (!resendCooldown) return;
+
+    const timer = window.setTimeout(
+      () => setResendCooldown(false),
+      RESEND_COOLDOWN_MS,
+    );
+
+    return () => window.clearTimeout(timer);
+  }, [resendCooldown]);
+
   const signUpMutation = useMutation<unknown, RegisterAuthError, Step1>({
     mutationFn: async (data: Step1) => {
       const email = data.email.trim().toLowerCase();
@@ -860,7 +774,7 @@ function RegisterPageContent() {
         email,
         password: data.password,
         name: defaultName,
-        callbackURL: "/register?completeProfile=1",
+        callbackURL: VERIFICATION_CALLBACK_URL,
       });
 
       if (response.error) {
@@ -875,7 +789,8 @@ function RegisterPageContent() {
 
       setVerificationEmail(email);
       setRegisterError(null);
-      toast.success("Silakan periksa email Anda untuk verifikasi.");
+      setResendMessage("");
+      toast.success("Silakan periksa emailmu untuk verifikasi.");
     },
 
     onError: (error, variables) => {
@@ -892,15 +807,46 @@ function RegisterPageContent() {
     },
   });
 
+  // Mengirim ulang link verifikasi lewat endpoint bawaan Better Auth.
+  const resendVerificationMutation = useMutation<
+    unknown,
+    RegisterAuthError,
+    string
+  >({
+    mutationFn: async (email) => {
+      const response = await authClient.sendVerificationEmail({
+        email,
+        callbackURL: VERIFICATION_CALLBACK_URL,
+      });
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      return response;
+    },
+
+    onSuccess: () => {
+      setResendCooldown(true);
+      setResendMessage(
+        "Email verifikasi sudah dikirim ulang. Kamu bisa meminta lagi dalam 30 detik.",
+      );
+      toast.success("Email verifikasi dikirim ulang.");
+    },
+
+    onError: (error) => {
+      const message = resolveResendError(error);
+      setResendMessage(message);
+      toast.error(message);
+    },
+  });
+
   const updateProfileMutation = useMutation({
-    mutationFn: async (data: Step3) => {
+    mutationFn: async (data: Step2) => {
       const response = await authClient.updateUser({
-        name: step2Data.name,
-        birthYear: step2Data.birthYear
-          ? Number(step2Data.birthYear)
-          : undefined,
-        gender: step2Data.gender,
-        parentEmail: data.parentEmail || null,
+        name: data.name,
+        birthYear: data.birthYear ? Number(data.birthYear) : undefined,
+        gender: data.gender,
         profileFilled: true,
       });
 
@@ -908,24 +854,17 @@ function RegisterPageContent() {
         throw response.error;
       }
 
-      return {
-        response,
-        parentEmail: data.parentEmail,
-      };
+      return response;
     },
 
-    onSuccess: ({ parentEmail }: { parentEmail?: string }) => {
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: SESSION_QUERY_KEY });
 
       setDone(true);
 
-      toast.success(
-        parentEmail
-          ? "Data diri tersimpan. Jika email orang tua baru, permintaan persetujuan telah dikirim."
-          : "Data diri berhasil dilengkapi.",
-      );
+      toast.success("Data diri berhasil dilengkapi.");
 
-      window.location.href = "/baseline";
+      window.location.href = "/home";
     },
 
     onError: (error: { message?: string }) => {
@@ -949,32 +888,56 @@ function RegisterPageContent() {
         return;
       }
 
-      await signUpMutation.mutateAsync(normalizedData);
+      await signUpMutation.mutateAsync(normalizedData).catch(() => {
+        // Error sudah ditangani onError mutation.
+      });
     },
     [isCompleteProfileFlow, signUpMutation],
   );
 
-  const handleStep2 = useCallback((data: Step2) => {
+  const handleStep2Back = useCallback((data: Partial<Step2>) => {
     setStep2Data(data);
-    setStep(2);
+    setStep(0);
   }, []);
 
   const handleFinalSubmit = useCallback(
-    (data: Step3) => {
+    (data: Step2) => {
+      if (updateProfileMutation.isPending) return;
+      setStep2Data(data);
       updateProfileMutation.mutate(data);
     },
     [updateProfileMutation],
   );
 
   const handleGoogle = useCallback(async () => {
+    setRegisterError(null);
+    setIsGoogleLoading(true);
+
     try {
-      await authClient.signIn.social({
+      const response = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/register?completeProfile=1",
+        callbackURL: VERIFICATION_CALLBACK_URL,
       });
+
+      if (response?.error) {
+        throw response.error;
+      }
     } catch {
+      setIsGoogleLoading(false);
       toast.error("Google sign-in gagal dimulai.");
     }
+  }, []);
+
+  const handleResend = useCallback(() => {
+    if (!verificationEmail || resendVerificationMutation.isPending) return;
+    setResendMessage("");
+    resendVerificationMutation.mutate(verificationEmail);
+  }, [verificationEmail, resendVerificationMutation]);
+
+  const handleChangeEmail = useCallback(() => {
+    setVerificationEmail(null);
+    setResendMessage("");
+    setRegisterError(null);
   }, []);
 
   if (isCompleteProfileFlow && isSessionLoading) {
@@ -982,93 +945,71 @@ function RegisterPageContent() {
   }
 
   if (done) {
-    return <PageLoader message="Memuat baseline..." fullscreen />;
+    return <PageLoader message="Memuat mood..." fullscreen />;
   }
 
-  return (
-    <BrandPageBackground fillViewport>
-      <AuthShell
-        showLogo={!done}
-        maxWidth={440}
-        compact={false}
-        footer={
-          !done && !isCompleteProfileFlow ? (
-            <>
-              Dengan mendaftar, kamu menyetujui{" "}
-              <Link
-                href="/terms"
-                className="underline-offset-2 hover:underline"
-                style={{ color: "var(--color-text-brand-secondary)" }}
-              >
-                Syarat &amp; Ketentuan
-              </Link>{" "}
-              dan{" "}
-              <Link
-                href="/privacy"
-                className="underline-offset-2 hover:underline"
-                style={{ color: "var(--color-text-brand-secondary)" }}
-              >
-                Kebijakan Privasi
-              </Link>
-              .
-            </>
-          ) : null
-        }
-      >
-        {!done ? <AuthStepIndicator current={step} total={3} /> : null}
+  const isAwaitingVerification =
+    step === 0 && !isCompleteProfileFlow && Boolean(verificationEmail);
 
-        <AnimatePresence mode="wait">
-          {done ? (
-            <SuccessScreen key="done" name={step2Data.name ?? ""} />
-          ) : step === 0 ? (
-            <Step1Form
-              key="s1"
-              onNext={handleStep1}
-              onGoogle={handleGoogle}
-              isGoogleLoading={false}
-              isEmailLoading={signUpMutation.isPending}
-              verificationEmail={verificationEmail}
-              isCompleteProfileFlow={isCompleteProfileFlow}
-              defaultValues={step1Data}
-              registerError={registerError}
-              onClearError={() => setRegisterError(null)}
-            />
-          ) : step === 1 ? (
+  return (
+    <AuthSplitLayout>
+      <RegistrationStepper current={step} />
+
+      <AnimatePresence mode="wait" initial={false}>
+        {step === 0 ? (
+          <StepMotion
+            key={isAwaitingVerification ? "s1-verify" : "s1"}
+            stepKey={isAwaitingVerification ? "s1-verify" : "s1"}
+          >
+            {isAwaitingVerification && verificationEmail ? (
+              <VerificationPending
+                email={verificationEmail}
+                onResend={handleResend}
+                isResending={resendVerificationMutation.isPending}
+                resendCooldown={resendCooldown}
+                resendMessage={resendMessage}
+                onChangeEmail={handleChangeEmail}
+              />
+            ) : (
+              <Step1Form
+                onNext={handleStep1}
+                onGoogle={handleGoogle}
+                isGoogleLoading={isGoogleLoading}
+                isEmailLoading={signUpMutation.isPending}
+                isCompleteProfileFlow={isCompleteProfileFlow}
+                defaultValues={step1Data}
+                registerError={registerError}
+                onClearError={() => setRegisterError(null)}
+              />
+            )}
+          </StepMotion>
+        ) : (
+          <StepMotion key="s2" stepKey="s2">
             <Step2Form
-              key="s2"
-              onNext={handleStep2}
-              onBack={() => setStep(0)}
+              onSubmit={handleFinalSubmit}
+              onBack={handleStep2Back}
               canGoBack={!isCompleteProfileFlow}
               defaultValues={step2Data}
-            />
-          ) : (
-            <Step3Form
-              key="s3"
-              onSubmit={handleFinalSubmit}
-              onBack={() => setStep(1)}
-              defaultValues={{}}
               isLoading={updateProfileMutation.isPending}
             />
-          )}
-        </AnimatePresence>
+          </StepMotion>
+        )}
+      </AnimatePresence>
 
-        {!done && !isCompleteProfileFlow ? (
-          <p
-            className="mt-4 text-center text-sm"
-            style={{ color: "var(--color-text-brand-muted)" }}
-          >
-            Sudah punya akun?{" "}
-            <Link
-              href="/login"
-              className="font-semibold underline-offset-2 hover:underline"
-              style={{ color: "var(--color-brand-teal)" }}
-            >
-              Masuk
-            </Link>
-          </p>
-        ) : null}
-      </AuthShell>
-    </BrandPageBackground>
+      {!isCompleteProfileFlow ? (
+        <p className="auth-switch">
+          Sudah punya akun? <Link href="/login">Masuk</Link>
+        </p>
+      ) : null}
+
+      {!isCompleteProfileFlow && step === 0 ? (
+        <p className="auth-legal">
+          Dengan mendaftar, kamu menyetujui{" "}
+          <Link href="/terms">Syarat &amp; Ketentuan</Link> dan{" "}
+          <Link href="/privacy">Kebijakan Privasi</Link>.
+        </p>
+      ) : null}
+    </AuthSplitLayout>
   );
 }
 

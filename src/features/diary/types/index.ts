@@ -4,6 +4,8 @@
 //  response API saat backend sudah siap
 // ============================================================
 
+import type { DiaryConversationDto } from "@/lib/diary/types";
+
 export type PlanType = "free" | "premium";
 
 export type UserProfile = {
@@ -37,6 +39,26 @@ export type ChatMessage = {
   time: string; // "HH.mm"
 };
 
+export type DiaryConversationStarter = {
+  id: string;
+  label: string;
+  messageText: string;
+};
+
+export type DiaryTopic =
+  | "KELUARGA"
+  | "PERTEMANAN"
+  | "PERCINTAAN"
+  | "IDENTITAS_RELASI"
+  | "AKADEMIK_SEKOLAH"
+  | "GURU_BK"
+  | "BULLYING_KONFLIK"
+  | "PILIHAN_STUDI"
+  | "LAINNYA";
+
+// Reuse the public API DTO; raw BE-03 structured output remains server-side.
+export type DiaryConversation = DiaryConversationDto;
+
 export type QuizOption = {
   label: string; // "A" | "B"
   text: string;
@@ -45,6 +67,8 @@ export type QuizOption = {
 
 export type BraveChoiceQuiz = {
   id: string;
+  /** Kategori skenario dari bank soal (dipakai untuk kalimat pembuka feedback). */
+  category?: string;
   scenario: string;
   options: QuizOption[];
   explanationWrong: string;

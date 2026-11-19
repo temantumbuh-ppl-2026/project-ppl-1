@@ -46,7 +46,7 @@ export async function GET(request: Request) {
       data: result,
     });
   } catch (error) {
-    console.error("Diary entries GET error:", error);
+    console.error("Diary entries GET error:");
 
     if (error instanceof DiaryServiceError) {
       return NextResponse.json(

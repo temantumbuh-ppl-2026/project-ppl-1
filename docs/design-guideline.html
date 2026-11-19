@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TemanTumbuh — Design Guideline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Fraunces:opsz,wght@9..144,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --navy:#13263e;--teal:#10a89a;--teal-dark:#087f76;--teal-hover:#066a63;
+  --mint:#dff7ee;--mint-light:#f0fbf7;--paper:#fbfaf6;--yellow:#ffdc72;--peach:#ffc5ad;--lilac:#dcd3ff;--sky:#ddecff;
+  --cream:#fff8df;--cream-b:#f1dfa2;--line:#cadbd7;--muted:#5c6d79;
+  --att-bg:#fbefe6;--att-tx:#8a4a1f;--att-b:#ebd2bf;
+  --warn-bg:#fef5d4;--warn-tx:#7a5200;--ok-bg:#d8f5e8;--ok-tx:#1a5c36;--info-bg:#e4f2fc;--info-tx:#1a4e75;
+  --serif:"Fraunces",Georgia,serif;--hand:"Caveat",cursive;
+  --sans:"Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--navy);font-family:var(--sans);font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+h1,h2,h3{font-family:var(--serif);font-weight:700;letter-spacing:-.035em;margin:0}
+em{color:var(--teal);font-family:var(--hand);font-style:normal;font-weight:700;letter-spacing:-.01em}
+code{background:#eef6f5;padding:2px 7px;border-radius:6px;font-size:12.5px;color:var(--teal-dark);font-weight:600}
+.wrap{width:min(1120px,calc(100% - 40px));margin:0 auto}
+.kicker{color:var(--teal-dark);font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.hand{font-family:var(--hand);color:var(--teal-dark);font-size:22px;font-weight:700}
+
+/* nav */
+nav.top{position:sticky;top:0;z-index:20;background:rgba(251,250,246,.93);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+nav.top .wrap{display:flex;gap:6px;align-items:center;overflow-x:auto;padding:10px 0}
+nav.top b{font-family:var(--serif);font-size:17px;margin-right:12px;white-space:nowrap}
+nav.top a{padding:7px 12px;border-radius:999px;text-decoration:none;font-size:13px;font-weight:700;color:#425765;white-space:nowrap}
+nav.top a:hover{background:var(--mint);color:var(--teal-dark)}
+
+/* hero */
+.hero{position:relative;overflow:hidden;padding:72px 0 64px;background:radial-gradient(circle at 5% 90%,rgba(16,168,154,.15),transparent 28%),radial-gradient(circle at 95% 8%,rgba(221,236,255,.9),transparent 30%),var(--paper)}
+.hero::after{content:"";position:absolute;right:-70px;bottom:-90px;width:240px;height:240px;border:44px solid var(--yellow);border-radius:50%;opacity:.4}
+.hero h1{font-size:clamp(44px,6vw,78px);line-height:.98;margin:14px 0 18px;max-width:780px}
+.hero p{max-width:640px;color:#586779;font-size:16px;margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.chip{padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;color:#48616b}
+
+section{padding:68px 0;border-top:1px solid #e3ece9}
+section:nth-of-type(even){background:#fff}
+.sec-head{max-width:720px;margin-bottom:34px}
+.sec-head h2{font-size:clamp(30px,4vw,44px);line-height:1.05;margin:8px 0 10px}
+.sec-head p{margin:0;color:var(--muted)}
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g5{grid-template-columns:repeat(5,minmax(0,1fr))}
+@media(max-width:900px){.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.g5{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){.g2,.g3,.g4{grid-template-columns:1fr}.g5{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.card{background:#fff;border:1px solid #cbded9;border-radius:7px 22px 7px 22px;padding:22px;box-shadow:0 7px 20px rgba(19,38,62,.04)}
+.card h3{font-size:20px;margin-bottom:6px}
+.card p{margin:0;color:var(--muted);font-size:14px}
+.num{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--mint);color:var(--teal-dark);font-weight:800;margin-bottom:12px}
+.stack{display:grid;gap:14px}
+.sub{font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#66757d;margin:30px 0 12px}
+
+/* type */
+.spec{display:grid;grid-template-columns:150px 1fr auto;gap:18px;align-items:baseline;padding:16px 0;border-bottom:1px dashed #cfe0dc}
+.spec small{color:#66757d;font-size:12px;font-weight:700}
+.spec .meta{font-size:12px;color:#66757d;text-align:right}
+@media(max-width:720px){.spec{grid-template-columns:1fr}.spec .meta{text-align:left}}
+.fontcard{padding:24px;border-radius:7px 22px 7px 22px;border:1px solid #cbded9;background:#fff}
+.fontcard .big{font-size:56px;line-height:1;margin:10px 0}
+.fontcard small{color:var(--muted);font-size:12.5px}
+
+/* swatches */
+.sw{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff}
+.sw i{display:block;height:74px}
+.sw div{padding:10px 12px}
+.sw b{display:block;font-size:13px}
+.sw span{display:block;font-size:12px;color:#66757d}
+.sw code{font-size:11.5px;padding:1px 6px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800}
+.nope{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:12px;background:#fff;border:1px dashed var(--att-b);margin-top:14px;font-size:13.5px}
+.nope b{color:var(--att-tx)}
+.strike{text-decoration:line-through;color:#8f9ba3}
+
+/* mood */
+.mood{text-align:center;border-radius:14px;padding:14px 10px;border:1.5px solid var(--b);background:linear-gradient(165deg,#fff,var(--t) 70%)}
+.mood svg{width:48px;height:48px}
+.mood b{display:block;margin-top:6px;font-size:13px;color:var(--c)}
+.mood small{display:block;color:#66757d;font-size:12px}
+
+/* shapes */
+.shape{padding:26px;background:#fff;min-height:130px}
+.shape.a{border:1px solid #c9dfda;border-radius:7px 28px 7px 28px;box-shadow:13px 14px 0 var(--mint),0 22px 50px rgba(19,38,62,.11)}
+.shape.b{border:1px solid #beddd6;border-radius:24px 7px 24px 7px;background:var(--mint-light)}
+.shape.c{border:1px solid #bfd8d2;border-radius:20px 6px 20px 6px;background:rgba(239,250,246,.94);box-shadow:7px 8px 0 rgba(223,247,238,.85)}
+.shape.d{border:2px solid var(--teal-dark);border-radius:12px;background:var(--mint-light);box-shadow:0 0 0 3px var(--mint)}
+.shape h3{font-size:17px;margin-bottom:4px}
+.shape p{margin:0;font-size:13px;color:var(--muted)}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:11px;font:800 14px var(--sans);border:1px solid transparent;cursor:pointer;text-decoration:none;transition:.2s}
+.btn.p{background:var(--teal-dark);border-color:var(--teal-dark);color:#fff;box-shadow:0 7px 0 rgba(7,105,98,.12)}
+.btn.p:hover{background:var(--teal-hover);transform:translateY(-2px)}
+.btn.s{background:#fff;border-color:#a9d6cf;color:var(--teal-dark)}
+.btn.s:hover{background:var(--mint-light)}
+.btn.g{background:#fff;border-color:#a9d6cf;color:var(--navy);min-height:52px}
+.btn.g b{font-size:18px;background:conic-gradient(from -45deg,#4285f4,#34a853,#fbbc05,#ea4335,#4285f4);-webkit-background-clip:text;background-clip:text;color:transparent}
+.btn.pr{background:#fff0b5;border-color:var(--cream-b);color:#5b4600}
+.btn.pr:hover{background:#ffe78a}
+.btn.l{background:none;border:0;color:var(--teal-dark);text-decoration:underline;text-decoration-color:#9ed9d1;text-underline-offset:3px;padding:0;min-height:44px}
+.btn.i{width:44px;min-height:44px;padding:0;background:#fff;border-color:#c7ddd8;color:var(--teal-dark)}
+.btn.chipb{border-radius:22px;background:#fff;border-color:#afd8d1;color:var(--teal-dark);font-size:13px}
+.btn.chipb:hover{background:var(--teal-dark);color:#fff}
+.btn.dis{background:#edf2f1;color:#8d999d;border-color:#edf2f1;cursor:not-allowed}
+.btn.focus{outline:3px solid var(--teal-dark);outline-offset:3px}
+.btn.att{background:var(--att-bg);border-color:var(--att-b);color:var(--att-tx)}
+.demo{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:22px;background:var(--mint-light);border:1px solid #cde4de;border-radius:14px}
+.cap{font-size:12px;color:#66757d;margin-top:6px;font-weight:600}
+table{width:100%;border-collapse:collapse;font-size:13.5px;background:#fff;border:1px solid #d3e2df;border-radius:12px;overflow:hidden}
+th{background:var(--mint-light);text-align:left;padding:10px 14px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--teal-dark)}
+td{padding:10px 14px;border-top:1px solid #e3ece9;vertical-align:top}
+.tblwrap{overflow-x:auto;border-radius:12px}
+
+/* forms */
+.field{display:grid;gap:7px}
+.field label{font-size:13px;font-weight:800;display:flex;gap:8px;align-items:center}
+.field label em2{font-style:normal;padding:3px 8px;border-radius:20px;background:var(--mint);color:var(--teal-dark);font-size:12px}
+.input{height:52px;border:1px solid #cbded9;border-radius:11px;padding:0 15px;font:500 15px var(--sans);color:var(--navy);background:#fff;width:100%}
+.input.f{border-color:var(--teal-dark);box-shadow:0 0 0 4px var(--mint)}
+.input.e{border-color:var(--att-tx);background:var(--att-bg)}
+.hint{font-size:12px;color:#5f6f7a}
+.err{font-size:12px;font-weight:700;color:var(--att-tx);display:flex;gap:6px;align-items:flex-start}
+.stepper{display:grid;grid-template-columns:repeat(3,1fr);max-width:340px}
+.stepper div{display:grid;justify-items:center;gap:6px;position:relative;font-size:12px;font-weight:800;color:#66757d}
+.stepper div:not(:last-child)::after{content:"";position:absolute;top:16px;left:calc(50% + 20px);width:calc(100% - 40px);height:2px;background:#d0dfdc}
+.stepper div.done:not(:last-child)::after{background:var(--teal-dark)}
+.stepper i{position:relative;z-index:1;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;border:2px solid #c8dbd7;background:#fff;font-style:normal;font-size:13px}
+.stepper .done i{background:var(--teal-dark);border-color:var(--teal-dark);color:#fff}
+.stepper .done,.stepper .act{color:var(--teal-dark)}
+.stepper .act i{border-color:var(--teal-dark);box-shadow:0 0 0 4px var(--mint)}
+
+/* alerts */
+.alert{display:flex;gap:10px;padding:13px 15px;border-radius:12px;border:1px solid;font-size:13.5px}
+.alert.att{background:var(--att-bg);border-color:var(--att-b);color:var(--att-tx)}
+.alert.cream{background:var(--cream);border-color:var(--cream-b);color:#4d4a3a}
+.alert.mint{background:var(--mint-light);border-color:#b6e3d6;border-left:4px solid var(--teal);color:#3f5260}
+.alert.info{background:var(--info-bg);border-color:#bcd9ee;color:var(--info-tx)}
+.alert b{display:block}
+
+/* layout wireframes */
+.wf{border:1px solid #bfd8d2;border-radius:14px;background:#fff;padding:14px;overflow:hidden}
+.wf .bar{height:10px;border-radius:5px;background:#e3ece9;margin:6px 0}
+.wf .box{border-radius:8px;background:var(--mint-light);border:1px dashed #b9dcd5;display:grid;place-items:center;font-size:11.5px;font-weight:700;color:var(--teal-dark);text-align:center;padding:6px}
+.wf h4{margin:0 0 10px;font-size:13px}
+.wf .row{display:grid;gap:8px}
+.wf-auth{grid-template-columns:1fr 1.1fr}
+.wf-dash{grid-template-columns:.4fr 1fr 1fr 1fr}
+.wf-diary{grid-template-columns:.7fr 2fr}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;background:var(--mint);color:var(--teal-dark);font-size:11.5px;font-weight:800}
+
+/* copy */
+.say{display:grid;gap:10px}
+.say div{padding:12px 14px;border-radius:12px;background:#fff;border:1px solid #d3e2df;font-size:14px}
+.say .ok{border-left:4px solid var(--teal)}
+.say .no{border-left:4px solid var(--att-tx);background:var(--att-bg)}
+.say small{display:block;font-size:12px;color:#66757d;font-weight:700;margin-bottom:2px;text-transform:uppercase;letter-spacing:.06em}
+.flow{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:700px){.flow{grid-template-columns:1fr}}
+.flow div{padding:16px;border-radius:12px;background:#fff;border:1px solid #cfe0dc}
+.flow b{display:block;color:var(--teal-dark);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.suggest{margin:10px 0;padding:11px 13px;background:#fff;border:1px solid #b9dcd5;border-radius:12px;font-size:13.5px}
+.suggest span{font-size:12px;font-weight:800;color:var(--teal-dark);letter-spacing:.06em;text-transform:uppercase;display:block}
+.ul{margin:0;padding-left:20px;color:#3f5260}
+.ul li{margin:4px 0}
+.check{list-style:none;padding:0;margin:0;display:grid;gap:9px}
+.check li{display:flex;gap:10px;padding:12px 14px;background:#fff;border:1px solid #d3e2df;border-radius:12px;font-size:14px}
+.check li::before{content:"";flex:0 0 18px;height:18px;margin-top:2px;border:2px solid var(--teal-dark);border-radius:5px}
+footer{padding:46px 0;background:var(--navy);color:#cfe3e0;font-size:13.5px}
+footer b{color:#fff;font-family:var(--serif);font-size:20px;display:block;margin-bottom:4px}
+</style>
+</head>
+<body>
+
+<nav class="top"><div class="wrap">
+  <b>TemanTumbuh · Design</b>
+  <a href="#prinsip">Prinsip</a><a href="#tipografi">Tipografi</a><a href="#warna">Warna</a><a href="#bentuk">Bentuk</a>
+  <a href="#tombol">Tombol</a><a href="#form">Form</a><a href="#layout">Layout</a><a href="#copy">Copywriting</a>
+  <a href="#a11y">Aksesibilitas</a><a href="#css">Struktur CSS</a><a href="#checklist">Checklist</a>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <span class="kicker">Blueprint · Frontend</span>
+  <h1>Ruang cerita yang <em>hangat,</em> jelas, dan tidak menghakimi.</h1>
+  <p>Panduan visual untuk semua pekerjaan FE: font, warna, bentuk, tombol, form, layout, dan copywriting yang sudah diterapkan di marketing, Login/Register, Dashboard, Brave Choice, dan Diary.</p>
+  <div class="chips"><span class="chip">Plus Jakarta Sans</span><span class="chip">Fraunces</span><span class="chip">Caveat</span><span class="chip">Teal #087F76</span><span class="chip">Tanpa merah</span><span class="chip">Teks ≥ 12px</span><span class="chip">Target ≥ 44px</span></div>
+</div></header>
+
+<section id="prinsip"><div class="wrap">
+  <div class="sec-head"><span class="kicker">01</span><h2>Enam prinsip</h2><p>Dipakai sebagai tolok ukur setiap keputusan desain dan review PR.</p></div>
+  <div class="grid g3">
+    <div class="card"><span class="num">1</span><h3>Hangat &amp; suportif</h3><p>Pengguna utama adalah remaja. UI tidak boleh terasa seperti ujian, penilaian, atau peringatan keras.</p></div>
+    <div class="card"><span class="num">2</span><h3>Tanpa merah</h3><p>Error memakai clay, peringatan memakai cream. Status dibedakan lewat ikon + teks + border, bukan warna saja.</p></div>
+    <div class="card"><span class="num">3</span><h3>Fungsi dulu</h3><p>Redesign tidak mengubah logika, API, payload, aturan paket, atau alur autentikasi.</p></div>
+    <div class="card"><span class="num">4</span><h3>Kosong ≠ netral</h3><p>Hari tanpa mood = “Belum dicatat”, bukan skor 3 atau 0. Tidak ada data demo di UI.</p></div>
+    <div class="card"><span class="num">5</span><h3>Gaya terisolasi</h3><p>Setiap halaman punya scope CSS sendiri agar halaman lain tidak ikut berubah.</p></div>
+    <div class="card"><span class="num">6</span><h3>Dapat diakses</h3><p>Target sentuh ≥ 44px, teks ≥ 12px, fokus terlihat, <code>prefers-reduced-motion</code> dihormati.</p></div>
+  </div>
+  <div class="sub">Dua lapisan sistem</div>
+  <div class="grid g2">
+    <div class="card"><h3>Token PB20 <code>--tt-*</code></h3><p>Untuk komponen shadcn (<code>Button</code>, <code>Input</code>, <code>Select</code>, <code>Alert</code>) dan halaman yang belum di-redesign. Dipakai lewat utility Tailwind atau <code>var(--tt-…)</code>.</p></div>
+    <div class="card"><h3>Tema Landing/Redesign</h3><p>Untuk marketing, auth, legal, dashboard, diary, dan Brave Choice. Variabel lokal di dalam scope halaman. Jangan ubah token global untuk satu halaman.</p></div>
+  </div>
+</div></section>
+
+<section id="tipografi"><div class="wrap">
+  <div class="sec-head"><span class="kicker">02</span><h2>Tipografi</h2><p>Tiga font dengan peran tetap. Ukuran minimum <b>12px</b> di seluruh UI.</p></div>
+  <div class="grid g3">
+    <div class="fontcard"><span class="kicker">Teks UI</span><div class="big" style="font-family:var(--sans);font-weight:800">Aa</div><b>Plus Jakarta Sans</b><br /><small>400–800 · body, label, tombol, input, kartu · <code>--font-plus-jakarta</code></small></div>
+    <div class="fontcard"><span class="kicker">Judul</span><div class="big" style="font-family:var(--serif)">Aa</div><b>Fraunces</b><br /><small>700 · h1–h3, angka besar, judul kartu · <code>--font-fraunces-display</code></small></div>
+    <div class="fontcard"><span class="kicker">Aksen</span><div class="big" style="font-family:var(--hand);color:var(--teal)">Aa</div><b>Caveat</b><br /><small>600–700 · kata <code>&lt;em&gt;</code> di judul, label tulisan tangan · <code>--font-caveat</code></small></div>
+  </div>
+
+  <div class="sub">Skala yang dipakai</div>
+  <div class="spec"><small>Hero marketing</small><div style="font-family:var(--serif);font-size:56px;line-height:1;font-weight:700;letter-spacing:-.05em">Cerita kecilmu</div><span class="meta">clamp 50–76px · 700 · Fraunces</span></div>
+  <div class="spec"><small>H1 auth / sapaan</small><div style="font-family:var(--serif);font-size:38px;line-height:1.08;font-weight:700;letter-spacing:-.04em">Senang kamu <em style="font-size:1.1em">kembali.</em></div><span class="meta">35–49px · 700 · Fraunces + Caveat</span></div>
+  <div class="spec"><small>H1 header Diary</small><div style="font-family:var(--serif);font-size:25px;font-weight:700;letter-spacing:-.035em">Senin, 19 Okt 2026</div><span class="meta">25px (19px mobile) · 700</span></div>
+  <div class="spec"><small>Judul kartu</small><div style="font-family:var(--serif);font-size:20px;font-weight:700">Brave Choice</div><span class="meta">19–20px · 700 · Fraunces</span></div>
+  <div class="spec"><small>Angka statistik</small><div style="font-family:var(--serif);font-size:48px;line-height:1;font-weight:700">12 <span style="font-family:var(--sans);font-size:13px;color:#66757d">hari</span></div><span class="meta">30–59px · 700 · Fraunces</span></div>
+  <div class="spec"><small>Body</small><div style="font-size:15px">Ceritakan harimu dan refleksikan perasaanmu bersama teman yang siap mendengarkan.</div><span class="meta">14–16px · 400–500 · lh 1.55–1.75</span></div>
+  <div class="spec"><small>Label form</small><div style="font-size:13px;font-weight:800">Konfirmasi Password</div><span class="meta">13px · 800</span></div>
+  <div class="spec"><small>Kicker</small><div class="kicker">Ringkasan aktivitas</div><span class="meta">12px · 800 · kapital · .12–.16em</span></div>
+  <div class="spec"><small>Caption / error</small><div style="font-size:12px;color:#5f6f7a">Minimal 8 karakter</div><span class="meta">12px · 500–700</span></div>
+  <div class="spec"><small>Tulisan tangan</small><div class="hand">selamat datang lagi</div><span class="meta">19–26px · 700 · Caveat</span></div>
+</div></section>
+
+<section id="warna"><div class="wrap">
+  <div class="sec-head"><span class="kicker">03</span><h2>Warna</h2><p>Teal-dark <code>#087F76</code> adalah warna aksi utama (kontras ≥ 4.5:1 dengan putih).</p></div>
+
+  <div class="sub" style="margin-top:0">Palet tema redesign</div>
+  <div class="grid g5">
+    <div class="sw"><i style="background:#13263e"></i><div><b>Navy</b><code>#13263E</code><span>teks &amp; judul</span></div></div>
+    <div class="sw"><i style="background:#10a89a"></i><div><b>Teal</b><code>#10A89A</code><span>aksen, <em style="font-size:15px">em</em></span></div></div>
+    <div class="sw"><i style="background:#087f76"></i><div><b>Teal dark</b><code>#087F76</code><span>aksi utama</span></div></div>
+    <div class="sw"><i style="background:#066a63"></i><div><b>Teal hover</b><code>#066A63</code><span>hover tombol primer</span></div></div>
+    <div class="sw"><i style="background:#dff7ee"></i><div><b>Mint</b><code>#DFF7EE</code><span>feedback, ring fokus</span></div></div>
+    <div class="sw"><i style="background:#f0fbf7"></i><div><b>Mint light</b><code>#F0FBF7</code><span>kartu aktif/lembut</span></div></div>
+    <div class="sw"><i style="background:#fbfaf6"></i><div><b>Paper</b><code>#FBFAF6</code><span>latar marketing</span></div></div>
+    <div class="sw"><i style="background:#fffdf7"></i><div><b>Paper diary</b><code>#FFFDF7</code><span>latar buku Diary</span></div></div>
+    <div class="sw"><i style="background:#ffdc72"></i><div><b>Yellow</b><code>#FFDC72</code><span>dekor, streak</span></div></div>
+    <div class="sw"><i style="background:#ffc5ad"></i><div><b>Peach</b><code>#FFC5AD</code><span>penanda, ikon</span></div></div>
+    <div class="sw"><i style="background:#dcd3ff"></i><div><b>Lilac</b><code>#DCD3FF</code><span>ikon Insight</span></div></div>
+    <div class="sw"><i style="background:#ddecff"></i><div><b>Sky</b><code>#DDECFF</code><span>gradien latar</span></div></div>
+    <div class="sw"><i style="background:#fff8df;border-bottom:1px solid #f1dfa2"></i><div><b>Cream</b><code>#FFF8DF</code><span>catatan, kuota</span></div></div>
+    <div class="sw"><i style="background:#cadbd7"></i><div><b>Garis</b><code>#CADBD7</code><span>border kartu</span></div></div>
+    <div class="sw"><i style="background:#5c6d79"></i><div><b>Teks sekunder</b><code>#5C6D79</code><span>deskripsi</span></div></div>
+  </div>
+
+  <div class="sub">Warna semantik — pengganti merah</div>
+  <div class="grid g4">
+    <div class="card" style="background:var(--att-bg);border-color:var(--att-b)"><b style="color:var(--att-tx)">Attention</b><p style="color:var(--att-tx)">Error &amp; perhatian</p><code>#FBEFE6 / #8A4A1F / #EBD2BF</code></div>
+    <div class="card" style="background:var(--warn-bg);border-color:var(--cream-b)"><b style="color:var(--warn-tx)">Warning</b><p style="color:var(--warn-tx)">Kuota, premium</p><code>#FEF5D4 / #7A5200</code></div>
+    <div class="card" style="background:var(--ok-bg)"><b style="color:var(--ok-tx)">Success</b><p style="color:var(--ok-tx)">Aktif, terverifikasi</p><code>#D8F5E8 / #1A5C36</code></div>
+    <div class="card" style="background:var(--info-bg)"><b style="color:var(--info-tx)">Info</b><p style="color:var(--info-tx)">Informasi netral</p><code>#E4F2FC / #1A4E75</code></div>
+  </div>
+  <div class="nope"><b>Dilarang</b> <span class="strike">#ef4444</span> <span class="strike">#dc2626</span> <span class="strike">red</span> dan tint merah apa pun di UI pengguna. Aksi destruktif (mis. Keluar) memakai clay + ikon.</div>
+
+  <div class="sub">Palet mood — sumber: <code>src/lib/mood/palette.ts</code> (jangan ditulis ulang)</div>
+  <div class="grid g5">
+    <div class="mood" style="--b:rgba(43,108,176,.35);--t:rgba(43,108,176,.18);--c:#2B6CB0"><svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="10" fill="rgba(43,108,176,.12)" stroke="#2B6CB0" stroke-width="1.4"/><circle cx="8" cy="9.5" r="1.2" fill="#2B6CB0"/><circle cx="14" cy="9.5" r="1.2" fill="#2B6CB0"/><path d="M5 16s2-3 6-3 6 3 6 3" stroke="#2B6CB0" stroke-width="1.6" stroke-linecap="round"/></svg><b>Sangat Sedih</b><small>1 · #2B6CB0</small></div>
+    <div class="mood" style="--b:rgba(124,92,191,.35);--t:rgba(124,92,191,.18);--c:#7C5CBF"><svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="10" fill="rgba(124,92,191,.12)" stroke="#7C5CBF" stroke-width="1.4"/><circle cx="8" cy="9.5" r="1.2" fill="#7C5CBF"/><circle cx="14" cy="9.5" r="1.2" fill="#7C5CBF"/><path d="M5.5 15.5s1.5-2 5.5-2 5.5 2 5.5 2" stroke="#7C5CBF" stroke-width="1.6" stroke-linecap="round"/></svg><b>Sedih</b><small>2 · #7C5CBF</small></div>
+    <div class="mood" style="--b:rgba(42,122,116,.35);--t:rgba(42,122,116,.18);--c:#2A7A74"><svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="10" fill="rgba(42,122,116,.12)" stroke="#2A7A74" stroke-width="1.4"/><circle cx="8" cy="9.5" r="1.2" fill="#2A7A74"/><circle cx="14" cy="9.5" r="1.2" fill="#2A7A74"/><path d="M7.5 15H14.5" stroke="#2A7A74" stroke-width="1.6" stroke-linecap="round"/></svg><b>Biasa Aja</b><small>3 · #2A7A74</small></div>
+    <div class="mood" style="--b:rgba(59,131,24,.35);--t:rgba(59,131,24,.18);--c:#3B8318"><svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="10" fill="rgba(59,131,24,.12)" stroke="#3B8318" stroke-width="1.4"/><circle cx="8" cy="9.5" r="1.2" fill="#3B8318"/><circle cx="14" cy="9.5" r="1.2" fill="#3B8318"/><path d="M6 14s1.5 2.5 5 2.5 5-2.5 5-2.5" stroke="#3B8318" stroke-width="1.6" stroke-linecap="round"/></svg><b>Senang</b><small>4 · #3B8318</small></div>
+    <div class="mood" style="--b:rgba(168,101,0,.35);--t:rgba(168,101,0,.18);--c:#A86500"><svg viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="10" fill="rgba(168,101,0,.12)" stroke="#A86500" stroke-width="1.4"/><circle cx="8" cy="9.5" r="1.2" fill="#A86500"/><circle cx="14" cy="9.5" r="1.2" fill="#A86500"/><path d="M5 13.5s2 3 6 3 6-3 6-3" stroke="#A86500" stroke-width="1.6" stroke-linecap="round"/></svg><b>Sangat Senang</b><small>5 · #A86500</small></div>
+  </div>
+  <p class="cap">Ramp dingin → hangat, tanpa merah. Level Baseline: Beginner = teal (skor 3), Intermediate = amber (skor 5).</p>
+</div></section>
+
+<section id="bentuk"><div class="wrap">
+  <div class="sec-head"><span class="kicker">04</span><h2>Bentuk, jarak, bayangan</h2><p>Ciri khas: sudut tidak simetris seperti halaman buku, dan bayangan keras berwarna mint.</p></div>
+  <div class="grid g2" style="gap:28px">
+    <div class="shape a"><h3>Kartu utama</h3><p><code>radius 7px 28px 7px 28px</code><br />bayangan <code>13px 14px 0 mint</code> + lembut · border 1px #C9DFDA · padding 38px</p></div>
+    <div class="shape b"><h3>Banner sapaan</h3><p><code>radius 24px 7px 24px 7px</code><br />latar mint-light · dekor lingkaran kuning</p></div>
+    <div class="shape c"><h3>Hero / state kosong</h3><p><code>radius 20px 6px 20px 6px</code><br />aksen garis peach 3px di kiri · bayangan 7px mint</p></div>
+    <div class="shape d"><h3>Elemen terpilih</h3><p><code>border 2px teal-dark + ring 0 0 0 3px mint</code><br />kartu entri aktif, hari terpilih, pilihanmu</p></div>
+  </div>
+  <div class="sub">Aturan lain</div>
+  <ul class="ul">
+    <li>Radius elemen kecil 9–12px, pil 999px; mobile memperkecil radius &amp; bayangan (<code>7px 8px 0 mint</code>).</li>
+    <li>Jarak kelipatan 4/8px. Padding kartu 22–38px desktop, 18–22px mobile.</li>
+    <li>Dekorasi (lingkaran tebal kuning/peach, doodle panah, bintang, penanda halaman) selalu <code>aria-hidden</code> dan <code>pointer-events:none</code>.</li>
+  </ul>
+</div></section>
+
+<section id="tombol"><div class="wrap">
+  <div class="sec-head"><span class="kicker">05</span><h2>Tombol</h2><p>Satu aksi primer per tampilan. Tombol tidak boleh tanpa aksi nyata; submit tidak boleh bisa diklik ganda.</p></div>
+
+  <div class="demo">
+    <div><button class="btn p">Masuk</button><div class="cap">Primer · 48–52px · 800</div></div>
+    <div><button class="btn s">Kembali</button><div class="cap">Sekunder</div></div>
+    <div><button class="btn g"><b>G</b> Masuk dengan Google</button><div class="cap">Google</div></div>
+    <div><button class="btn pr">👑 Lihat Premium</button><div class="cap">Premium (cream)</div></div>
+    <div><button class="btn l">Lupa password?</button><div class="cap">Link</div></div>
+    <div><button class="btn i" aria-label="Sebelumnya">‹</button> <button class="btn i" aria-label="Berikutnya">›</button><div class="cap">Ikon 44×44</div></div>
+    <div><button class="btn chipb">Soal sekolah</button><div class="cap">Chip topik</div></div>
+    <div><button class="btn dis" disabled>Kirim</button><div class="cap">Disabled</div></div>
+    <div><button class="btn p focus">Fokus</button><div class="cap">Fokus keyboard</div></div>
+    <div><button class="btn att">Keluar</button><div class="cap">Aksi destruktif (clay)</div></div>
+  </div>
+
+  <div class="sub">Katalog tombol per halaman</div>
+  <div class="tblwrap"><table>
+    <tr><th>Halaman</th><th>Tombol</th><th>Fungsi</th></tr>
+    <tr><td>Login</td><td><b>Masuk</b> · Masuk dengan Google · Lupa password? · Daftar Gratis</td><td><code>signIn.email</code> / <code>signIn.social</code> / <code>/forgot-password</code> / <code>/register</code></td></tr>
+    <tr><td>Register 1</td><td><b>Daftar &amp; Verifikasi</b> · Daftar dengan Google · Masuk</td><td><code>signUp.email</code> / Google / <code>/login</code></td></tr>
+    <tr><td>Verifikasi email</td><td><b>Kirim Ulang Verifikasi</b> (jeda 30 dtk) · Ganti email</td><td><code>sendVerificationEmail</code> / kembali ke form</td></tr>
+    <tr><td>Register 2–3</td><td><b>Lanjut</b> · Kembali ke akun · <b>Selesai</b> · Kembali</td><td>alur existing <code>completeProfile=1</code></td></tr>
+    <tr><td>Dashboard</td><td><b>Mulai Bercerita</b></td><td>→ <code>/diary</code> (TemanCerita)</td></tr>
+    <tr><td>Dashboard · riwayat</td><td>‹ › · pemilih bulan · <b>Kembali ke hari ini</b> · Coba lagi</td><td>navigasi periode &amp; muat ulang</td></tr>
+    <tr><td>Kartu Brave Choice</td><td><b>Jelajahi Pilihan</b> / <b>Coba Skenario Lain</b></td><td>buka modal</td></tr>
+    <tr><td>Kartu Insight</td><td><b>Lihat Insight</b> (premium) · <b>Buka dengan Premium</b> (gratis)</td><td><code>/insight</code> / <code>/subscription</code></td></tr>
+    <tr><td>Kartu Baseline</td><td><b>Mulai refleksi</b> / <b>Kerjakan kembali</b></td><td><code>/baseline</code></td></tr>
+    <tr><td>Modal Brave Choice</td><td><b>Coba Skenario Lain</b> · Kembali ke Dashboard / Lanjutkan Menulis · Lihat Premium · Ulangi dari Awal · Lewati situasi ini · Tutup</td><td>sesuai kuota &amp; asal pembukaan</td></tr>
+    <tr><td>Diary · sidebar</td><td>Kembali · Ciutkan riwayat · ‹ › bulan · <b>Hari Ini</b> · Brave Choice · Upgrade Premium</td><td><code>useDiary</code> / <code>useBraveChoice</code></td></tr>
+    <tr><td>Diary · percakapan</td><td>Riwayat · Entry sebelumnya/berikutnya · starter · <b>Kirim pesan</b> · Upgrade → · Muat ulang diary</td><td><code>handleSendMessage</code> dst.</td></tr>
+    <tr><td>Legal</td><td>Syarat &amp; Ketentuan · Kebijakan Privasi</td><td><code>/terms</code> · <code>/privacy</code></td></tr>
+  </table></div>
+</div></section>
+
+<section id="form"><div class="wrap">
+  <div class="sec-head"><span class="kicker">06</span><h2>Form &amp; status</h2><p>Input 52px, radius 11px. Error memakai clay dengan ikon dan pesan di dekat field.</p></div>
+  <div class="grid g3">
+    <div class="field"><label>Email</label><input class="input" placeholder="email@contoh.com" /><span class="hint">Normal</span></div>
+    <div class="field"><label>Email</label><input class="input f" value="cia@contoh.com" /><span class="hint">Fokus · ring mint 4px</span></div>
+    <div class="field"><label>Email</label><input class="input e" value="email-salah" /><span class="err">⚠ Format email tidak valid</span></div>
+  </div>
+  <div class="grid g2" style="margin-top:18px">
+    <div class="field"><label>Email Orang Tua / Wali <em2>Opsional</em2></label><input class="input" placeholder="email-orangtua@contoh.com" /><span class="hint">Kosongkan jika tidak ingin mengirim laporan.</span></div>
+    <div><div class="kicker" style="margin-bottom:12px">Stepper registrasi</div>
+      <div class="stepper"><div class="done"><i>✓</i>Akun</div><div class="act"><i>2</i>Data Diri</div><div><i>3</i>Laporan</div></div></div>
+  </div>
+
+  <div class="sub">Alert &amp; catatan</div>
+  <div class="grid g2">
+    <div class="alert att"><span>ⓘ</span><div><b>Login gagal</b>Email atau password tidak valid.</div></div>
+    <div class="alert cream"><span>ⓘ</span><div><b>Kesempatan hari ini sudah habis</b>Lanjut besok, atau buka akses tanpa batas dengan Premium.</div></div>
+    <div class="alert mint"><span>💡</span><div><b>Ada langkah lain yang bisa kamu coba</b>Feedback suportif (mint, garis teal di kiri).</div></div>
+    <div class="alert info"><span>ⓘ</span><div><b>Informasi</b>Pesan netral dengan warna info.</div></div>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px">
+    <span class="badge" style="background:#edf3f2;color:#55646f">BELUM AKTIF</span>
+    <span class="badge" style="background:#fff0b5;color:#6b5100">PREMIUM</span>
+    <span class="badge" style="background:#e3f5d8;color:#2f6a12">TERVERIFIKASI</span>
+    <span class="badge" style="background:var(--mint);color:var(--teal-dark)">Sisa 5</span>
+  </div>
+  <ul class="ul" style="margin-top:18px">
+    <li>Fokus: border teal-dark + ring mint 4px; tombol/link outline 3px teal-dark offset 3px.</li>
+    <li>Wajib: <code>aria-describedby</code>, <code>aria-invalid</code>, <code>role="alert"</code>, <code>autocomplete</code> yang benar; Enter men-submit; tombol tampil/sembunyi password <code>type="button"</code>.</li>
+    <li>Loading: tombol disabled + spinner + <code>aria-busy</code> + teks “Memproses…”.</li>
+  </ul>
+</div></section>
+
+<section id="layout"><div class="wrap">
+  <div class="sec-head"><span class="kicker">07</span><h2>Pola layout</h2><p>Breakpoint: <b>≤ 980px</b> sidebar menjadi drawer · <b>≤ 720px</b> mobile · <b>≤ 390px</b> sangat sempit. Dashboard memakai container query.</p></div>
+  <div class="grid g2">
+    <div class="wf"><h4>Auth <span class="pill">2 kolom</span></h4>
+      <div class="row wf-auth"><div class="row"><div class="box" style="height:34px">kicker + judul Fraunces</div><div class="box" style="height:80px">kolase catatan + mood (panel visual)</div></div>
+      <div class="row"><div class="box" style="height:30px">Google</div><div class="bar"></div><div class="box" style="height:30px">Email</div><div class="box" style="height:30px">Password</div><div class="box" style="height:34px;background:var(--teal-dark);color:#fff;border:0">Masuk</div></div></div>
+      <p class="cap">Mobile: form lebih dulu, panel visual diringkas di bawah.</p></div>
+
+    <div class="wf"><h4>Dashboard <span class="pill">shell + 4 seksi</span></h4>
+      <div class="row wf-dash" style="height:150px"><div class="box">Sidebar<br />(shell existing)</div><div class="row" style="grid-column:2/5;grid-template-rows:auto auto 1fr auto"><div class="box" style="height:26px">Sapaan + Mulai Bercerita</div><div class="box" style="height:26px;background:#d6efe9">Ringkasan aktivitas</div><div class="box">Riwayat perasaan · 7 hari + datepicker</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"><div class="box" style="height:26px">Brave</div><div class="box" style="height:26px">Insight</div><div class="box" style="height:26px">Refleksi</div></div></div></div></div>
+
+    <div class="wf"><h4>Diary <span class="pill">buku</span></h4>
+      <div class="row wf-diary" style="height:150px"><div class="row" style="grid-template-rows:auto auto auto 1fr auto"><div class="box" style="height:20px">Kembali</div><div class="box" style="height:20px">Tanggal · ‹ Hari Ini ›</div><div class="box" style="height:20px">Brave Choice</div><div class="box">Daftar entri</div><div class="box" style="height:18px">Streak</div></div>
+      <div class="row" style="grid-template-rows:auto 1fr auto"><div class="box" style="height:26px">Tanggal (kiri) ………… mood · entri ‹ › (kanan)</div><div class="box">AI di kiri · kamu di kanan</div><div class="box" style="height:26px">Kolom tulis selebar header</div></div></div>
+      <p class="cap">Sidebar 80% (248px). Header, thread, composer: padding kiri 32px, kanan 56px.</p></div>
+
+    <div class="wf"><h4>Modal Brave Choice <span class="pill">sheet</span></h4>
+      <div class="row" style="max-width:340px;margin:auto"><div class="box" style="height:34px;background:var(--mint-light)">Header · kompas peach · “3 kesempatan tersisa hari ini”</div><div class="box" style="height:44px">Situasinya</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px"><div class="box" style="height:48px">Pilihan A</div><div class="box" style="height:48px;border:2px solid var(--teal-dark)">Pilihan B · Pilihanmu</div></div><div class="box" style="height:40px;background:var(--mint)">Feedback 3 langkah</div><div class="box" style="height:30px;background:var(--teal-dark);color:#fff;border:0">Coba Skenario Lain</div></div>
+      <p class="cap">Mobile: bottom sheet penuh lebar, pilihan bertumpuk.</p></div>
+  </div>
+  <div class="sub">Halaman Legal</div>
+  <p style="margin:0;color:var(--muted)">Hero + kotak <b>“Draf untuk ditinjau”</b> (clay) + daftar isi sticky di kiri (desktop) + seksi bernomor dengan judul Fraunces.</p>
+</div></section>
+
+<section id="copy"><div class="wrap">
+  <div class="sec-head"><span class="kicker">08</span><h2>Copywriting</h2><p>Bahasa Indonesia, sapaan “kamu”, nada hangat dan sederhana. Jangan menggurui, menilai karakter, atau menjanjikan hasil pasti.</p></div>
+
+  <div class="grid g2">
+    <div>
+      <div class="sub" style="margin-top:0">Istilah baku</div>
+      <div class="say">
+        <div class="ok"><small>Pakai</small><b>TemanCerita</b> (satu kata) · <b>Brave Choice</b> · <b>Refleksi Awal</b> + “Baseline Assessment” · <b>Riwayat Diary</b> · <b>Streak N hari</b></div>
+        <div class="no"><small>Jangan</small><span class="strike">Buddy</span> · <span class="strike">AI Companion</span> · <span class="strike">Brave Choice Quiz</span> · <span class="strike">soal</span> · <span class="strike">hari mencatat</span></div>
+      </div>
+    </div>
+    <div>
+      <div class="sub" style="margin-top:0">Kata &amp; elemen terlarang</div>
+      <div class="say">
+        <div class="no"><small>Di Brave Choice</small><span class="strike">benar / salah</span> · <span class="strike">kurang tepat</span> · <span class="strike">coba pikirkan lagi</span> · <span class="strike">bijak</span> (label) · <span class="strike">% tepat</span> · <span class="strike">grafik akurasi</span> · <span class="strike">tanda silang</span></div>
+        <div class="ok"><small>Gantinya</small>“Pilihanmu” · “Ada langkah lain yang bisa kamu coba” · “Langkah ini bisa membantumu” · “3 latihan diselesaikan”</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sub">Pola feedback Brave Choice — 3 langkah</div>
+  <div class="flow">
+    <div><b>1 · Pahami</b>“Wajar kalau kamu ingin masalahnya cepat selesai.” <span style="color:#66757d;font-size:12.5px">(per kategori; memvalidasi perasaan, tidak membenarkan tindakan berisiko)</span></div>
+    <div><b>2 · Langkah yang disarankan</b>Teks opsi rekomendasi dari bank soal.</div>
+    <div><b>3 · Alasan / yang perlu diperhatikan</b>Penjelasan dari bank soal; risiko tetap dijelaskan.</div>
+  </div>
+  <div class="alert mint" style="margin-top:14px"><span>💡</span><div style="width:100%"><b style="font-family:var(--serif);font-size:17px">Ada langkah lain yang bisa kamu coba</b>
+    <p style="margin:6px 0">Wajar kalau kamu ingin masalahnya cepat selesai atau tergiur kesempatan mendapat uang.</p>
+    <div class="suggest"><span>Langkah yang disarankan</span><b>Minta dasar tertulis, jangan bayar, dan konsultasi ke kampus/keluarga/layanan hukum.</b></div>
+    <p style="margin:6px 0">Ancaman denda tanpa kontrak yang jelas perlu dicek. Bukti tertulis dan pendamping membantumu mengambil keputusan.</p></div></div>
+
+  <div class="sub">Pesan sistem baku</div>
+  <div class="tblwrap"><table>
+    <tr><th>Situasi</th><th>Teks</th></tr>
+    <tr><td>Login gagal</td><td>Email atau password tidak valid.</td></tr>
+    <tr><td>Email belum terverifikasi</td><td>Email belum terverifikasi. Silakan cek inbox/spam untuk verifikasi.</td></tr>
+    <tr><td>Riwayat mood gagal</td><td>Riwayat mood gagal dimuat. Coba lagi untuk melihat catatanmu.</td></tr>
+    <tr><td>Hari kosong</td><td><b>Belum dicatat</b> — Tidak ada check-in mood pada tanggal ini. Tidak apa-apa—kamu bisa mulai lagi kapan saja.</td></tr>
+    <tr><td>Hari mendatang</td><td>Belum tiba</td></tr>
+    <tr><td>Skenario gagal dimuat</td><td>Skenario belum berhasil dimuat. Coba lagi.</td></tr>
+    <tr><td>Pilihan belum tersimpan</td><td>Pilihanmu belum tersimpan. Coba pilih lagi.</td></tr>
+    <tr><td>Pesan diary gagal</td><td>Pesan belum terkirim. … Ceritamu masih ada di kolom tulis. Kirim lagi untuk mencoba.</td></tr>
+    <tr><td>Kuota Brave Choice</td><td>Sisa kesempatan hari ini: 3 · 3 kesempatan tersisa hari ini · Kesempatan hari ini sudah habis.</td></tr>
+    <tr><td>Batas sesi diary</td><td>Batas 15 sesi diary bulan ini tercapai. Upgrade ke Premium untuk menulis tanpa batas.</td></tr>
+    <tr><td>Diary lampau</td><td>Entri lampau tidak bisa diedit - pilih Hari Ini untuk menulis baru.</td></tr>
+    <tr><td>Placeholder diary</td><td>Tulis ceritamu di sini...</td></tr>
+    <tr><td>Penutup suportif</td><td>Pelan-pelan tetap berarti.</td></tr>
+  </table></div>
+  <p class="cap">Angka harus jujur: “3 latihan diselesaikan” (bukan “skenario unik”) karena skenario bisa berulang. Halaman legal adalah draf — jangan menulis klaim hukum yang tidak sesuai perilaku aplikasi.</p>
+</div></section>
+
+<section id="a11y"><div class="wrap">
+  <div class="sec-head"><span class="kicker">09</span><h2>Aksesibilitas &amp; state data</h2></div>
+  <div class="grid g2">
+    <div class="card"><h3>Aksesibilitas</h3><ul class="ul">
+      <li>Target sentuh ≥ 44×44px; teks ≥ 12px.</li>
+      <li>Fokus terlihat; modal menjebak fokus, Escape menutup, fokus kembali ke pemicu.</li>
+      <li><code>role="status"</code>/<code>aria-live</code> untuk loading; <code>role="alert"</code> untuk error; <code>aria-pressed</code>/<code>aria-current</code> untuk pilihan.</li>
+      <li>Status tidak hanya warna: hari mendatang = garis diagonal + “Belum tiba”.</li>
+      <li>Animasi ≤ 0.4s; mati/lambat dengan <code>prefers-reduced-motion</code>.</li>
+      <li>Mobile: input 16px, <code>safe-area-inset-bottom</code>, tanpa horizontal scroll.</li></ul></div>
+    <div class="card"><h3>State data</h3><div class="tblwrap"><table>
+      <tr><th>State</th><th>Aturan</th></tr>
+      <tr><td>Loading</td><td><code>PageLoader</code> halaman; spinner kecil + teks untuk bagian</td></tr>
+      <tr><td>Kosong</td><td>hanya bila data memang kosong; teks suportif + langkah berikutnya</td></tr>
+      <tr><td>Error</td><td>pesan jelas + “Coba lagi”; jangan diganti state kosong</td></tr>
+      <tr><td>Terkunci</td><td>kotak cream + tautan nyata ke <code>/subscription</code></td></tr>
+      <tr><td>Read-only</td><td>ikon gembok + “Hanya baca”; input diganti penjelasan</td></tr></table></div></div>
+  </div>
+</div></section>
+
+<section id="css"><div class="wrap">
+  <div class="sec-head"><span class="kicker">10</span><h2>Struktur &amp; isolasi CSS</h2><p>Semua selector berada di dalam scope; jangan menulis <code>button {}</code> atau <code>h1 {}</code> global. Kelas berprefiks halaman.</p></div>
+  <div class="tblwrap"><table>
+    <tr><th>Area</th><th>Scope</th><th>File</th></tr>
+    <tr><td>Landing / marketing</td><td><code>.tt-landing</code></td><td><code>components/landing/home/landing-redesign.css</code></td></tr>
+    <tr><td>Login / Register</td><td><code>.tt-landing.tt-auth-redesign</code></td><td><code>components/auth/redesign/auth-redesign.css</code></td></tr>
+    <tr><td>Legal</td><td><code>.tt-landing.legal-page</code></td><td><code>components/landing/legal/legal-redesign.css</code></td></tr>
+    <tr><td>Dashboard</td><td><code>.tt-dash</code> (+ container <code>dash</code>)</td><td><code>features/home/components/home-dashboard-redesign.css</code></td></tr>
+    <tr><td>Brave Choice</td><td><code>.bc-overlay</code> (modal di-portal ke body)</td><td><code>features/diary/components/brave-choice.css</code></td></tr>
+    <tr><td>Diary</td><td><code>.tt-diary</code> (prefix <code>dy-</code>)</td><td><code>features/diary/components/diary-redesign.css</code></td></tr>
+  </table></div>
+  <ul class="ul" style="margin-top:16px">
+    <li>Pakai ulang komponen existing: <code>Button</code>, <code>Input</code>, <code>PasswordInput</code>, <code>Select</code>, <code>Alert</code>, <code>AuthField</code>, <code>CalendarDropdown</code>, <code>MoodFaceIcon</code>, <code>PageLoader</code>.</li>
+    <li>Override komponen shared lewat selector berskop (mis. <code>.tt-diary .dy-date-picker button</code>).</li>
+    <li>Logo resmi <code>/img/LOGO_TEMANTUMBUH.svg</code> via <code>next/image</code>. Sidebar Diary <code>zoom: .8</code> hanya di desktop.</li>
+  </ul>
+</div></section>
+
+<section id="checklist"><div class="wrap">
+  <div class="sec-head"><span class="kicker">11</span><h2>Checklist sebelum PR FE</h2></div>
+  <ul class="check">
+    <li>Font ≥ 12px; hanya Jakarta / Fraunces / Caveat sesuai perannya.</li>
+    <li>Tidak ada merah; error memakai attention, peringatan memakai cream.</li>
+    <li>Warna mood diambil dari <code>MOOD_COLORS</code>.</li>
+    <li>Gaya berada di scope halaman; halaman lain tidak berubah.</li>
+    <li>Tombol ≥ 44px, ada fokus, tidak ada tombol tanpa aksi, submit anti-ganda.</li>
+    <li>Copy mengikuti istilah baku &amp; nada suportif.</li>
+    <li>Loading / kosong / error / sukses semua ditangani.</li>
+    <li>Desktop, tablet (768px), mobile (375px) tanpa horizontal overflow.</li>
+    <li>Logika, API, payload tidak berubah; tes terkait diperbarui.</li>
+    <li><code>npm run lint</code>, <code>npx tsc --noEmit</code>, <code>npm test</code>, <code>npm run build</code> lulus.</li>
+    <li>Setelah PR di-merge lalu di-revert: buat branch baru dari <code>dev</code> dan batalkan revert-nya, jangan buka PR dari branch lama.</li>
+  </ul>
+  <div class="sub">Utang desain</div>
+  <ul class="ul">
+    <li>Insight, Subscription, Profil, Pengaturan, Mood, Baseline, Admin belum memakai tema redesign.</li>
+    <li>Beberapa komponen lama masih memakai merah <code>#DC2626</code> (sidebar shell, Navbar, dialog keluar, Subscription, Admin, Insight).</li>
+    <li><code>features/diary/constants/tokens.ts</code> masih berisi alias warna lama; style inline dan <code>isMobile</code> dipindah ke CSS berskop saat disentuh.</li>
+    <li>Belum ada tes visual otomatis; verifikasi visual masih manual.</li>
+  </ul>
+</div></section>
+
+<footer><div class="wrap"><b>TemanTumbuh Design Guideline</b>Versi markdown lengkap: <code style="background:rgba(255,255,255,.1);color:#fff">docs/design-guideline.md</code> · Kelompok Cegukan · Universitas Padjadjaran</div></footer>
+</body>
+</html>

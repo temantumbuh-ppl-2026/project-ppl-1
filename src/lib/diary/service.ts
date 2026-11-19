@@ -1,18 +1,47 @@
-import { Sender } from "@/app/generated/prisma/client";
-
-import { generateDiaryAssistantReply } from "@/lib/diary/litellm";
 import {
+  ConversationState,
+  RiskLevel,
+  Sender,
+  type DiaryTopic,
+  type Prisma,
+} from "@/app/generated/prisma/client";
+
+import {
+  generateDiaryAssistantReply,
+  generateDiaryStructuredReply,
+} from "@/lib/diary/litellm";
+import { resolveConversationState } from "@/lib/diary/conversation-state";
+import { resolveConversationSummary } from "@/lib/diary/conversation-summary";
+import {
+  parseStoredActionOptions,
+  resolveActionOptions,
+} from "@/lib/diary/action-options";
+import { applyDiaryResponseGuardrails } from "@/lib/diary/response-guardrails";
+import {
+  prepareHighRiskAlert,
+  persistHighRiskAlert,
+} from "@/lib/diary/safety-alerts";
+import {
+  buildDiaryMoodGreetingPromptMessages,
   buildDiaryPromptMessages,
+  buildDiaryStructuredPromptMessages,
   type DiaryConversationTurn,
   type DiaryPromptMessage,
 } from "@/lib/diary/prompt";
+import {
+  DiaryStructuredOutputError,
+  diaryStructuredOutputSchema,
+  type DiaryStructuredOutput,
+} from "@/lib/diary/structured-output";
 import type {
+  DiaryConversationDto,
   DiaryEntryDto,
   DiaryMessageDto,
   DiaryMoodScore,
 } from "@/lib/diary/types";
-import { encrypt, decrypt } from "@/lib/encryption";
+import { encrypt, decrypt, EncryptionError } from "@/lib/encryption";
 import prisma from "@/lib/prisma";
+import { FREE_DIARY_LIMIT_PER_MONTH } from "@/lib/subscription/plans";
 
 type ListDiaryEntriesInput = {
   userId: string;
@@ -35,6 +64,7 @@ type SendDiaryChatInput = {
 
 type DiaryMoodInitiationInput = {
   userId: string;
+  moodLogId: string;
   moodScore: number;
   notes: string;
   timezone?: string;
@@ -48,7 +78,6 @@ type DiaryMessageRecord = {
 };
 
 const DEFAULT_TIMEZONE = "Asia/Jakarta";
-const FREE_DIARY_LIMIT_PER_MONTH = 15;
 const MAX_PROMPT_HISTORY_MESSAGES = 32;
 const PREVIEW_MAX_LENGTH = 96;
 const PERSIST_TRANSACTION_MAX_WAIT_MS = 10_000;
@@ -183,26 +212,83 @@ export async function listDiaryMessagesByEntryId({
   return decryptedMessages.map((message) => toDiaryMessageDto(message, tz));
 }
 
+export async function getDiaryConversationMetadata({
+  userId,
+  entryId,
+  timezone,
+}: ListDiaryMessagesInput): Promise<DiaryConversationDto | null> {
+  const diary = await findDiaryForUser({
+    userId,
+    entryId,
+    timezone: normalizeTimezone(timezone),
+  });
+
+  if (!diary) {
+    return null;
+  }
+
+  const metadata = await prisma.diary.findUnique({
+    where: { id: diary.id },
+    select: {
+      topics: true,
+      conversationState: true,
+      actionOptions: true,
+      safetyFlag: true,
+      riskLevel: true,
+    },
+  });
+
+  if (!metadata) {
+    return null;
+  }
+
+  const storedOptions = parseStoredActionOptions(
+    metadata.actionOptions ? decrypt(metadata.actionOptions) : null,
+  );
+  const actionOptions =
+    metadata.conversationState === ConversationState.ACTION &&
+    metadata.riskLevel === RiskLevel.NONE
+      ? storedOptions
+      : [];
+
+  return {
+    topics: metadata.topics,
+    conversationState: metadata.conversationState,
+    proactiveSuggestion: actionOptions[0] ?? null,
+    actionOptions,
+    safetyFlag: metadata.safetyFlag,
+    riskLevel: metadata.riskLevel,
+  };
+}
+
 export type PreparedDiaryChatSession = {
   userId: string;
   timezone: string;
   diary: {
     id: string;
     date: Date;
+    topics: DiaryTopic[];
+    conversationState: ConversationState;
+    conversationSummary: string | null;
+    actionOptions?: string[];
+    riskLevel: RiskLevel;
   } | null;
   todayKey: string;
   todayDate: Date;
   trimmedText: string;
   promptHistory: DiaryMessageRecord[];
   promptMessages: DiaryPromptMessage[];
+  structuredPromptMessages: DiaryPromptMessage[];
 };
 
-export async function prepareDiaryChatSession({
-  userId,
-  entryId,
-  messageText,
-  timezone,
-}: SendDiaryChatInput): Promise<PreparedDiaryChatSession> {
+export async function prepareDiaryChatSession(
+  { userId, entryId, messageText, timezone }: SendDiaryChatInput,
+  {
+    includeMetadata = false,
+  }: {
+    includeMetadata?: boolean;
+  } = {},
+): Promise<PreparedDiaryChatSession> {
   const tz = normalizeTimezone(timezone);
   const trimmedText = messageText.trim();
 
@@ -235,6 +321,14 @@ export async function prepareDiaryChatSession({
     timezone: tz,
   });
 
+  if (!diary && entryId !== "today") {
+    throw new DiaryServiceError(
+      "Sesi diary tidak ditemukan.",
+      404,
+      "SESSION_NOT_FOUND",
+    );
+  }
+
   if (diary && getDateKeyInTimeZone(diary.date, tz) !== todayKey) {
     throw new DiaryServiceError(
       "Entri lampau tidak bisa ditulis lagi. Pilih entri hari ini.",
@@ -242,6 +336,38 @@ export async function prepareDiaryChatSession({
       "READ_ONLY_ENTRY",
     );
   }
+
+  const currentMetadata =
+    includeMetadata && diary
+      ? await prisma.diary.findUnique({
+          where: { id: diary.id },
+          select: {
+            topics: true,
+            conversationState: true,
+            conversationSummary: true,
+            actionOptions: true,
+            riskLevel: true,
+          },
+        })
+      : null;
+  const preparedDiary = diary
+    ? {
+        ...diary,
+        topics: currentMetadata?.topics ?? [],
+        conversationState:
+          currentMetadata?.conversationState ?? ConversationState.EXPLORATION,
+        conversationSummary: currentMetadata?.conversationSummary
+          ? decrypt(currentMetadata.conversationSummary)
+          : null,
+        actionOptions:
+          currentMetadata?.conversationState === ConversationState.ACTION &&
+          currentMetadata.riskLevel === RiskLevel.NONE &&
+          currentMetadata.actionOptions
+            ? parseStoredActionOptions(decrypt(currentMetadata.actionOptions))
+            : [],
+        riskLevel: currentMetadata?.riskLevel ?? RiskLevel.NONE,
+      }
+    : null;
 
   if (!diary) {
     if (!user.isPremium) {
@@ -308,27 +434,51 @@ export async function prepareDiaryChatSession({
     todayLabel,
     conversation: conversationForPrompt,
   });
+  const structuredPromptMessages = buildDiaryStructuredPromptMessages({
+    userName: user.name || "Teman",
+    todayLabel,
+    conversation: conversationForPrompt,
+    currentTopics: preparedDiary?.topics ?? [],
+    currentState:
+      preparedDiary?.conversationState ?? ConversationState.EXPLORATION,
+    currentSummary: preparedDiary?.conversationSummary ?? null,
+    currentActionOptions: preparedDiary?.actionOptions ?? [],
+    sessionRiskLevel: preparedDiary?.riskLevel ?? RiskLevel.NONE,
+    isOpening: promptHistory.length === 0,
+  });
 
   return {
     userId,
     timezone: tz,
-    diary,
+    diary: preparedDiary,
     todayKey,
     todayDate,
     trimmedText,
     promptHistory,
     promptMessages,
+    structuredPromptMessages,
   };
 }
 
 export async function persistDiaryChatSession({
   session,
   assistantText,
+  assistantOutput,
 }: {
   session: PreparedDiaryChatSession;
   assistantText: string;
+  assistantOutput?: DiaryStructuredOutput;
 }) {
-  const normalizedAssistantText = assistantText.trim();
+  if (
+    assistantOutput &&
+    !diaryStructuredOutputSchema.safeParse(assistantOutput).success
+  ) {
+    throw new DiaryStructuredOutputError();
+  }
+
+  const normalizedAssistantText = (
+    assistantOutput?.reply ?? assistantText
+  ).trim();
 
   if (!normalizedAssistantText) {
     throw new DiaryServiceError(
@@ -338,15 +488,126 @@ export async function persistDiaryChatSession({
     );
   }
 
+  // Check encryption before opening the transaction. Metadata depending on the
+  // locked diary is encrypted inside it; any failure rolls back all writes.
+  const encryptedUserText = encrypt(session.trimmedText);
+  const encryptedAssistantText = encrypt(normalizedAssistantText);
+  const nextSummary = assistantOutput
+    ? resolveConversationSummary({
+        proposed: assistantOutput.conversationSummary,
+        previous: null,
+        userMessages: [
+          ...session.promptHistory
+            .filter((message) => message.senderType === Sender.USER)
+            .map((message) => message.content),
+          session.trimmedText,
+        ],
+      })
+    : null;
+  const encryptedSummary = nextSummary ? encrypt(nextSummary) : null;
+  const highRiskAlert = assistantOutput
+    ? prepareHighRiskAlert(assistantOutput.safety)
+    : null;
+  const { startDate, endDate } = getMonthRange(session.todayKey.slice(0, 7));
+
   const persisted = await prisma.$transaction(
     async (tx) => {
-      const finalDiary = session.diary
-        ? session.diary
+      let diaryId = session.diary?.id;
+      if (!diaryId) {
+        await lockDiaryDay(tx, session.userId, session.todayKey);
+        const existing = await tx.diary.findFirst({
+          where: {
+            userId: session.userId,
+            date: session.todayDate,
+            isActive: true,
+          },
+          orderBy: { createdAt: "asc" },
+          select: { id: true },
+        });
+        diaryId = existing?.id;
+      }
+      const current = diaryId
+        ? await lockDiaryForWrite(tx, session.userId, diaryId)
+        : null;
+      if (diaryId && !current) {
+        throw new DiaryServiceError(
+          "Sesi diary tidak ditemukan.",
+          404,
+          "SESSION_NOT_FOUND",
+        );
+      }
+      if (current && current.date.getTime() !== session.todayDate.getTime()) {
+        throw new DiaryServiceError(
+          "Entri lampau tidak bisa ditulis lagi. Pilih entri hari ini.",
+          403,
+          "READ_ONLY_ENTRY",
+        );
+      }
+
+      const riskLevel = higherRiskLevel(
+        current?.riskLevel ?? RiskLevel.NONE,
+        assistantOutput?.safety.riskLevel ?? RiskLevel.NONE,
+      );
+      const summary = encryptedSummary ?? current?.conversationSummary ?? null;
+      const hasPriorUserContext =
+        session.promptHistory.some(
+          (message) => message.senderType === Sender.USER,
+        ) ||
+        (current !== null &&
+          (await tx.diaryMessage.count({
+            where: { diaryId: current.id, senderType: Sender.USER },
+          })) > 0);
+      const conversationState = assistantOutput
+        ? resolveConversationState({
+            previous:
+              current?.conversationState ?? ConversationState.EXPLORATION,
+            proposed: assistantOutput.conversationState,
+            previousTopics: current?.topics ?? [],
+            nextTopics: assistantOutput.topics,
+            userMessage: session.trimmedText,
+            hasSummary: Boolean(summary),
+            hasPriorUserContext,
+            riskLevel,
+          })
+        : null;
+      const actionOptions = assistantOutput
+        ? resolveActionOptions({
+            proposed: assistantOutput.actionOptions,
+            state: conversationState!,
+            riskLevel,
+            hasSummary: Boolean(summary),
+          })
+        : [];
+      const proactiveSuggestion = actionOptions[0] ?? null;
+      const metadataData = assistantOutput
+        ? {
+            topics: assistantOutput.topics,
+            conversationState: conversationState!,
+            conversationSummary: summary,
+            proactiveSuggestion: proactiveSuggestion
+              ? encrypt(proactiveSuggestion)
+              : null,
+            actionOptions: actionOptions.length
+              ? encrypt(JSON.stringify(actionOptions))
+              : null,
+            safetyFlag: riskLevel !== RiskLevel.NONE,
+            riskLevel,
+          }
+        : null;
+      const finalDiary = current
+        ? metadataData
+          ? await tx.diary.update({
+              where: { id: current.id },
+              data: metadataData,
+              select: { id: true, date: true },
+            })
+          : current
         : await tx.diary.create({
             data: {
               userId: session.userId,
               date: session.todayDate,
               isActive: true,
+              ...(metadataData ?? {}),
             },
             select: {
               id: true,
@@ -358,7 +619,7 @@ export async function persistDiaryChatSession({
         data: {
           diaryId: finalDiary.id,
           senderType: Sender.USER,
-          content: encrypt(session.trimmedText),
+          content: encryptedUserText,
         },
         select: {
           id: true,
@@ -372,7 +633,7 @@ export async function persistDiaryChatSession({
         data: {
           diaryId: finalDiary.id,
           senderType: Sender.AI,
-          content: encrypt(normalizedAssistantText),
+          content: encryptedAssistantText,
         },
         select: {
           id: true,
@@ -382,8 +643,37 @@ export async function persistDiaryChatSession({
         },
       });
 
+      await persistHighRiskAlert(
+        tx,
+        finalDiary.id,
+        userMessage.id,
+        highRiskAlert,
+      );
+
+      const diarySessionsUsedThisMonth = await tx.diary.count({
+        where: {
+          userId: session.userId,
+          isActive: true,
+          date: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
+      });
+
       return {
         finalDiary,
+        conversation: assistantOutput
+          ? {
+              topics: assistantOutput.topics,
+              conversationState: conversationState!,
+              proactiveSuggestion,
+              actionOptions,
+              safetyFlag: riskLevel !== RiskLevel.NONE,
+              riskLevel,
+            }
+          : null,
+        diarySessionsUsedThisMonth,
         userMessage: {
           ...userMessage,
           content: session.trimmedText,
@@ -406,18 +696,6 @@ export async function persistDiaryChatSession({
     persisted.aiMessage,
   ];
 
-  const { startDate, endDate } = getMonthRange(session.todayKey.slice(0, 7));
-  const diarySessionsUsedThisMonth = await prisma.diary.count({
-    where: {
-      userId: session.userId,
-      isActive: true,
-      date: {
-        gte: startDate,
-        lte: endDate,
-      },
-    },
-  });
-
   return {
     aiMessage: toDiaryMessageDto(persisted.aiMessage, session.timezone),
     entry: {
@@ -429,7 +707,12 @@ export async function persistDiaryChatSession({
       ),
       isToday: true,
     },
-    diarySessionsUsedThisMonth,
+    diarySessionsUsedThisMonth: persisted.diarySessionsUsedThisMonth,
+    ...(assistantOutput
+      ? {
+          conversation: persisted.conversation!,
+        }
+      : {}),
   };
 }
 
@@ -444,47 +727,58 @@ export async function ensureDiaryShellFromMood({
   const todayKey = getDateKeyInTimeZone(new Date(), tz);
   const todayDate = parseDateKeyToUTCDate(todayKey);
 
-  const existingDiary = await prisma.diary.findFirst({
-    where: {
-      userId,
-      date: todayDate,
-      isActive: true,
-    },
-    include: {
-      messages: {
-        take: 1,
-      },
-    },
-  });
+  return prisma.$transaction(
+    async (tx) => {
+      await lockDiaryDay(tx, userId, todayKey);
+      const existingDiary = await tx.diary.findFirst({
+        where: {
+          userId,
+          date: todayDate,
+          isActive: true,
+        },
+        include: {
+          messages: {
+            take: 1,
+          },
+        },
+        orderBy: { createdAt: "asc" },
+      });
 
-  if (existingDiary) {
-    return {
-      diaryId: existingDiary.id,
-      shouldGenerateGreeting: existingDiary.messages.length === 0,
-      timezone: tz,
-      todayDate,
-    };
-  }
+      if (existingDiary) {
+        return {
+          diaryId: existingDiary.id,
+          shouldGenerateGreeting: existingDiary.messages.length === 0,
+          timezone: tz,
+          todayDate,
+        };
+      }
 
-  const diary = await prisma.diary.create({
-    data: {
-      userId,
-      date: todayDate,
-      isActive: true,
+      const diary = await tx.diary.create({
+        data: {
+          userId,
+          date: todayDate,
+          isActive: true,
+        },
+        select: { id: true },
+      });
+
+      return {
+        diaryId: diary.id,
+        shouldGenerateGreeting: true,
+        timezone: tz,
+        todayDate,
+      };
     },
-    select: { id: true },
-  });
-
-  return {
-    diaryId: diary.id,
-    shouldGenerateGreeting: true,
-    timezone: tz,
-    todayDate,
-  };
+    {
+      maxWait: PERSIST_TRANSACTION_MAX_WAIT_MS,
+      timeout: PERSIST_TRANSACTION_TIMEOUT_MS,
+    },
+  );
 }
 
 export async function generateDiaryGreetingFromMood({
   userId,
+  moodLogId,
   moodScore,
   notes,
   timezone,
@@ -499,56 +793,146 @@ export async function generateDiaryGreetingFromMood({
     where: { diaryId },
   });
 
-  if (existingMessageCount > 0) {
+  if (existingMessageCount > 0 && !notes.trim()) {
+    return;
+  }
+  const triggerMessageId = `mood-note:${moodLogId}`;
+  const alreadyProcessed = await prisma.diaryMessage.findUnique({
+    where: { id: triggerMessageId },
+    select: { id: true },
+  });
+  if (alreadyProcessed) return;
+
+  const [user, diary] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { name: true },
+    }),
+    prisma.diary.findFirst({
+      where: { id: diaryId, userId, isActive: true },
+      select: {
+        topics: true,
+        conversationState: true,
+      },
+    }),
+  ]);
+
+  if (!diary) {
     return;
   }
 
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { name: true },
-  });
-
-  const moodDesc = getMoodDescription(moodScore);
-  const aiPrompt = `(Sistem: User baru saja melakukan check-in hari ini. Ia merasa ${moodDesc}.${
-    notes ? ` Catatan yang ia tulis: "${notes}".` : ""
-  } Berikan sapaan pertama yang ramah, berempati dengan perasaannya sekarang, dan pancing ia untuk mulai bercerita di diary. Berbicaralah sesuai dengan persona sistemmu tanpa menyebutkan secara eksplisit bahwa instruksi ini berasal dari sistem.)`;
-
-  const todayLabel = formatDateLabel(todayDate, timezone);
-  const promptMessages = buildDiaryPromptMessages({
+  const promptMessages = buildDiaryMoodGreetingPromptMessages({
     userName: user?.name || "Teman",
-    todayLabel,
-    conversation: [
-      {
-        role: "user",
-        content: aiPrompt,
-      },
-    ],
+    todayLabel: formatDateLabel(todayDate, timezone),
+    currentTopics: diary.topics,
+    currentState: diary.conversationState,
+    currentSummary: null,
+    moodDescription: getMoodDescription(moodScore),
+    note: notes,
   });
 
   try {
-    const assistantText = await generateDiaryAssistantReply({
+    const generated = await generateDiaryStructuredReply({
       messages: promptMessages,
     });
-
-    if (assistantText.trim()) {
-      const latestMessageCount = await prisma.diaryMessage.count({
-        where: { diaryId },
-      });
-
-      if (latestMessageCount > 0) {
-        return;
-      }
-
-      await prisma.diaryMessage.create({
-        data: {
-          diaryId: diaryId,
-          senderType: Sender.AI,
-          content: encrypt(assistantText.trim()),
-        },
-      });
+    const parsed = diaryStructuredOutputSchema.safeParse(generated);
+    if (!parsed.success) {
+      throw new DiaryStructuredOutputError();
     }
+
+    const output = applyDiaryResponseGuardrails(parsed.data, notes);
+    const hasRisk = output.safety.riskLevel !== RiskLevel.NONE;
+    if (hasRisk && !notes.trim()) throw new DiaryStructuredOutputError();
+    const encryptedReply = encrypt(output.reply);
+    const encryptedNote = hasRisk ? encrypt(notes.trim()) : null;
+    const highRiskAlert = prepareHighRiskAlert(output.safety);
+
+    await prisma.$transaction(
+      async (tx) => {
+        // Both writers lock the row. Ordinary greetings must not arrive after
+        // chat has started, while a risky mood note still needs its own event.
+        const current = await lockDiaryForWrite(tx, userId, diaryId);
+        if (!current) {
+          return;
+        }
+        const duplicate = await tx.diaryMessage.findUnique({
+          where: { id: triggerMessageId },
+          select: { id: true },
+        });
+        if (duplicate) return;
+
+        const latestMessageCount = await tx.diaryMessage.count({
+          where: { diaryId },
+        });
+        if (latestMessageCount > 0 && !hasRisk) {
+          return;
+        }
+
+        const riskLevel = higherRiskLevel(
+          current.riskLevel,
+          output.safety.riskLevel,
+        );
+        await tx.diary.update({
+          where: { id: diaryId },
+          data: {
+            ...(latestMessageCount === 0
+              ? {
+                  topics: output.topics,
+                  conversationState: resolveConversationState({
+                    previous: current.conversationState,
+                    proposed: output.conversationState,
+                    previousTopics: current.topics,
+                    nextTopics: output.topics,
+                    userMessage: notes,
+                    hasSummary: false,
+                    riskLevel,
+                    isMoodGreeting: true,
+                  }),
+                  conversationSummary: null,
+                }
+              : {}),
+            proactiveSuggestion: null,
+            actionOptions: null,
+            safetyFlag: riskLevel !== RiskLevel.NONE,
+            riskLevel,
+          },
+        });
+        if (encryptedNote) {
+          // This is the user's actual mood note, not a story inferred from a score.
+          await tx.diaryMessage.create({
+            data: {
+              id: triggerMessageId,
+              diaryId,
+              senderType: Sender.USER,
+              content: encryptedNote,
+            },
+          });
+        }
+        await tx.diaryMessage.create({
+          data: {
+            diaryId,
+            senderType: Sender.AI,
+            content: encryptedReply,
+          },
+        });
+        await persistHighRiskAlert(
+          tx,
+          diaryId,
+          triggerMessageId,
+          highRiskAlert,
+        );
+      },
+      {
+        maxWait: PERSIST_TRANSACTION_MAX_WAIT_MS,
+        timeout: PERSIST_TRANSACTION_TIMEOUT_MS,
+      },
+    );
   } catch (error) {
-    console.error("Gagal menginisiasi diary dari mood:", error);
+    const serviceError = toDiaryServiceErrorForAiFailure(error);
+    console.error("Gagal menginisiasi diary dari mood.", {
+      code: serviceError.code,
+      status: serviceError.status,
+    });
   }
 }
 
@@ -558,7 +942,7 @@ export async function initiateDiaryFromMood(input: DiaryMoodInitiationInput) {
     timezone: input.timezone,
   });
 
-  if (!diaryShell.shouldGenerateGreeting) {
+  if (!diaryShell.shouldGenerateGreeting && !input.notes.trim()) {
     return;
   }
 
@@ -592,10 +976,23 @@ export function toDiaryServiceErrorForAiFailure(error: unknown) {
     return error;
   }
 
-  const rawMessage =
-    error instanceof Error
-      ? error.message
-      : "AI sedang tidak tersedia. Coba kirim lagi.";
+  if (error instanceof DiaryStructuredOutputError) {
+    return new DiaryServiceError(
+      "AI belum dapat memberi balasan yang valid. Coba kirim ulang pesanmu.",
+      502,
+      "AI_OUTPUT_INVALID",
+    );
+  }
+
+  if (error instanceof EncryptionError) {
+    return new DiaryServiceError(
+      "Data percakapan sedang tidak tersedia. Coba lagi nanti.",
+      503,
+      "DIARY_ENCRYPTION_UNAVAILABLE",
+    );
+  }
+
+  const rawMessage = error instanceof Error ? error.message : "";
 
   if (
     /respons kosong|response kosong|empty response|empty assistant text/i.test(
@@ -621,7 +1018,11 @@ export function toDiaryServiceErrorForAiFailure(error: unknown) {
     );
   }
 
-  return new DiaryServiceError(rawMessage, 503, "AI_UNAVAILABLE");
+  return new DiaryServiceError(
+    "AI sedang tidak tersedia. Coba kirim lagi.",
+    503,
+    "AI_UNAVAILABLE",
+  );
 }
 
 export async function sendDiaryChatMessage(input: SendDiaryChatInput) {
@@ -634,7 +1035,7 @@ export async function sendDiaryChatMessage(input: SendDiaryChatInput) {
       messages: session.promptMessages,
     });
   } catch (error) {
-    console.error("Diary AI generation error:", error);
+    console.error("Diary AI generation failed.");
 
     throw toDiaryServiceErrorForAiFailure(error);
   }
@@ -647,6 +1048,88 @@ export async function sendDiaryChatMessage(input: SendDiaryChatInput) {
   } catch (error) {
     throw toDiaryServiceErrorForAiFailure(error);
   }
+}
+
+export async function sendDiaryStructuredChatMessage(
+  input: SendDiaryChatInput,
+) {
+  const session = await prepareDiaryChatSession(input, {
+    includeMetadata: true,
+  });
+
+  return completePreparedDiaryStructuredChatSession(session);
+}
+
+export async function completePreparedDiaryStructuredChatSession(
+  session: PreparedDiaryChatSession,
+) {
+  try {
+    const generated = await generateDiaryStructuredReply({
+      messages: session.structuredPromptMessages,
+    });
+    const output = applyDiaryResponseGuardrails(generated, session.trimmedText);
+
+    return await persistDiaryChatSession({
+      session,
+      assistantText: output.reply,
+      assistantOutput: output,
+    });
+  } catch (error) {
+    console.error("Diary structured chat failed.", {
+      name: error instanceof Error ? error.name : "UnknownError",
+      status:
+        typeof error === "object" &&
+        error !== null &&
+        "status" in error &&
+        typeof error.status === "number"
+          ? error.status
+          : null,
+    });
+    throw toDiaryServiceErrorForAiFailure(error);
+  }
+}
+
+function higherRiskLevel(first: RiskLevel, second: RiskLevel): RiskLevel {
+  const priority = {
+    [RiskLevel.NONE]: 0,
+    [RiskLevel.ATTENTION]: 1,
+    [RiskLevel.HIGH]: 2,
+  };
+
+  return priority[first] >= priority[second] ? first : second;
+}
+
+type LockedDiary = {
+  id: string;
+  date: Date;
+  topics: DiaryTopic[];
+  conversationState: ConversationState;
+  conversationSummary: string | null;
+  riskLevel: RiskLevel;
+};
+
+async function lockDiaryDay(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  dateKey: string,
+) {
+  // Transaction-scoped, so pooling or a failed writer cannot leave a held lock.
+  const key = `diary:${userId}:${dateKey}`;
+  await tx.$queryRaw`SELECT 1 AS locked FROM pg_advisory_xact_lock(hashtextextended(${key}, 0))`;
+}
+
+async function lockDiaryForWrite(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  diaryId: string,
+): Promise<LockedDiary | null> {
+  const rows = await tx.$queryRaw<LockedDiary[]>`
+    SELECT "id", "date", "topics", "conversationState", "conversationSummary", "riskLevel"
+    FROM "diary"
+    WHERE "id" = ${diaryId} AND "userId" = ${userId} AND "isActive" = true
+    FOR UPDATE
+  `;
+  return rows[0] ?? null;
 }
 
 async function findDiaryForUser({
@@ -673,6 +1156,7 @@ async function findDiaryForUser({
         id: true,
         date: true,
       },
+      orderBy: { createdAt: "asc" },
     });
   }
 

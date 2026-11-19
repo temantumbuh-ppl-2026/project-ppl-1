@@ -9,6 +9,7 @@ import {
   LogOut,
   Users,
   BookOpen,
+  ShieldAlert,
   ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
@@ -18,7 +19,7 @@ import {
 import { authClient } from "@/lib/auth-client";
 import { LogoutConfirmDialog } from "@/components/ui/manual/logout-confirm-dialog";
 
-export type AdminPage = "overview" | "users" | "quiz";
+export type AdminPage = "overview" | "users" | "quiz" | "safety";
 
 const NAV: { id: AdminPage; label: string; href: string; icon: LucideIcon }[] =
   [
@@ -35,6 +36,12 @@ const NAV: { id: AdminPage; label: string; href: string; icon: LucideIcon }[] =
       href: "/admin/quiz",
       icon: BookOpen,
     },
+    {
+      id: "safety",
+      label: "Safety Monitoring",
+      href: "/admin/safety",
+      icon: ShieldAlert,
+    },
   ];
 
 const PAGE_META: Record<AdminPage, { title: string; sub: string }> = {
@@ -47,6 +54,10 @@ const PAGE_META: Record<AdminPage, { title: string; sub: string }> = {
     title: "BraveChoice CMS",
     sub: "Kelola soal Brave Choice per segmen usia",
   },
+  safety: {
+    title: "Safety Monitoring",
+    sub: "Tinjau alert keselamatan tanpa melihat isi percakapan",
+  },
 };
 
 const MOBILE_BREAKPOINT = 1024;
@@ -54,6 +65,7 @@ const MOBILE_BREAKPOINT = 1024;
 function getActivePage(pathname: string): AdminPage {
   if (pathname.startsWith("/admin/users")) return "users";
   if (pathname.startsWith("/admin/quiz")) return "quiz";
+  if (pathname.startsWith("/admin/safety")) return "safety";
   return "overview";
 }
 
@@ -82,13 +94,14 @@ function Initials({ name, size = 34 }: { name: string; size?: number }) {
         width: size,
         height: size,
         borderRadius: size * 0.3,
-        background: "linear-gradient(135deg, #1a9688 0%, #0f7a6e 100%)",
+        background:
+          "linear-gradient(135deg, var(--tt-button-primary) 0%, var(--tt-primary-700) 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         fontWeight: 800,
         fontSize: size * 0.37,
-        color: "#fff",
+        color: "var(--tt-surface)",
         flexShrink: 0,
         letterSpacing: "-0.02em",
       }}
@@ -253,7 +266,7 @@ function Sidebar({
           {(!collapsed || isMobile) && (
             <p
               style={{
-                fontSize: 10,
+                fontSize: 12,
                 fontWeight: 800,
                 letterSpacing: "0.12em",
                 color: "var(--tt-dashboard-text-3)",
@@ -290,7 +303,7 @@ function Sidebar({
                     ? "var(--tt-dashboard-active-text)"
                     : "var(--tt-dashboard-text-2)",
                   boxShadow: isActive
-                    ? "0 4px 14px rgba(26,150,136,0.22)"
+                    ? "0 4px 14px color-mix(in srgb, var(--tt-primary-500) 22%, transparent)"
                     : "none",
                   transition: "all 0.15s ease",
                   justifyContent: showLabel ? "flex-start" : "center",
@@ -416,7 +429,7 @@ function Topbar({
           {!isMobile && (
             <p
               style={{
-                fontSize: 11,
+                fontSize: 12,
                 color: "var(--tt-dashboard-text-3)",
                 marginTop: 2,
               }}
@@ -450,7 +463,7 @@ function Topbar({
             </p>
             <p
               style={{
-                fontSize: 11,
+                fontSize: 12,
                 color: "var(--tt-dashboard-text-3)",
                 whiteSpace: "nowrap",
               }}
@@ -471,7 +484,7 @@ function Topbar({
             borderRadius: 10,
             border: "none",
             background: "transparent",
-            color: "#DC2626",
+            color: "var(--tt-attention-text)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -580,7 +593,8 @@ export function AdminShell({
             flex: 1,
             overflowY: "auto",
             scrollbarWidth: "thin",
-            scrollbarColor: "rgba(167,210,205,0.5) transparent",
+            scrollbarColor:
+              "color-mix(in srgb, var(--tt-gray-200) 50%, transparent) transparent",
           }}
         >
           {children}

@@ -92,7 +92,7 @@ export function InsightReflectionSection({
                 className="relative overflow-hidden rounded-[28px] border px-6 py-6"
                 style={{
                   background:
-                    "linear-gradient(180deg, #F8FCFB 0%, #F2F9F7 100%)",
+                    "linear-gradient(180deg, var(--tt-gray-50) 0%, var(--tt-gray-50) 100%)",
                   borderColor: "rgba(25,39,44,0.06)",
                 }}
               >

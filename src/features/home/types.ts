@@ -43,15 +43,4 @@ export type SessionUser = {
   image?: string | null;
   isPremium?: boolean;
   currentStreak?: number;
-  parentEmail?: string | null;
 };
-
-export type ParentStatusResponse = {
-  email: string | null;
-  status: "pending" | "verified" | "expired" | null;
-  expiresAt: string | null;
-  reason: "rejected" | "expired" | null;
-  lastSentAt: string | null;
-  lastReportType: "free_summary" | "premium_pdf" | null;
-  lastReportStatus: "sent" | "failed" | null;
-} | null;
