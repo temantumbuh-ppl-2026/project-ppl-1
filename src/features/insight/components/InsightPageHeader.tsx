@@ -146,17 +146,15 @@ export function InsightPageHeader({
                   type="button"
                   onClick={handleInsightClick}
                   disabled={disabled}
-                  className={`inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[12px] font-semibold transition-all sm:px-4 sm:text-[12px] ${disabled ? "cursor-not-allowed opacity-70" : "hover:translate-y-[-1px]"}`}
+                  className={`inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-full px-3 text-[11px] font-semibold transition-all sm:px-4 sm:text-[12px] ${disabled ? "cursor-not-allowed opacity-70" : "hover:translate-y-[-1px]"}`}
                   style={{
                     background: disabled
-                      ? "var(--tt-gray-100)"
+                      ? "#E8F2F0"
                       : "var(--gradient-brand-btn)",
-                    color: disabled
-                      ? "var(--tt-dashboard-text-2)"
-                      : "var(--tt-surface)",
+                    color: disabled ? "var(--tt-dashboard-text-2)" : "#FFFFFF",
                     boxShadow: disabled
                       ? "none"
-                      : "0 8px 18px color-mix(in srgb, var(--tt-primary-500) 20%, transparent)",
+                      : "0 8px 18px rgba(26,150,136,0.20)",
                   }}
                 >
                   {isGenerating ? (
@@ -187,7 +185,7 @@ export function InsightPageHeader({
                   style={{ background: "var(--tt-dashboard-chip-bg)" }}
                 >
                   <div
-                    className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg text-[12px] font-black text-white"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-lg text-[10px] font-black text-white"
                     style={{ background: "var(--tt-dashboard-brand)" }}
                   >
                     {userImage ? (
@@ -230,7 +228,7 @@ export function InsightPageHeader({
                     <Link
                       href="/profile"
                       onClick={() => setProfileOpen(false)}
-                      className="flex cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[color-mix(in_srgb,_var(--tt-primary-500)_6%,_transparent)]"
+                      className="flex cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[rgba(26,150,136,0.06)]"
                       style={{ color: "var(--tt-dashboard-text)" }}
                     >
                       <User
@@ -250,8 +248,8 @@ export function InsightPageHeader({
                         void handleLogout();
                       }}
                       disabled={isLoggingOut}
-                      className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-tt-attention-bg disabled:cursor-not-allowed disabled:opacity-60"
-                      style={{ color: "var(--tt-attention-text)" }}
+                      className="flex w-full cursor-pointer items-center gap-2.5 px-4 py-3 text-[13px] font-semibold transition-colors hover:bg-[rgba(239,68,68,0.06)] disabled:cursor-not-allowed disabled:opacity-60"
+                      style={{ color: "#DC2626" }}
                     >
                       <LogOut size={15} /> Keluar
                     </button>
@@ -317,10 +315,7 @@ export function InsightPageHeader({
             <div className="flex items-center gap-3 mb-4">
               <div
                 className="flex h-10 w-10 items-center justify-center rounded-full"
-                style={{
-                  background:
-                    "color-mix(in srgb, var(--tt-primary-500) 12%, transparent)",
-                }}
+                style={{ background: "rgba(26,150,136,0.12)" }}
               >
                 <Sparkles
                   size={18}
@@ -351,8 +346,7 @@ export function InsightPageHeader({
                 className="flex-1 h-11 cursor-pointer rounded-xl text-[13px] font-semibold text-white transition-all hover:translate-y-[-1px]"
                 style={{
                   background: "var(--gradient-brand-btn)",
-                  boxShadow:
-                    "0 8px 18px color-mix(in srgb, var(--tt-primary-500) 20%, transparent)",
+                  boxShadow: "0 8px 18px rgba(26,150,136,0.20)",
                 }}
               >
                 Ya, Tampilkan

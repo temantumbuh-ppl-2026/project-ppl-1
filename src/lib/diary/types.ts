@@ -1,9 +1,3 @@
-import type {
-  ConversationState,
-  DiaryTopic,
-  RiskLevel,
-} from "@/app/generated/prisma/client";
-
 export type DiaryMoodScore = 1 | 2 | 3 | 4 | 5;
 
 export type DiaryEntryDto = {
@@ -20,13 +14,4 @@ export type DiaryMessageDto = {
   role: "ai" | "user";
   text: string;
   time: string;
-};
-
-export type DiaryConversationDto = {
-  topics: DiaryTopic[];
-  conversationState: ConversationState;
-  proactiveSuggestion: string | null;
-  actionOptions?: string[];
-  safetyFlag: boolean;
-  riskLevel: RiskLevel;
 };

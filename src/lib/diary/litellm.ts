@@ -1,10 +1,5 @@
 import OpenAI from "openai";
 import type { DiaryPromptMessage } from "@/lib/diary/prompt";
-import {
-  DiaryStructuredOutputError,
-  parseDiaryStructuredOutput,
-} from "@/lib/diary/structured-output";
-import type { DiaryStructuredOutput } from "@/lib/diary/structured-output";
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -37,30 +32,8 @@ type GenerateDiaryReplyStreamInput = {
 
 const DEFAULT_BASE_URL = "https://api.koboillm.com/v1";
 const DEFAULT_MODEL = "openai/gpt-5-mini";
-const DEFAULT_MAX_TOKENS = 2500;
-const RETRY_MAX_TOKENS = 5000;
-
-/** One model completion supplies both the user-facing reply and its metadata. */
-export async function generateDiaryStructuredReply({
-  messages,
-}: GenerateDiaryReplyInput): Promise<DiaryStructuredOutput> {
-  const { client, model } = createDiaryOpenAIClient();
-  const completion = (await client.chat.completions.create({
-    model,
-    max_tokens: RETRY_MAX_TOKENS,
-    messages,
-    response_format: { type: "json_object" },
-    ...({ cache: { "no-cache": true } } as Record<string, unknown>),
-  } as unknown as OpenAI.ChatCompletionCreateParamsNonStreaming)) as unknown as ChatCompletionLike;
-
-  if (completion.choices?.some((choice) => choice.finish_reason === "length")) {
-    throw new DiaryStructuredOutputError();
-  }
-
-  return parseDiaryStructuredOutput(extractAssistantText(completion), {
-    sanitize: true,
-  });
-}
+const DEFAULT_MAX_TOKENS = 600;
+const RETRY_MAX_TOKENS = 1400;
 
 export async function generateDiaryAssistantReply({
   messages,
@@ -109,6 +82,7 @@ export async function* generateDiaryAssistantReplyStream({
 
   const stream = await client.chat.completions.create({
     model,
+    temperature: 0.9,
     max_tokens: RETRY_MAX_TOKENS,
     presence_penalty: 0.4,
     frequency_penalty: 0.2,
@@ -149,7 +123,7 @@ function createDiaryOpenAIClient() {
     .trim()
     .replace(/\/$/, "");
 
-  const model = (process.env.LLM_MODEL || DEFAULT_MODEL).trim();
+  const model = DEFAULT_MODEL.trim();
   const client = new OpenAI({
     apiKey,
     baseURL: baseUrl,
@@ -174,6 +148,7 @@ async function callChatCompletions({
 }): Promise<ChatCompletionLike> {
   const completion = await client.chat.completions.create({
     model,
+    temperature: 0.9,
     max_tokens: maxTokens,
     presence_penalty: 0.4,
     frequency_penalty: 0.2,

@@ -9,6 +9,8 @@ export default function ProfilePage() {
       {({ data, refresh }) => (
         <ProfileContent
           profile={data.user}
+          parentStatus={data.parentStatus}
+          pendingParentEmail={data.pendingParentEmail}
           isGoogleLinked={data.isGoogleLinked}
           hasPassword={data.hasPassword}
           onRefresh={refresh}

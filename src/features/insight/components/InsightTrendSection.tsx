@@ -85,10 +85,10 @@ function HelperTooltip({ text }: { text: string }) {
 
       {open && (
         <div
-          className="absolute left-1/2 top-full z-20 mt-2 w-[200px] -translate-x-1/2 rounded-xl px-3 py-2 text-[12px] font-medium leading-4 shadow-lg"
+          className="absolute left-1/2 top-full z-20 mt-2 w-[200px] -translate-x-1/2 rounded-xl px-3 py-2 text-[11px] font-medium leading-4 shadow-lg"
           style={{
             background: "rgba(25,39,44,0.95)",
-            color: "var(--tt-surface)",
+            color: "#FFFFFF",
             backdropFilter: "blur(8px)",
           }}
         >
@@ -123,8 +123,7 @@ function MoodStatBox({
       className="flex flex-col gap-3 rounded-[20px] border p-4 sm:p-5"
       style={{
         borderColor: "rgba(25,39,44,0.06)",
-        background:
-          "linear-gradient(180deg, var(--tt-surface) 0%, var(--tt-gray-50) 100%)",
+        background: "linear-gradient(180deg, #FFFFFF 0%, #F9FCFB 100%)",
       }}
     >
       <div className="flex items-center gap-3">
@@ -177,8 +176,7 @@ function PlainStatBox({
       className="flex flex-col gap-3 rounded-[20px] border p-4 sm:p-5"
       style={{
         borderColor: "rgba(25,39,44,0.06)",
-        background:
-          "linear-gradient(180deg, var(--tt-surface) 0%, var(--tt-gray-50) 100%)",
+        background: "linear-gradient(180deg, #FFFFFF 0%, #F9FCFB 100%)",
       }}
     >
       <div className="flex items-center gap-3">
@@ -271,7 +269,7 @@ export function InsightTrendSection({
           style={{
             borderColor: "rgba(25,39,44,0.06)",
             background:
-              "linear-gradient(135deg, color-mix(in srgb, var(--tt-primary-500) 4%, transparent) 0%, color-mix(in srgb, var(--tt-primary-300) 2%, transparent) 100%)",
+              "linear-gradient(135deg, rgba(26,150,136,0.04) 0%, rgba(78,207,195,0.02) 100%)",
           }}
         >
           <p
@@ -327,7 +325,7 @@ export function InsightTrendSection({
           style={{ borderColor: "rgba(25,39,44,0.06)" }}
         >
           <p
-            className="mb-3 text-[12px] font-bold uppercase tracking-[0.1em]"
+            className="mb-3 text-[11px] font-bold uppercase tracking-[0.1em]"
             style={{ color: "var(--tt-dashboard-text-2)" }}
           >
             Keterangan Skor Mood
@@ -336,7 +334,7 @@ export function InsightTrendSection({
             <div className="flex items-center gap-1.5">
               <MoodFaceIcon score={1} size={18} />
               <span
-                className="text-[12px] font-medium sm:text-[12px]"
+                className="text-[11px] font-medium sm:text-[12px]"
                 style={{ color: "var(--tt-dashboard-text-2)" }}
               >
                 1 = Sangat Sedih
@@ -345,7 +343,7 @@ export function InsightTrendSection({
             <div className="flex items-center gap-1.5">
               <MoodFaceIcon score={2} size={18} />
               <span
-                className="text-[12px] font-medium sm:text-[12px]"
+                className="text-[11px] font-medium sm:text-[12px]"
                 style={{ color: "var(--tt-dashboard-text-2)" }}
               >
                 2 = Sedih
@@ -354,7 +352,7 @@ export function InsightTrendSection({
             <div className="flex items-center gap-1.5">
               <MoodFaceIcon score={3} size={18} />
               <span
-                className="text-[12px] font-medium sm:text-[12px]"
+                className="text-[11px] font-medium sm:text-[12px]"
                 style={{ color: "var(--tt-dashboard-text-2)" }}
               >
                 3 = Biasa Aja
@@ -363,7 +361,7 @@ export function InsightTrendSection({
             <div className="flex items-center gap-1.5">
               <MoodFaceIcon score={4} size={18} />
               <span
-                className="text-[12px] font-medium sm:text-[12px]"
+                className="text-[11px] font-medium sm:text-[12px]"
                 style={{ color: "var(--tt-dashboard-text-2)" }}
               >
                 4 = Senang
@@ -372,7 +370,7 @@ export function InsightTrendSection({
             <div className="flex items-center gap-1.5">
               <MoodFaceIcon score={5} size={18} />
               <span
-                className="text-[12px] font-medium sm:text-[12px]"
+                className="text-[11px] font-medium sm:text-[12px]"
                 style={{ color: "var(--tt-dashboard-text-2)" }}
               >
                 5 = Sangat Senang
@@ -393,8 +391,7 @@ export function InsightTrendSection({
           <div
             className="flex flex-1 flex-col rounded-[20px] border p-3 sm:rounded-[24px] sm:p-5"
             style={{
-              background:
-                "linear-gradient(180deg, var(--tt-surface) 0%, var(--tt-gray-50) 100%)",
+              background: "linear-gradient(180deg, #FFFFFF 0%, #F9FCFB 100%)",
               borderColor: "rgba(25,39,44,0.06)",
             }}
           >
@@ -443,7 +440,7 @@ export function InsightTrendSection({
                     tickMargin={12}
                     tick={{
                       fill: "var(--tt-dashboard-text-3)",
-                      fontSize: 12,
+                      fontSize: 11,
                       fontFamily:
                         "var(--font-plus-jakarta), system-ui, sans-serif",
                     }}
@@ -458,7 +455,7 @@ export function InsightTrendSection({
                     width={32}
                     tick={{
                       fill: "var(--tt-dashboard-text-3)",
-                      fontSize: 12,
+                      fontSize: 11,
                       fontFamily:
                         "var(--font-plus-jakarta), system-ui, sans-serif",
                     }}
@@ -466,8 +463,7 @@ export function InsightTrendSection({
 
                   <Tooltip
                     cursor={{
-                      stroke:
-                        "color-mix(in srgb, var(--tt-primary-500) 16%, transparent)",
+                      stroke: "rgba(26,150,136,0.16)",
                       strokeWidth: 1,
                     }}
                     content={<ChartTooltip />}
@@ -488,7 +484,7 @@ export function InsightTrendSection({
                     dot={{
                       r: 4,
                       strokeWidth: 2,
-                      fill: "var(--tt-surface)",
+                      fill: "#FFFFFF",
                       stroke: "var(--tt-dashboard-brand)",
                     }}
                     activeDot={{
@@ -509,7 +505,7 @@ export function InsightTrendSection({
                   style={{ background: "var(--tt-dashboard-brand-deep)" }}
                 />
                 <span
-                  className="text-[12px] font-medium sm:text-xs"
+                  className="text-[11px] font-medium sm:text-xs"
                   style={{ color: "var(--tt-dashboard-text-2)" }}
                 >
                   Mood harian
@@ -525,7 +521,7 @@ export function InsightTrendSection({
                   }}
                 />
                 <span
-                  className="text-[12px] font-medium sm:text-xs"
+                  className="text-[11px] font-medium sm:text-xs"
                   style={{ color: "var(--tt-dashboard-text-2)" }}
                 >
                   Batas cukup stabil

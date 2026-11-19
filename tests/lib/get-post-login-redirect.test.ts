@@ -59,38 +59,24 @@ describe("lib/get-post-login-redirect", () => {
     expect(result).toBe("/register?completeProfile=1");
   });
 
-  // FE-03: baseline tidak lagi menghalangi akses.
-  it("Harus return /home walaupun baseline belum diisi, asalkan mood hari ini sudah", async () => {
+  it("Harus return /baseline jika belum mengisi baseline", async () => {
     mockUserFindUnique.mockResolvedValue({
       role: "user",
       profileFilled: true,
     } as never);
     mockGetBaselineByUserId.mockResolvedValue(null);
-    mockMoodFindFirst.mockResolvedValue({ id: "mood-1" } as never);
 
     const result = await getPostLoginRedirect("user1");
 
-    expect(result).toBe("/home");
+    expect(result).toBe("/baseline");
   });
 
-  it("Tidak boleh lagi membaca baseline saat menentukan rute", async () => {
+  it("Harus return /mood jika baseline ada tapi belum isi mood hari ini", async () => {
     mockUserFindUnique.mockResolvedValue({
       role: "user",
       profileFilled: true,
     } as never);
-    mockMoodFindFirst.mockResolvedValue({ id: "mood-1" } as never);
-
-    await getPostLoginRedirect("user1");
-
-    expect(mockGetBaselineByUserId).not.toHaveBeenCalled();
-  });
-
-  // Alur mood sengaja tidak diubah oleh FE-03.
-  it("Harus tetap return /mood jika mood hari ini belum diisi", async () => {
-    mockUserFindUnique.mockResolvedValue({
-      role: "user",
-      profileFilled: true,
-    } as never);
+    mockGetBaselineByUserId.mockResolvedValue({ id: "base-1" } as never);
     mockMoodFindFirst.mockResolvedValue(null);
 
     const result = await getPostLoginRedirect("user1");
@@ -98,24 +84,12 @@ describe("lib/get-post-login-redirect", () => {
     expect(result).toBe("/mood");
   });
 
-  it("Harus return /mood walaupun baseline belum diisi, jika mood hari ini juga belum", async () => {
+  it("Harus return /home jika semua sudah diisi", async () => {
     mockUserFindUnique.mockResolvedValue({
       role: "user",
       profileFilled: true,
     } as never);
-    mockGetBaselineByUserId.mockResolvedValue(null);
-    mockMoodFindFirst.mockResolvedValue(null);
-
-    const result = await getPostLoginRedirect("user1");
-
-    expect(result).toBe("/mood");
-  });
-
-  it("Harus return /home jika profil dan mood hari ini sudah terisi", async () => {
-    mockUserFindUnique.mockResolvedValue({
-      role: "user",
-      profileFilled: true,
-    } as never);
+    mockGetBaselineByUserId.mockResolvedValue({ id: "base-1" } as never);
     mockMoodFindFirst.mockResolvedValue({ id: "mood-1" } as never);
 
     const result = await getPostLoginRedirect("user1");

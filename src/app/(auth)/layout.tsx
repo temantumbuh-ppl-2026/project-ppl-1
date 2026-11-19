@@ -21,8 +21,8 @@ export default async function AuthLayout({
     // User authenticated tapi perlu complete profile → render tanpa Navbar/Footer
     return (
       <div
-        className="tt-auth-page min-h-screen flex flex-col"
-        style={{ fontFamily: "var(--tt-font-sans)" }}
+        className="min-h-screen flex flex-col"
+        style={{ fontFamily: "var(--font-plus-jakarta)" }}
       >
         <main className="flex-1">{children}</main>
       </div>
@@ -31,8 +31,8 @@ export default async function AuthLayout({
 
   return (
     <div
-      className="tt-auth-page min-h-screen flex flex-col"
-      style={{ fontFamily: "var(--tt-font-sans)" }}
+      className="min-h-screen flex flex-col"
+      style={{ fontFamily: "var(--font-plus-jakarta)" }}
     >
       <Navbar />
       <main className="flex-1">{children}</main>

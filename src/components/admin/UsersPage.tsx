@@ -1,13 +1,15 @@
 "use client";
 
 // src/components/admin/UsersPage.tsx
-// Full CRUD: Add, Edit, Delete, Toggle Status, Toggle Premium, View Detail
+// Full CRUD: Add, Edit, Delete, Toggle Status, Toggle Premium, View Detail, Link Parent
 
 import {
   updateUserAction,
   deleteUserAction,
   toggleStatusAction,
   togglePremiumAction,
+  linkParentAction,
+  unlinkParentAction,
 } from "@/lib/admin/action";
 
 import { useRouter } from "next/navigation";
@@ -23,6 +25,7 @@ import {
   Trash2,
   Power,
   Crown,
+  Users as UsersIcon,
   X,
   Check,
   AlertCircle,
@@ -41,6 +44,7 @@ type User = {
   gender: string | null;
   profileFilled: boolean;
   currentStreak: number;
+  parentEmail?: string | null;
 };
 
 type Props = {
@@ -118,7 +122,7 @@ const C = {
   th: {
     textAlign: "left" as const,
     padding: "11px 16px",
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 700,
     color: "var(--tt-dashboard-text-3)",
     textTransform: "uppercase" as const,
@@ -139,20 +143,20 @@ const mInput: React.CSSProperties = {
   width: "100%",
   padding: "10px 14px",
   borderRadius: 10,
-  border: "1.5px solid var(--tt-gray-200)",
-  background: "var(--tt-surface)",
+  border: "1.5px solid #d1ebe8",
+  background: "#ffffff",
   fontSize: 14,
   fontFamily: "inherit",
-  color: "var(--tt-primary-900)",
+  color: "#1a2e2b",
   outline: "none",
   boxSizing: "border-box",
   transition: "border-color 0.15s",
   lineHeight: 1.5,
 };
 const mLabel: React.CSSProperties = {
-  fontSize: 12,
+  fontSize: 11,
   fontWeight: 700,
-  color: "var(--tt-gray-600)",
+  color: "#4a7a74",
   display: "block",
   marginBottom: 6,
   textTransform: "uppercase",
@@ -170,13 +174,13 @@ function Badge({
   const map = {
     success: { bg: "var(--tt-dashboard-success-soft)", color: C.success },
     warning: { bg: "var(--tt-dashboard-warning-soft)", color: C.warning },
-    danger: { bg: "var(--tt-attention-bg)", color: C.danger },
+    danger: { bg: "rgba(239,68,68,0.1)", color: C.danger },
     muted: { bg: "var(--tt-dashboard-chip-bg)", color: C.text3 },
   };
   return (
     <span
       style={{
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: 700,
         padding: "3px 10px",
         borderRadius: 100,
@@ -198,14 +202,13 @@ function Avatar({ name, size = 32 }: { name: string; size?: number }) {
         width: size,
         height: size,
         borderRadius: size * 0.31,
-        background:
-          "linear-gradient(135deg, var(--tt-button-primary) 0%, var(--tt-primary-700) 100%)",
+        background: "linear-gradient(135deg, #1a9688 0%, #0f7a6e 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         fontWeight: 800,
         fontSize: size * 0.34,
-        color: "var(--tt-surface)",
+        color: "#fff",
         flexShrink: 0,
       }}
     >
@@ -230,7 +233,7 @@ function Toggle({
         height: 24,
         borderRadius: 100,
         border: "none",
-        background: checked ? "var(--tt-button-primary)" : "rgba(0,0,0,0.12)",
+        background: checked ? "#1a9688" : "rgba(0,0,0,0.12)",
         cursor: "pointer",
         position: "relative",
         transition: "background 0.2s",
@@ -242,7 +245,7 @@ function Toggle({
           width: 18,
           height: 18,
           borderRadius: "50%",
-          background: "var(--tt-surface)",
+          background: "#fff",
           position: "absolute",
           top: 3,
           left: checked ? 21 : 3,
@@ -302,7 +305,7 @@ function Modal({
             width: "100%",
             maxWidth: 540,
             overflowY: "auto",
-            background: "var(--tt-surface)",
+            background: "#ffffff",
             boxShadow:
               "0 -8px 48px rgba(0,0,0,0.2), 0 4px 24px rgba(0,0,0,0.1)",
             border: "1px solid rgba(0,0,0,0.06)",
@@ -314,11 +317,11 @@ function Modal({
           <div
             style={{
               padding: "14px 20px",
-              borderBottom: "1px solid var(--tt-gray-200)",
+              borderBottom: "1px solid #c8ede9",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              background: "var(--tt-button-primary)",
+              background: "#1a9688",
               position: "sticky",
               top: 0,
               zIndex: 1,
@@ -326,13 +329,7 @@ function Modal({
               borderRadius: "20px 20px 0 0",
             }}
           >
-            <p
-              style={{
-                fontWeight: 700,
-                fontSize: 15,
-                color: "var(--tt-surface)",
-              }}
-            >
+            <p style={{ fontWeight: 700, fontSize: 15, color: "#fff" }}>
               {title}
             </p>
             <button
@@ -348,19 +345,13 @@ function Modal({
                 alignItems: "center",
                 justifyContent: "center",
                 cursor: "pointer",
-                color: "var(--tt-surface)",
+                color: "#fff",
               }}
             >
               <X size={14} strokeWidth={2.5} />
             </button>
           </div>
-          <div
-            style={{
-              padding: "20px",
-              background: "var(--tt-gray-50)",
-              flex: 1,
-            }}
-          >
+          <div style={{ padding: "20px", background: "#f9fffe", flex: 1 }}>
             {children}
           </div>
         </div>
@@ -440,7 +431,7 @@ function ActionMenu({ items }: { items: MenuItem[] }) {
               left: coords.left,
               minWidth: 220,
               zIndex: 9999,
-              background: "var(--tt-surface)",
+              background: "#fff",
               borderRadius: 12,
               border: "1px solid var(--tt-dashboard-card-border)",
               boxShadow:
@@ -487,8 +478,8 @@ function ActionMenu({ items }: { items: MenuItem[] }) {
                   }}
                   onMouseEnter={(e) =>
                     (e.currentTarget.style.background = it.danger
-                      ? "var(--tt-attention-bg)"
-                      : "color-mix(in srgb, var(--tt-primary-500) 7%, transparent)")
+                      ? "rgba(239,68,68,0.07)"
+                      : "rgba(26,150,136,0.07)")
                   }
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.background = "transparent")
@@ -526,9 +517,7 @@ function ActionMenu({ items }: { items: MenuItem[] }) {
           height: 32,
           borderRadius: 9,
           border: "1px solid var(--tt-dashboard-card-border)",
-          background: open
-            ? "color-mix(in srgb, var(--tt-primary-500) 12%, transparent)"
-            : "rgba(255,255,255,0.7)",
+          background: open ? "rgba(26,150,136,0.12)" : "rgba(255,255,255,0.7)",
           color: C.text2,
           display: "flex",
           alignItems: "center",
@@ -647,13 +636,12 @@ function FilterBar({
             borderRadius: 12,
             background: "var(--tt-dashboard-button-bg)",
             border: "none",
-            color: "var(--tt-surface)",
+            color: "#fff",
             fontSize: 13,
             fontWeight: 700,
             fontFamily: "inherit",
             cursor: "pointer",
-            boxShadow:
-              "0 4px 12px color-mix(in srgb, var(--tt-primary-500) 25%, transparent)",
+            boxShadow: "0 4px 12px rgba(26,150,136,0.25)",
             whiteSpace: "nowrap",
             flexShrink: 0,
           }}
@@ -801,10 +789,8 @@ function UserForm({
           style={{
             padding: "10px 14px",
             borderRadius: 11,
-            background:
-              "color-mix(in srgb, var(--tt-primary-500) 7%, transparent)",
-            border:
-              "1px solid color-mix(in srgb, var(--tt-primary-500) 18%, transparent)",
+            background: "rgba(26,150,136,0.07)",
+            border: "1px solid rgba(26,150,136,0.18)",
             fontSize: 12,
             color: C.brand,
             lineHeight: 1.5,
@@ -816,8 +802,7 @@ function UserForm({
 
       <div>
         <label style={mLabel}>
-          Nama Lengkap{" "}
-          <span style={{ color: "var(--tt-attention-text)" }}>*</span>
+          Nama Lengkap <span style={{ color: "#ef4444" }}>*</span>
         </label>
         <input
           type="text"
@@ -831,7 +816,7 @@ function UserForm({
 
       <div>
         <label style={mLabel}>
-          Email <span style={{ color: "var(--tt-attention-text)" }}>*</span>
+          Email <span style={{ color: "#ef4444" }}>*</span>
         </label>
         <input
           type="email"
@@ -842,13 +827,13 @@ function UserForm({
           disabled={isEdit}
           style={{
             ...mInput,
-            background: isEdit ? "var(--tt-gray-100)" : "var(--tt-surface)",
-            color: isEdit ? "var(--tt-gray-400)" : "var(--tt-primary-900)",
+            background: isEdit ? "#f3f7f6" : "#fff",
+            color: isEdit ? "#7d9d99" : "#1a2e2b",
             cursor: isEdit ? "not-allowed" : "text",
           }}
         />
         {isEdit && (
-          <p style={{ fontSize: 12, color: C.text3, marginTop: 4 }}>
+          <p style={{ fontSize: 11, color: C.text3, marginTop: 4 }}>
             Email tidak bisa diubah karena terikat dengan akun Google Login.
           </p>
         )}
@@ -869,8 +854,8 @@ function UserForm({
             justifyContent: "space-between",
             padding: "12px 14px",
             borderRadius: 11,
-            border: "1px solid var(--tt-gray-200)",
-            background: "var(--tt-surface)",
+            border: "1px solid #d1ebe8",
+            background: "#fff",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -883,7 +868,7 @@ function UserForm({
               <p style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
                 Akun Premium
               </p>
-              <p style={{ fontSize: 12, color: C.text3, marginTop: 1 }}>
+              <p style={{ fontSize: 11, color: C.text3, marginTop: 1 }}>
                 {form.isPremium
                   ? "User punya akses fitur premium"
                   : "User akan jadi Basic"}
@@ -903,8 +888,8 @@ function UserForm({
             justifyContent: "space-between",
             padding: "12px 14px",
             borderRadius: 11,
-            border: "1px solid var(--tt-gray-200)",
-            background: "var(--tt-surface)",
+            border: "1px solid #d1ebe8",
+            background: "#fff",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -917,7 +902,7 @@ function UserForm({
               <p style={{ fontSize: 13, fontWeight: 700, color: C.text }}>
                 Status Akun
               </p>
-              <p style={{ fontSize: 12, color: C.text3, marginTop: 1 }}>
+              <p style={{ fontSize: 11, color: C.text3, marginTop: 1 }}>
                 {form.status === "Aktif"
                   ? "User bisa login & pakai aplikasi"
                   : "Akun dinonaktifkan"}
@@ -937,7 +922,7 @@ function UserForm({
           gap: 10,
           justifyContent: "flex-end",
           paddingTop: 14,
-          borderTop: "1px solid var(--tt-gray-100)",
+          borderTop: "1px solid #e0f0ee",
           marginTop: 4,
         }}
       >
@@ -948,9 +933,9 @@ function UserForm({
             height: 44,
             padding: "0 20px",
             borderRadius: 10,
-            border: "1.5px solid var(--tt-gray-200)",
-            background: "var(--tt-surface)",
-            color: "var(--tt-gray-600)",
+            border: "1.5px solid #d1ebe8",
+            background: "#fff",
+            color: "#4a7a74",
             fontSize: 13,
             fontWeight: 600,
             fontFamily: "inherit",
@@ -966,18 +951,14 @@ function UserForm({
             height: 44,
             padding: "0 22px",
             borderRadius: 10,
-            background: loading
-              ? "color-mix(in srgb, var(--tt-primary-500) 50%, transparent)"
-              : "var(--tt-button-primary)",
+            background: loading ? "rgba(26,150,136,0.5)" : "#1a9688",
             border: "none",
-            color: "var(--tt-surface)",
+            color: "#fff",
             fontSize: 13,
             fontWeight: 700,
             fontFamily: "inherit",
             cursor: loading ? "not-allowed" : "pointer",
-            boxShadow: loading
-              ? "none"
-              : "0 4px 14px color-mix(in srgb, var(--tt-primary-500) 30%, transparent)",
+            boxShadow: loading ? "none" : "0 4px 14px rgba(26,150,136,0.3)",
             display: "flex",
             alignItems: "center",
             gap: 7,
@@ -1062,8 +1043,8 @@ function UserDetailBody({
           padding: "16px 18px",
           borderRadius: 14,
           background:
-            "linear-gradient(135deg, color-mix(in srgb, var(--tt-primary-500) 8%, transparent) 0%, color-mix(in srgb, var(--tt-primary-500) 2%, transparent) 100%)",
-          border: "1px solid var(--tt-gray-200)",
+            "linear-gradient(135deg, rgba(26,150,136,0.08) 0%, rgba(26,150,136,0.02) 100%)",
+          border: "1px solid #d1ebe8",
         }}
       >
         <Avatar name={user.name} size={56} />
@@ -1093,9 +1074,9 @@ function UserDetailBody({
 
       <div
         style={{
-          background: "var(--tt-surface)",
+          background: "#fff",
           borderRadius: 12,
-          border: "1px solid var(--tt-gray-200)",
+          border: "1px solid #d1ebe8",
           overflow: "hidden",
         }}
       >
@@ -1108,12 +1089,12 @@ function UserDetailBody({
               gap: 12,
               padding: "11px 16px",
               borderBottom:
-                i === rows.length - 1 ? "none" : "1px solid var(--tt-gray-100)",
+                i === rows.length - 1 ? "none" : "1px solid #ecf6f4",
             }}
           >
             <p
               style={{
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: 700,
                 color: C.text3,
                 width: 96,
@@ -1131,6 +1112,40 @@ function UserDetailBody({
         ))}
       </div>
 
+      {user.parentEmail && (
+        <div
+          style={{
+            padding: "12px 16px",
+            borderRadius: 12,
+            background: "rgba(139,92,246,0.07)",
+            border: "1px solid rgba(139,92,246,0.2)",
+          }}
+        >
+          <p
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              color: "#7c3aed",
+              textTransform: "uppercase",
+              letterSpacing: "0.04em",
+              marginBottom: 4,
+            }}
+          >
+            Akun Orang Tua Tersambung
+          </p>
+          <p
+            style={{
+              fontSize: 12,
+              color: C.text3,
+              marginTop: 2,
+              wordBreak: "break-all",
+            }}
+          >
+            {user.parentEmail}
+          </p>
+        </div>
+      )}
+
       <div
         style={{ display: "flex", justifyContent: "flex-end", paddingTop: 6 }}
       >
@@ -1141,9 +1156,9 @@ function UserDetailBody({
             height: 42,
             padding: "0 22px",
             borderRadius: 10,
-            border: "1.5px solid var(--tt-gray-200)",
-            background: "var(--tt-surface)",
-            color: "var(--tt-gray-600)",
+            border: "1.5px solid #d1ebe8",
+            background: "#fff",
+            color: "#4a7a74",
             fontSize: 13,
             fontWeight: 600,
             fontFamily: "inherit",
@@ -1154,6 +1169,184 @@ function UserDetailBody({
         </button>
       </div>
     </div>
+  );
+}
+
+// ── Link Parent Form ─────────────────────────────────────────────
+type ParentFormData = { parentEmail: string };
+
+function LinkParentForm({
+  user,
+  onSubmit,
+  onUnlink,
+  onCancel,
+  loading,
+}: {
+  user: User;
+  onSubmit: (d: ParentFormData) => void;
+  onUnlink: () => void;
+  onCancel: () => void;
+  loading: boolean;
+}) {
+  const [form, setForm] = useState<ParentFormData>({
+    parentEmail: user.parentEmail ?? "",
+  });
+  const isLinked = !!user.parentEmail;
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.parentEmail.trim()) return;
+    onSubmit(form);
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      style={{ display: "flex", flexDirection: "column", gap: 14 }}
+    >
+      <div
+        style={{
+          display: "flex",
+          gap: 10,
+          padding: "12px 14px",
+          borderRadius: 12,
+          background: "rgba(139,92,246,0.07)",
+          border: "1px solid rgba(139,92,246,0.2)",
+          alignItems: "flex-start",
+        }}
+      >
+        <UsersIcon
+          size={17}
+          strokeWidth={2}
+          color="#7c3aed"
+          style={{ flexShrink: 0, marginTop: 1 }}
+        />
+        <div>
+          <p style={{ fontSize: 13, fontWeight: 700, color: "#7c3aed" }}>
+            Laporan Mingguan ke Orang Tua
+          </p>
+          <p
+            style={{
+              fontSize: 12,
+              color: C.text2,
+              marginTop: 4,
+              lineHeight: 1.5,
+            }}
+          >
+            Setelah disambungkan, sistem akan mengirim ringkasan aktivitas{" "}
+            <strong>{user.name}</strong> ke email orang tua setiap minggu.
+          </p>
+        </div>
+      </div>
+
+      <div>
+        <label style={mLabel}>
+          Email Orang Tua <span style={{ color: "#ef4444" }}>*</span>
+        </label>
+        <input
+          type="email"
+          value={form.parentEmail}
+          onChange={(e) =>
+            setForm((p) => ({ ...p, parentEmail: e.target.value }))
+          }
+          placeholder="orangtua@email.com"
+          required
+          style={mInput}
+        />
+        <p style={{ fontSize: 11, color: C.text3, marginTop: 4 }}>
+          Laporan mingguan otomatis dikirim ke email ini.
+        </p>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          gap: 10,
+          justifyContent: "space-between",
+          paddingTop: 14,
+          borderTop: "1px solid #e0f0ee",
+          marginTop: 4,
+          flexWrap: "wrap",
+        }}
+      >
+        {isLinked ? (
+          <button
+            type="button"
+            onClick={onUnlink}
+            disabled={loading}
+            style={{
+              height: 44,
+              padding: "0 18px",
+              borderRadius: 10,
+              border: "1.5px solid rgba(239,68,68,0.3)",
+              background: "rgba(239,68,68,0.06)",
+              color: C.danger,
+              fontSize: 13,
+              fontWeight: 600,
+              fontFamily: "inherit",
+              cursor: loading ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <Trash2 size={13} strokeWidth={2} /> Putuskan Sambungan
+          </button>
+        ) : (
+          <span />
+        )}
+
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            type="button"
+            onClick={onCancel}
+            style={{
+              height: 44,
+              padding: "0 18px",
+              borderRadius: 10,
+              border: "1.5px solid #d1ebe8",
+              background: "#fff",
+              color: "#4a7a74",
+              fontSize: 13,
+              fontWeight: 600,
+              fontFamily: "inherit",
+              cursor: "pointer",
+            }}
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              height: 44,
+              padding: "0 22px",
+              borderRadius: 10,
+              background: loading ? "rgba(124,58,237,0.5)" : "#7c3aed",
+              border: "none",
+              color: "#fff",
+              fontSize: 13,
+              fontWeight: 700,
+              fontFamily: "inherit",
+              cursor: loading ? "not-allowed" : "pointer",
+              boxShadow: loading ? "none" : "0 4px 14px rgba(124,58,237,0.3)",
+              display: "flex",
+              alignItems: "center",
+              gap: 7,
+            }}
+          >
+            {loading ? (
+              "Menyimpan…"
+            ) : (
+              <>
+                <Check size={14} strokeWidth={2.5} />{" "}
+                {isLinked ? "Update" : "Sambungkan"}
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </form>
   );
 }
 
@@ -1177,25 +1370,19 @@ function DeleteUserBody({
           gap: 12,
           padding: "14px 16px",
           borderRadius: 13,
-          background: "var(--tt-attention-bg)",
-          border: "1px solid var(--tt-attention-border)",
+          background: "rgba(239,68,68,0.07)",
+          border: "1px solid rgba(239,68,68,0.18)",
           alignItems: "flex-start",
         }}
       >
         <AlertCircle
           size={17}
           strokeWidth={2}
-          color="var(--tt-attention-text)"
+          color="#ef4444"
           style={{ flexShrink: 0, marginTop: 1 }}
         />
         <div>
-          <p
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              color: "var(--tt-attention-text)",
-            }}
-          >
+          <p style={{ fontSize: 13, fontWeight: 700, color: "#ef4444" }}>
             Tindakan ini tidak bisa dibatalkan
           </p>
           <p
@@ -1249,9 +1436,9 @@ function DeleteUserBody({
             height: 44,
             padding: "0 20px",
             borderRadius: 10,
-            border: "1.5px solid var(--tt-gray-200)",
-            background: "var(--tt-surface)",
-            color: "var(--tt-gray-600)",
+            border: "1.5px solid #d1ebe8",
+            background: "#fff",
+            color: "#4a7a74",
             fontSize: 13,
             fontWeight: 600,
             fontFamily: "inherit",
@@ -1268,11 +1455,9 @@ function DeleteUserBody({
             height: 44,
             padding: "0 22px",
             borderRadius: 10,
-            background: loading
-              ? "color-mix(in srgb, var(--tt-attention-text) 50%, transparent)"
-              : "var(--tt-attention-text)",
+            background: loading ? "rgba(239,68,68,0.5)" : "#ef4444",
             border: "none",
-            color: "var(--tt-surface)",
+            color: "#fff",
             fontSize: 13,
             fontWeight: 700,
             fontFamily: "inherit",
@@ -1280,9 +1465,7 @@ function DeleteUserBody({
             display: "flex",
             alignItems: "center",
             gap: 6,
-            boxShadow: loading
-              ? "none"
-              : "0 4px 14px color-mix(in srgb, var(--tt-attention-text) 25%, transparent)",
+            boxShadow: loading ? "none" : "0 4px 14px rgba(239,68,68,0.25)",
           }}
         >
           {loading ? (
@@ -1332,7 +1515,7 @@ function UserCard({ u, menuItems }: { u: User; menuItems: MenuItem[] }) {
               alignItems: "center",
               gap: 5,
               marginTop: 2,
-              fontSize: 12,
+              fontSize: 11,
               color: C.text3,
               minWidth: 0,
             }}
@@ -1361,6 +1544,21 @@ function UserCard({ u, menuItems }: { u: User; menuItems: MenuItem[] }) {
           label={u.status}
           variant={u.status === "Aktif" ? "success" : "danger"}
         />
+        {u.parentEmail && (
+          <span
+            style={{
+              fontSize: 11,
+              fontWeight: 700,
+              padding: "3px 10px",
+              borderRadius: 100,
+              background: "rgba(139,92,246,0.12)",
+              color: "#7c3aed",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Ortu Tersambung
+          </span>
+        )}
       </div>
 
       <div
@@ -1374,7 +1572,7 @@ function UserCard({ u, menuItems }: { u: User; menuItems: MenuItem[] }) {
       >
         <p
           style={{
-            fontSize: 12,
+            fontSize: 9,
             fontWeight: 700,
             color: C.text3,
             textTransform: "uppercase",
@@ -1385,7 +1583,7 @@ function UserCard({ u, menuItems }: { u: User; menuItems: MenuItem[] }) {
         </p>
         <p
           style={{
-            fontSize: 12,
+            fontSize: 11,
             fontWeight: 600,
             color: C.text2,
             display: "flex",
@@ -1466,9 +1664,9 @@ function Pagination({
             ...btnBase,
             ...(p === page
               ? {
-                  background: "var(--tt-button-primary)",
-                  borderColor: "var(--tt-primary-500)",
-                  color: "var(--tt-surface)",
+                  background: "#1a9688",
+                  borderColor: "#1a9688",
+                  color: "#fff",
                   fontWeight: 700,
                 }
               : {}),
@@ -1503,9 +1701,9 @@ export function UsersPage({
     setUsers(initialUsers);
   }, [initialUsers]);
 
-  const [modal, setModal] = useState<"none" | "edit" | "detail" | "delete">(
-    "none",
-  );
+  const [modal, setModal] = useState<
+    "none" | "edit" | "detail" | "parent" | "delete"
+  >("none");
   const [target, setTarget] = useState<User | null>(null);
 
   const [saving, setSaving] = useState(false);
@@ -1602,6 +1800,41 @@ export function UsersPage({
     setToast(`${u.name} → ${next ? "Premium" : "Basic"}`);
   }
 
+  async function handleLinkParent(data: ParentFormData) {
+    if (!target) return;
+    setSaving(true);
+    setError(null);
+    const result = await linkParentAction({
+      userId: target.id,
+      parentEmail: data.parentEmail,
+    });
+    setSaving(false);
+    if (!result.success) {
+      setError(result.error);
+      return;
+    }
+    setModal("none");
+    setTarget(null);
+    setToast(result.message ?? "Email persetujuan dikirim");
+    router.refresh();
+  }
+
+  async function handleUnlinkParent() {
+    if (!target) return;
+    setSaving(true);
+    setError(null);
+    const result = await unlinkParentAction(target.id);
+    setSaving(false);
+    if (!result.success) {
+      setError(result.error);
+      return;
+    }
+    setModal("none");
+    setTarget(null);
+    setToast(result.message ?? "Sambungan ortu dihapus");
+    router.refresh();
+  }
+
   function menuFor(u: User): MenuItem[] {
     return [
       {
@@ -1629,6 +1862,14 @@ export function UsersPage({
         label: u.status === "Aktif" ? "Nonaktifkan" : "Aktifkan",
         icon: <Power size={14} strokeWidth={2} />,
         onClick: () => handleToggleStatus(u),
+      },
+      {
+        label: u.parentEmail ? "Kelola Akun Ortu" : "Sambung Akun Ortu",
+        icon: <UsersIcon size={14} strokeWidth={2} />,
+        onClick: () => {
+          setTarget(u);
+          setModal("parent");
+        },
       },
       {
         label: "Hapus User",
@@ -1665,12 +1906,11 @@ export function UsersPage({
             zIndex: 1000,
             padding: "12px 20px",
             borderRadius: 12,
-            background: "var(--tt-button-primary)",
-            color: "var(--tt-surface)",
+            background: "#1a9688",
+            color: "#fff",
             fontSize: 13,
             fontWeight: 600,
-            boxShadow:
-              "0 8px 24px color-mix(in srgb, var(--tt-primary-500) 35%, transparent)",
+            boxShadow: "0 8px 24px rgba(26,150,136,0.35)",
             display: "flex",
             alignItems: "center",
             gap: 8,
@@ -1690,8 +1930,8 @@ export function UsersPage({
             alignItems: "center",
             padding: "12px 16px",
             borderRadius: 13,
-            background: "var(--tt-attention-bg)",
-            border: "1px solid var(--tt-attention-border)",
+            background: "rgba(239,68,68,0.08)",
+            border: "1px solid rgba(239,68,68,0.2)",
           }}
         >
           <AlertCircle size={15} strokeWidth={2} color={C.danger} />
@@ -1795,12 +2035,7 @@ export function UsersPage({
               }}
             >
               <thead>
-                <tr
-                  style={{
-                    background:
-                      "color-mix(in srgb, var(--tt-primary-500) 4%, transparent)",
-                  }}
-                >
+                <tr style={{ background: "rgba(26,150,136,0.04)" }}>
                   {[
                     "Pengguna",
                     "Email",
@@ -1821,9 +2056,7 @@ export function UsersPage({
                     key={u.id}
                     style={{
                       background:
-                        i % 2 === 0
-                          ? "transparent"
-                          : "color-mix(in srgb, var(--tt-primary-500) 2%, transparent)",
+                        i % 2 === 0 ? "transparent" : "rgba(26,150,136,0.018)",
                     }}
                   >
                     <td style={C.td}>
@@ -1845,6 +2078,18 @@ export function UsersPage({
                           >
                             {u.name}
                           </p>
+                          {u.parentEmail && (
+                            <p
+                              style={{
+                                fontSize: 10,
+                                color: "#7c3aed",
+                                marginTop: 1,
+                                fontWeight: 600,
+                              }}
+                            >
+                              Ortu tersambung
+                            </p>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -1943,6 +2188,32 @@ export function UsersPage({
               setModal("none");
               setTarget(null);
             }}
+          />
+        )}
+      </Modal>
+
+      <Modal
+        open={modal === "parent" && !!target}
+        onClose={() => {
+          setModal("none");
+          setTarget(null);
+        }}
+        title={
+          target?.parentEmail
+            ? "Kelola Akun Orang Tua"
+            : "Sambung Akun Orang Tua"
+        }
+      >
+        {target && (
+          <LinkParentForm
+            user={target}
+            onSubmit={handleLinkParent}
+            onUnlink={handleUnlinkParent}
+            onCancel={() => {
+              setModal("none");
+              setTarget(null);
+            }}
+            loading={saving}
           />
         )}
       </Modal>

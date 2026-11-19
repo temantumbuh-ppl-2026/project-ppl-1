@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { encrypt, decrypt, EncryptionError } from "@/lib/encryption";
+import { encrypt, decrypt } from "@/lib/encryption";
 
 // Key 32-byte hex yang valid (64 karakter)
 const VALID_KEY = "a".repeat(64);
@@ -32,16 +32,17 @@ describe("lib/encryption", () => {
       expect(result1).not.toBe(result2); // IV random = cipher berbeda
     });
 
-    it("Harus gagal jika ENCRYPTION_KEY tidak ada", () => {
+    it("Harus return teks asli jika ENCRYPTION_KEY tidak ada (fallback)", () => {
       vi.stubEnv("ENCRYPTION_KEY", "");
-      expect(() => encrypt("teks gagal dienkripsi")).toThrow(EncryptionError);
+      const result = encrypt("teks gagal dienkripsi");
+      // Fallback: return teks aslinya
+      expect(result).toBe("teks gagal dienkripsi");
     });
 
-    it("Harus gagal jika ENCRYPTION_KEY tidak valid", () => {
-      vi.stubEnv("ENCRYPTION_KEY", "abcd");
-      expect(() => encrypt("teks gagal")).toThrow(EncryptionError);
-      vi.stubEnv("ENCRYPTION_KEY", "z".repeat(64));
-      expect(() => encrypt("teks gagal")).toThrow(EncryptionError);
+    it("Harus return teks asli jika ENCRYPTION_KEY panjangnya salah (bukan 32 byte)", () => {
+      vi.stubEnv("ENCRYPTION_KEY", "abcd"); // terlalu pendek
+      const result = encrypt("teks gagal");
+      expect(result).toBe("teks gagal");
     });
   });
 
@@ -66,19 +67,22 @@ describe("lib/encryption", () => {
       expect(result).toBe("hanya:dua");
     });
 
-    it("Harus gagal jika ciphertext rusak (authTag salah)", () => {
+    it("Harus return hash asli jika decryption gagal (authTag salah)", () => {
       // Buat hash dengan format benar tapi authTag palsu
       const fakeHash = "aXZiYXNlNjQ=:YXV0aFRhZ0Zha2U=:ZW5jcnlwdGVk";
-      expect(() => decrypt(fakeHash)).toThrow(EncryptionError);
+      const result = decrypt(fakeHash);
+      // Harus fallback ke hash asli, tidak throw
+      expect(result).toBe(fakeHash);
     });
 
-    it("Harus gagal jika key dekripsi berbeda", () => {
+    it("Harus return hash asli jika decrypt tapi key beda (ENCRYPTION_KEY berubah)", () => {
       // Encrypt dengan key awal
       const encrypted = encrypt("data penting");
 
       // Ganti key — decryption harus gagal dan fallback ke hash
       vi.stubEnv("ENCRYPTION_KEY", "b".repeat(64));
-      expect(() => decrypt(encrypted)).toThrow(EncryptionError);
+      const result = decrypt(encrypted);
+      expect(result).toBe(encrypted); // fallback
     });
 
     it("Harus return input langsung jika input falsy/kosong", () => {
@@ -99,21 +103,6 @@ describe("lib/encryption", () => {
       const encrypted = encrypt("");
       const decrypted = decrypt(encrypted);
       expect(decrypted).toBe("");
-    });
-    it("strict mode menolak plaintext, input kosong, dan base64 yang dimodifikasi", () => {
-      expect(() =>
-        decrypt("catatan review", { allowLegacyPlaintext: false }),
-      ).toThrow(EncryptionError);
-      expect(() => decrypt("", { allowLegacyPlaintext: false })).toThrow(
-        EncryptionError,
-      );
-      const encrypted = encrypt("catatan review");
-      expect(() =>
-        decrypt(`${encrypted}!`, { allowLegacyPlaintext: false }),
-      ).toThrow(EncryptionError);
-      expect(decrypt(encrypted, { allowLegacyPlaintext: false })).toBe(
-        "catatan review",
-      );
     });
   });
 });

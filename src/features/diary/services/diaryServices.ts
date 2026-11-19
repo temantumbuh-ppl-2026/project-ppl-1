@@ -2,15 +2,7 @@
 //  src/features/diary/services/diaryServices.ts
 // ============================================================
 
-import type {
-  BraveChoiceQuiz,
-  ChatMessage,
-  DiaryConversation,
-  DiaryConversationStarter,
-  DiaryEntry,
-} from "../types";
-import { DIARY_TOPIC_LABELS } from "../constants/topics";
-import { ConversationState, RiskLevel } from "@/app/generated/prisma/enums";
+import type { BraveChoiceQuiz, ChatMessage, DiaryEntry } from "../types";
 
 type ApiErrorResponse = {
   error?: string;
@@ -30,15 +22,6 @@ type DiaryMessagesApiResponse = {
   error?: string;
   data?: {
     messages?: ChatMessage[];
-    conversation?: DiaryConversation | null;
-  };
-};
-
-type DiaryStartersApiResponse = {
-  success?: boolean;
-  error?: string;
-  data?: {
-    starters?: DiaryConversationStarter[];
   };
 };
 
@@ -86,12 +69,6 @@ export type SendDiaryChatStreamResult = {
   aiMessage: ChatMessage;
   entry: DiaryEntry;
   diarySessionsUsedThisMonth: number;
-  conversation?: DiaryConversation;
-};
-
-export type DiaryMessagesResult = {
-  messages: ChatMessage[];
-  conversation: DiaryConversation | null;
 };
 
 export type GetBraveChoiceQuizResult = {
@@ -163,7 +140,7 @@ export async function getDiaryEntries(month: string): Promise<{
 
 export async function getDiaryMessages(
   entryId: string,
-): Promise<DiaryMessagesResult> {
+): Promise<ChatMessage[]> {
   const timezone = getTimezone();
   const query = new URLSearchParams({
     timezone,
@@ -192,44 +169,7 @@ export async function getDiaryMessages(
     throw new Error(payload.error || "Percakapan diary tidak valid.");
   }
 
-  const conversation = payload.data.conversation;
-
-  if (conversation != null && !isDiaryConversation(conversation)) {
-    throw new Error("Topik percakapan diary tidak valid.");
-  }
-
-  return {
-    messages: Array.isArray(payload.data.messages) ? payload.data.messages : [],
-    conversation: conversation ?? null,
-  };
-}
-
-export async function getDiaryConversationStarters(): Promise<
-  DiaryConversationStarter[]
-> {
-  const response = await fetch("/api/diary/chat/starters", {
-    method: "GET",
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      await extractResponseError(response, "Gagal memuat pilihan awal cerita."),
-    );
-  }
-
-  const payload = (await response.json()) as DiaryStartersApiResponse;
-  const starters = payload.data?.starters;
-
-  if (
-    !payload.success ||
-    !Array.isArray(starters) ||
-    !starters.every(isDiaryConversationStarter)
-  ) {
-    throw new Error(payload.error || "Pilihan awal cerita tidak valid.");
-  }
-
-  return starters;
+  return Array.isArray(payload.data.messages) ? payload.data.messages : [];
 }
 
 export async function sendChatMessageStream(
@@ -627,47 +567,6 @@ function isChatMessage(value: unknown): value is ChatMessage {
   );
 }
 
-function isDiaryConversationStarter(
-  value: unknown,
-): value is DiaryConversationStarter {
-  const record = asRecord(value);
-
-  return (
-    record !== null &&
-    typeof record.id === "string" &&
-    typeof record.label === "string" &&
-    typeof record.messageText === "string" &&
-    record.messageText.trim().length > 0
-  );
-}
-
-function isDiaryConversation(value: unknown): value is DiaryConversation {
-  const record = asRecord(value);
-
-  return (
-    record !== null &&
-    Array.isArray(record.topics) &&
-    record.topics.every(
-      (topic) =>
-        typeof topic === "string" &&
-        Object.prototype.hasOwnProperty.call(DIARY_TOPIC_LABELS, topic),
-    ) &&
-    Object.values(ConversationState).includes(
-      record.conversationState as ConversationState,
-    ) &&
-    (record.proactiveSuggestion === null ||
-      typeof record.proactiveSuggestion === "string") &&
-    (record.actionOptions === undefined ||
-      (Array.isArray(record.actionOptions) &&
-        record.actionOptions.length <= 3 &&
-        record.actionOptions.every(
-          (option) => typeof option === "string" && option.trim().length > 0,
-        ))) &&
-    typeof record.safetyFlag === "boolean" &&
-    Object.values(RiskLevel).includes(record.riskLevel as RiskLevel)
-  );
-}
-
 function isSendDiaryChatStreamResult(
   value: unknown,
 ): value is SendDiaryChatStreamResult {
@@ -680,9 +579,7 @@ function isSendDiaryChatStreamResult(
   return (
     isChatMessage(record.aiMessage) &&
     isDiaryEntry(record.entry) &&
-    typeof record.diarySessionsUsedThisMonth === "number" &&
-    (record.conversation === undefined ||
-      isDiaryConversation(record.conversation))
+    typeof record.diarySessionsUsedThisMonth === "number"
   );
 }
 

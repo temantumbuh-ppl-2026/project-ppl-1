@@ -10,9 +10,7 @@ vi.mock("openai", () => ({
 import {
   generateDiaryAssistantReply,
   generateDiaryAssistantReplyStream,
-  generateDiaryStructuredReply,
 } from "@/lib/diary/litellm";
-import { DiaryStructuredOutputError } from "@/lib/diary/structured-output";
 import type { DiaryPromptMessage } from "@/lib/diary/prompt";
 
 const messages: DiaryPromptMessage[] = [{ role: "user", content: "Halo" }];
@@ -52,7 +50,7 @@ describe("lib/diary/litellm", () => {
       baseURL: "https://example.test",
     });
     expect(mockCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ max_tokens: 2500 }),
+      expect.objectContaining({ max_tokens: 600 }),
     );
   });
 
@@ -81,7 +79,7 @@ describe("lib/diary/litellm", () => {
     );
   });
 
-  it("retry jika finish_reason length dan respons awal kosong", async () => {
+  it("retry dengan token lebih besar jika finish_reason length dan respons awal kosong", async () => {
     process.env.API_KEY = "key";
     mockCreate
       .mockResolvedValueOnce({ choices: [{ finish_reason: "length" }] })
@@ -92,7 +90,7 @@ describe("lib/diary/litellm", () => {
     );
     expect(mockCreate).toHaveBeenNthCalledWith(
       2,
-      expect.objectContaining({ max_tokens: 5000 }),
+      expect.objectContaining({ max_tokens: 1400 }),
     );
   });
 
@@ -128,7 +126,7 @@ describe("lib/diary/litellm", () => {
 
     expect(chunks).toEqual(["Halo", ", Ruri"]);
     expect(mockCreate).toHaveBeenCalledWith(
-      expect.objectContaining({ stream: true, max_tokens: 5000 }),
+      expect.objectContaining({ stream: true, max_tokens: 1400 }),
     );
 
     async function* emptyStream() {
@@ -144,76 +142,5 @@ describe("lib/diary/litellm", () => {
         // consume stream
       }
     }).rejects.toThrow("Model mengembalikan respons kosong.");
-  });
-
-  it("menghasilkan balasan dan metadata dalam satu completion JSON", async () => {
-    process.env.API_KEY = "key";
-    const output = {
-      reply: "Aku mendengarmu.",
-      topics: ["KELUARGA", "PERTEMANAN"],
-      conversationState: "CLARIFICATION",
-      conversationSummary: null,
-      proactiveSuggestion: null,
-      actionOptions: [],
-      safety: {
-        flag: false,
-        riskLevel: "NONE",
-        category: null,
-        summary: null,
-      },
-    };
-    mockCreate.mockResolvedValue({
-      choices: [
-        { finish_reason: "stop", message: { content: JSON.stringify(output) } },
-      ],
-    });
-
-    await expect(generateDiaryStructuredReply({ messages })).resolves.toEqual(
-      output,
-    );
-    expect(mockCreate).toHaveBeenCalledTimes(1);
-    expect(mockCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        model: "openai/gpt-5-mini",
-        response_format: { type: "json_object" },
-        max_tokens: 5000,
-      }),
-    );
-  });
-
-  it("menolak hasil terpotong atau invalid tanpa melakukan generation kedua", async () => {
-    process.env.API_KEY = "key";
-    mockCreate.mockResolvedValueOnce({
-      choices: [{ finish_reason: "length", message: { content: "{}" } }],
-    });
-    await expect(generateDiaryStructuredReply({ messages })).rejects.toThrow(
-      DiaryStructuredOutputError,
-    );
-    expect(mockCreate).toHaveBeenCalledTimes(1);
-
-    mockCreate.mockResolvedValueOnce({
-      choices: [{ finish_reason: "stop", message: { content: "bukan JSON" } }],
-    });
-    await expect(generateDiaryStructuredReply({ messages })).rejects.toThrow(
-      DiaryStructuredOutputError,
-    );
-    expect(mockCreate).toHaveBeenCalledTimes(2);
-  });
-
-  it("menolak respons kosong dan meneruskan kegagalan provider", async () => {
-    process.env.API_KEY = "key";
-    mockCreate.mockResolvedValueOnce({
-      choices: [{ message: { content: "" } }],
-    });
-    await expect(generateDiaryStructuredReply({ messages })).rejects.toThrow(
-      DiaryStructuredOutputError,
-    );
-
-    const providerError = new Error("provider unavailable");
-    mockCreate.mockRejectedValueOnce(providerError);
-    await expect(generateDiaryStructuredReply({ messages })).rejects.toBe(
-      providerError,
-    );
-    expect(mockCreate).toHaveBeenCalledTimes(2);
   });
 });

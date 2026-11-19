@@ -26,37 +26,32 @@ const PRIORITY_VISUAL: Record<
   }
 > = {
   High: {
-    indexBg: "var(--tt-attention-text)",
-    indexShadow:
-      "0 8px 18px color-mix(in srgb, var(--tt-attention-text) 28%, transparent)",
-    cardBg: "var(--tt-surface)",
-    border: "var(--tt-attention-border)",
-    elevation:
-      "0 1px 2px rgba(16,24,40,0.04), 0 8px 20px color-mix(in srgb, var(--tt-attention-text) 6%, transparent)",
-    dotColor: "var(--tt-attention-text)",
-    headerLabelColor: "var(--tt-attention-text)",
+    indexBg: "linear-gradient(135deg, #DC2626 0%, #EF4444 100%)",
+    indexShadow: "0 8px 18px rgba(220,38,38,0.28)",
+    cardBg: "#FFFFFF",
+    border: "rgba(220,38,38,0.18)",
+    elevation: "0 1px 2px rgba(16,24,40,0.04), 0 8px 20px rgba(220,38,38,0.06)",
+    dotColor: "#DC2626",
+    headerLabelColor: "#DC2626",
   },
   Medium: {
-    indexBg: "var(--tt-warning-text)",
-    indexShadow:
-      "0 8px 18px color-mix(in srgb, var(--tt-warning-text) 22%, transparent)",
-    cardBg: "var(--tt-surface)",
-    border: "color-mix(in srgb, var(--tt-warning-text) 16%, transparent)",
-    elevation:
-      "0 1px 2px rgba(16,24,40,0.04), 0 6px 16px color-mix(in srgb, var(--tt-warning-text) 5%, transparent)",
-    dotColor: "var(--tt-warning-text)",
-    headerLabelColor: "var(--tt-warning-text)",
+    indexBg: "linear-gradient(135deg, #D97706 0%, #F59E0B 100%)",
+    indexShadow: "0 8px 18px rgba(217,119,6,0.22)",
+    cardBg: "#FFFFFF",
+    border: "rgba(217,119,6,0.16)",
+    elevation: "0 1px 2px rgba(16,24,40,0.04), 0 6px 16px rgba(217,119,6,0.05)",
+    dotColor: "#D97706",
+    headerLabelColor: "#D97706",
   },
   Low: {
-    indexBg: "var(--tt-button-primary)",
-    indexShadow:
-      "0 8px 18px color-mix(in srgb, var(--tt-primary-500) 22%, transparent)",
-    cardBg: "var(--tt-surface)",
-    border: "color-mix(in srgb, var(--tt-primary-500) 14%, transparent)",
+    indexBg: "linear-gradient(135deg, #1A9688 0%, #4ECFC3 100%)",
+    indexShadow: "0 8px 18px rgba(26,150,136,0.22)",
+    cardBg: "#FFFFFF",
+    border: "rgba(26,150,136,0.14)",
     elevation:
-      "0 1px 2px rgba(16,24,40,0.04), 0 6px 16px color-mix(in srgb, var(--tt-primary-500) 4%, transparent)",
-    dotColor: "var(--tt-primary-500)",
-    headerLabelColor: "var(--tt-primary-500)",
+      "0 1px 2px rgba(16,24,40,0.04), 0 6px 16px rgba(26,150,136,0.04)",
+    dotColor: "#1A9688",
+    headerLabelColor: "#1A9688",
   },
 };
 
@@ -85,7 +80,7 @@ export function InsightRecommendationSection({
           style={{
             borderColor: "rgba(25,39,44,0.06)",
             background:
-              "linear-gradient(135deg, color-mix(in srgb, var(--tt-primary-500) 4%, transparent) 0%, color-mix(in srgb, var(--tt-primary-300) 2%, transparent) 100%)",
+              "linear-gradient(135deg, rgba(26,150,136,0.04) 0%, rgba(78,207,195,0.02) 100%)",
           }}
         >
           <p
@@ -124,7 +119,7 @@ export function InsightRecommendationSection({
                       className="mt-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-base font-bold"
                       style={{
                         background: visual.indexBg,
-                        color: "var(--tt-surface)",
+                        color: "#FFFFFF",
                         boxShadow: visual.indexShadow,
                       }}
                     >

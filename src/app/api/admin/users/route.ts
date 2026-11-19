@@ -1,10 +1,26 @@
 import { NextResponse } from "next/server";
-import { requireAdminApi, AdminAccessError } from "@/lib/admin/authorization";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 
 export async function GET(request: Request) {
   try {
-    await requireAdminApi(request);
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const adminUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { role: true },
+    });
+
+    if (adminUser?.role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
 
     const { searchParams } = new URL(request.url);
     const search = searchParams.get("search") ?? "";
@@ -65,11 +81,6 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    if (error instanceof AdminAccessError)
-      return NextResponse.json(
-        { error: error.message },
-        { status: error.status },
-      );
     console.error("Admin Users API Error:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },

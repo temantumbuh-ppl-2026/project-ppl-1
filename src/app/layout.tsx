@@ -4,7 +4,7 @@
 // ============================================================
 
 import type { Metadata } from "next";
-import { Caveat, Fraunces, Plus_Jakarta_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 import QueryProvider from "@/components/providers/query-providers";
@@ -13,29 +13,6 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
-  display: "swap",
-});
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  weight: ["700", "800", "900"],
-  display: "swap",
-});
-
-// Varian dengan sumbu optical size, dipakai halaman About agar judul besar sesuai desain.
-const frauncesDisplay = Fraunces({
-  variable: "--font-fraunces-display",
-  subsets: ["latin"],
-  axes: ["opsz"],
-  display: "swap",
-  preload: false,
-});
-
-const caveat = Caveat({
-  variable: "--font-caveat",
-  subsets: ["latin"],
-  weight: ["600", "700"],
   display: "swap",
 });
 
@@ -57,7 +34,7 @@ export default function RootLayout({
   return (
     <html
       lang="id"
-      className={`${plusJakartaSans.variable} ${fraunces.variable} ${frauncesDisplay.variable} ${caveat.variable}`}
+      className={plusJakartaSans.variable}
       suppressHydrationWarning
     >
       <body className="font-sans antialiased" suppressHydrationWarning>
@@ -69,8 +46,8 @@ export default function RootLayout({
             richColors
             toastOptions={{
               style: {
-                fontFamily: "var(--tt-font-sans)",
-                borderRadius: "var(--tt-radius-md)",
+                fontFamily: "var(--font-plus-jakarta)",
+                borderRadius: "12px",
               },
             }}
           />
